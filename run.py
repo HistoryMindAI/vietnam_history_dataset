@@ -1,120 +1,76 @@
-import os
 import sys
+sys.stdout.reconfigure(encoding="utf-8")
+
 import re
-import json
-import datasets
+from pathlib import Path
 
-if sys.platform == "win32":
-    import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+# ================== CONFIG ==================
+RAW_PATH = "data/history_docs.txt"
+OUT_PATH = "data/history_docs_clean.txt"
 
-YEAR = r"(1[0-9]{3})"
+YEAR_PATTERN = re.compile(r"\b(1[0-9]{3})\b")
 
-EVENT_YEAR_PATTERN = re.compile(
-    rf"(diễn ra|được tổ chức|tổ chức|vào năm)\s*{YEAR}",
-    re.IGNORECASE
-)
-
-DURATION_PATTERN = re.compile(r"(\d{2,4})\s*năm")
-
-REFERENCE_YEAR_PATTERN = re.compile(r"từ năm\s*(1[0-9]{3})", re.IGNORECASE)
-
-ANNIVERSARY_KEYWORDS = [
-    "đại lễ", "kỷ niệm", "thành lập", "ngày thành lập"
+FORBIDDEN_KEYWORDS = [
+    "câu hỏi", "hãy cho biết", "trình bày",
+    "vì sao", "ai là", "kể tên"
 ]
-
-def classify_event(text: str):
-    t = text.lower()
-    if any(k in t for k in ANNIVERSARY_KEYWORDS):
-        return "anniversary"
-    if "chiến tranh" in t or "khởi nghĩa" in t:
-        return "war"
-    if "triều" in t or "vua" in t:
-        return "dynasty"
-    return "general"
+# ============================================
 
 def normalize_event(text: str):
+    # chuẩn hoá khoảng trắng
     text = re.sub(r"\s+", " ", text.strip())
+    lower = text.lower()
+
+    # quá ngắn → loại
     if len(text) < 30:
         return None
 
-    event_type = classify_event(text)
+    # câu hỏi / meta → loại
+    for kw in FORBIDDEN_KEYWORDS:
+        if kw in lower:
+            return None
 
-    event_year = None
-    reference_year = None
-    duration_years = None
-
-    # 1️⃣ event_year
-    m = EVENT_YEAR_PATTERN.search(text)
-    if m:
-        event_year = int(m.group(2))
-    else:
-        y = re.search(YEAR, text)
-        if y:
-            event_year = int(y.group(1))
-
-    if not event_year:
+    # ❌ CHẶN TUYỆT ĐỐI "năm 1000"
+    if "năm 1000" in lower:
         return None
 
-    # 2️⃣ duration
-    d = DURATION_PATTERN.search(text)
-    if d:
-        duration_years = int(d.group(1))
+    # ⭐ CASE ĐẶC BIỆT: 1000 năm Thăng Long → 2010
+    if "1000 năm" in lower and "thăng long" in lower:
+        year = "2010"
+    else:
+        m = YEAR_PATTERN.search(text)
+        if not m:
+            return None
+        year = m.group(1)
 
-    # 3️⃣ reference_year (nếu là kỷ niệm)
-    if event_type == "anniversary" and duration_years:
-        reference_year = event_year - duration_years
+    # ❌ bỏ "Năm XXXX" nếu đã tồn tại
+    clean = re.sub(r"^Năm\s+\d{4},?\s*", "", text, flags=re.I)
 
-    final_text = f"Năm {event_year}, {text}"
-    if "." in final_text:
-        final_text = final_text.split(".")[0] + "."
+    # ❌ bỏ ngoặc
+    clean = re.sub(r"\(.*?\)", "", clean)
 
-    return {
-        "event_year": event_year,
-        "reference_year": reference_year,
-        "duration_years": duration_years,
-        "event_type": event_type,
-        "text": final_text
-    }
+    clean = clean.strip().rstrip(".")
 
-# ===================== BUILD DATASET =====================
-def prepare_data():
-    ds = datasets.load_dataset("vietnam_history_dataset", split="train")
-    os.makedirs("data", exist_ok=True)
+    return f"Năm {year}, {clean}."
 
-    out_jsonl = open("data/history_structured.jsonl", "w", encoding="utf-8")
-    out_txt = open("data/history_docs.txt", "w", encoding="utf-8")
+def main():
+    src = Path(RAW_PATH)
+    dst = Path(OUT_PATH)
 
-    seen = set()
-    count = 0
+    results = []
 
-    for item in ds:
-        for msg in item.get("messages", []):
-            content = msg.get("content")
-            if not isinstance(content, str):
-                continue
+    with src.open(encoding="utf-8") as f:
+        for line in f:
+            ev = normalize_event(line)
+            if ev:
+                results.append(ev)
 
-            event = normalize_event(content)
-            if not event:
-                continue
+    # ❗ deduplicate + sort
+    results = sorted(set(results))
 
-            key = event["text"]
-            if key in seen:
-                continue
-            seen.add(key)
+    dst.write_text("\n".join(results), encoding="utf-8")
 
-            out_jsonl.write(json.dumps(event, ensure_ascii=False) + "\n")
-            out_txt.write(event["text"] + "\n")
-
-            count += 1
-            if count >= 3000:
-                break
-        if count >= 3000:
-            break
-
-    out_jsonl.close()
-    out_txt.close()
-    print(f"[DONE] Chuẩn hoá {count} sự kiện lịch sử (V3)")
+    print(f"[DONE] Chuẩn hoá {len(results)} sự kiện lịch sử (CANONICAL)")
 
 if __name__ == "__main__":
-    prepare_data()
+    main()
