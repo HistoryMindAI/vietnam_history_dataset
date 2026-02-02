@@ -1,170 +1,224 @@
-import os
-import sys
 import json
 import re
 import faiss
-import numpy as np
+import unicodedata
 from sentence_transformers import SentenceTransformer
-from llama_cpp import Llama
 
-# ===================== FIX WINDOWS ENCODING =====================
-if sys.platform == "win32":
-    import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+# ================== CONFIG ==================
+INDEX_DIR = "faiss_index"
+INDEX_PATH = f"{INDEX_DIR}/history.index"
+META_PATH = f"{INDEX_DIR}/meta.json"
 
-# ===================== CONFIG =====================
 EMBED_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+TOP_K = 15
+SIM_THRESHOLD = 0.45
+# ============================================
 
-FAISS_INDEX_PATH = "./faiss_index/history.index"
-META_PATH = "./faiss_index/meta.json"
 
-MODEL_PATH = "./models/qwen2.5-7b-instruct-q4_k_m.gguf"
+# ---------- NORMALIZE (CHỈ DÙNG CHO SO KHỚP) ----------
+def normalize(text: str) -> str:
+    text = text.lower()
+    text = unicodedata.normalize("NFD", text)
+    return "".join(c for c in text if unicodedata.category(c) != "Mn")
 
-TOP_K = 8
 
-SYSTEM_RULES = """Bạn là trợ lý AI lịch sử Việt Nam.
-CHỈ sử dụng thông tin trong tài liệu.
-KHÔNG suy đoán.
-KHÔNG dùng kiến thức bên ngoài.
-Nếu tài liệu không có thông tin, chỉ trả lời đúng 1 câu:
-Không có thông tin trong tài liệu.
-Chỉ trả lời bằng tiếng Việt.
-"""
+# ---------- YEAR UTILS ----------
+YEAR_RE = r"(1[0-9]{3}|20[0-2][0-9])"
 
-YEAR_PATTERN = re.compile(r"\b(1[0-9]{3})\b")
 
-# ===================== LOAD FAISS =====================
-def load_faiss():
-    index = faiss.read_index(FAISS_INDEX_PATH)
-    with open(META_PATH, encoding="utf-8") as f:
-        meta = json.load(f)
-    docs = [m["text"] for m in meta]
-    return index, docs
+def extract_event_year(text: str):
+    m = re.search(YEAR_RE, text)
+    return int(m.group()) if m else None
 
-# ===================== YEAR EXTRACTION =====================
-def extract_year(query: str):
-    m = YEAR_PATTERN.search(query)
-    return m.group(1) if m else None
 
-# ===================== QUERY EXPANSION =====================
-def expand_query(query: str):
+def extract_year_range(text: str):
     """
-    Giữ mở rộng NHẸ để tăng recall,
-    KHÔNG quyết định logic ở đây
+    Ưu tiên:
+    1. Regex có từ khóa (từ năm X đến năm Y)
+    2. Nếu có >= 2 năm → coi là khoảng
     """
-    queries = [query]
-    year = extract_year(query)
-    if year:
-        queries.append(f"Năm {year}")
-    return queries
+    t = normalize(text)
 
-# ===================== FAISS RETRIEVAL =====================
-def retrieve_context(query, embedder, index, docs):
-    queries = expand_query(query)
+    patterns = [
+        rf"tu nam\s*{YEAR_RE}\s*(den|toi)\s*nam\s*{YEAR_RE}",
+        rf"{YEAR_RE}\s*(den|toi|-)\s*{YEAR_RE}",
+    ]
+
+    for p in patterns:
+        m = re.search(p, t)
+        if m:
+            y1, y2 = int(m.group(1)), int(m.group(3))
+            return min(y1, y2), max(y1, y2)
+
+    years = sorted(set(map(int, re.findall(YEAR_RE, t))))
+    if len(years) >= 2:
+        return years[0], years[-1]
+
+    return None
+
+
+def extract_single_year(text: str):
+    years = re.findall(YEAR_RE, text)
+    return int(years[0]) if len(years) == 1 else None
+
+
+# ---------- ENTITY ----------
+ENTITY_ALIASES = {
+    "quang trung": ["quang trung", "nguyen hue"],
+    "nguyen tat thanh": ["nguyen tat thanh", "ho chi minh"],
+}
+
+
+def extract_entities(query: str):
+    q = normalize(query)
+    found = set()
+    for aliases in ENTITY_ALIASES.values():
+        if any(a in q for a in aliases):
+            found.update(aliases)
+    return found
+
+
+def contains_entity(text: str, entities):
+    t = normalize(text)
+    return any(e in t for e in entities)
+
+
+# ---------- LOAD ----------
+print("[INFO] Loading model & index...")
+embedder = SentenceTransformer(EMBED_MODEL)
+index = faiss.read_index(INDEX_PATH)
+
+with open(META_PATH, encoding="utf-8") as f:
+    META = json.load(f)
+
+
+# ---------- SEMANTIC SEARCH ----------
+def semantic_search(query: str):
+    q_emb = embedder.encode([query], convert_to_numpy=True).astype("float32")
+    faiss.normalize_L2(q_emb)
+
+    scores, ids = index.search(q_emb, TOP_K)
     results = []
 
-    for q in queries:
-        emb = embedder.encode([q], convert_to_numpy=True).astype("float32")
-        faiss.normalize_L2(emb)
-        _, ids = index.search(emb, TOP_K)
+    for score, idx in zip(scores[0], ids[0]):
+        if idx != -1 and score >= SIM_THRESHOLD:
+            results.append(META[idx]["text"])
 
-        for i in ids[0]:
-            if 0 <= i < len(docs):
-                results.append(docs[i])
+    return results
 
-    # unique, giữ thứ tự
-    seen = set()
-    uniq = []
-    for r in results:
-        if r not in seen:
-            uniq.append(r)
-            seen.add(r)
 
-    return uniq
+# ---------- SCAN ----------
+def scan_by_year(year: int):
+    return [
+        it["text"] for it in META
+        if extract_event_year(it["text"]) == year
+    ]
 
-# ===================== HARD FILTER BY YEAR =====================
-def filter_by_year(docs, year):
+
+def scan_by_year_range(y1: int, y2: int):
+    out = []
+    for it in META:
+        y = extract_event_year(it["text"])
+        if y and y1 <= y <= y2:
+            out.append(it["text"])
+    return out
+
+
+def scan_by_entity(entities):
+    return [
+        it["text"] for it in META
+        if contains_entity(it["text"], entities)
+    ]
+
+
+# ---------- TIMELINE ----------
+def clean_title(text: str):
     """
-    QUYẾT ĐỊNH BẰNG CODE – KHÔNG GIAO CHO LLM
+    TẠO TITLE ĐẸP – GIỮ NGUYÊN TIẾNG VIỆT
     """
-    if not year:
-        return docs
+    t = text
 
-    filtered = []
-    for d in docs:
-        if d.startswith(f"Năm {year},"):
-            filtered.append(d)
+    t = t.replace("**", "")
+    t = re.sub(r"Năm\s*\d{4},?\s*", "", t)
+    t = re.sub(r"xảy ra năm\s*\d{4}", "", t, flags=re.IGNORECASE)
 
-    return filtered
+    t = t.split(".")[0]
+    return t.strip()
 
-# ===================== PROMPT =====================
-def build_prompt(context_docs, question):
-    context = "\n".join(context_docs)
-    return f"""{SYSTEM_RULES}
 
-TÀI LIỆU:
-{context}
+def to_timeline(texts):
+    timeline = []
 
-CÂU HỎI:
-{question}
-
-TRẢ LỜI:
-"""
-
-# ===================== MAIN =====================
-def main():
-    embedder = SentenceTransformer(EMBED_MODEL)
-    index, docs = load_faiss()
-
-    llm = Llama(
-        model_path=MODEL_PATH,
-        n_ctx=4096,
-        temperature=0.0,
-        n_threads=8,
-        n_gpu_layers=0,
-        verbose=False
-    )
-
-    print("\n👉 Gõ câu hỏi (exit để thoát)\n")
-
-    while True:
-        query = input("🧑 Bạn: ").strip()
-        if query.lower() == "exit":
-            break
-
-        year = extract_year(query)
-
-        # 1️⃣ Retrieve
-        ctx_raw = retrieve_context(query, embedder, index, docs)
-
-        # 2️⃣ HARD FILTER (QUAN TRỌNG NHẤT)
-        ctx = filter_by_year(ctx_raw, year)
-
-        # 3️⃣ Không có → trả lời cứng
-        if not ctx:
-            print("\n🤖 AI: Không có thông tin trong tài liệu.\n")
+    for t in texts:
+        year = extract_event_year(t)
+        if not year:
             continue
 
-        # 4️⃣ Build prompt & generate
-        prompt = build_prompt(ctx, query)
+        timeline.append({
+            "year": year,
+            "title": clean_title(t),
+            "description": t
+        })
 
-        output = llm(
-            prompt,
-            max_tokens=120,
-            stop=["\n", "Human:", "Assistant:", "请", "Premier", "。"]
-        )
+    timeline.sort(key=lambda x: x["year"])
 
-        raw = output["choices"][0]["text"].strip()
-        answer = raw.split("\n")[0].strip()
+    # dedup mạnh (theo year + title normalize)
+    seen = set()
+    clean = []
+    for it in timeline:
+        key = f"{it['year']}|{normalize(it['title'])}"
+        if key not in seen:
+            seen.add(key)
+            clean.append(it)
 
-        if "." in answer:
-            answer = answer.split(".")[0] + "."
+    return clean
 
-        if not answer:
-            answer = "Không có thông tin trong tài liệu."
 
-        print(f"\n🤖 AI: {answer}\n")
+# ---------- ANSWER ----------
+def answer(query: str):
+    query = query.strip()
 
-# ===================== RUN =====================
+    year_range = extract_year_range(query)
+    single_year = extract_single_year(query)
+    entities = extract_entities(query)
+
+    # 1️⃣ RANGE YEAR
+    if year_range:
+        return to_timeline(scan_by_year_range(*year_range))
+
+    # 2️⃣ SINGLE YEAR
+    if single_year:
+        return to_timeline(scan_by_year(single_year))
+
+    # 3️⃣ ENTITY ONLY
+    if entities and len(query.split()) <= 3:
+        return to_timeline(scan_by_entity(entities))
+
+    # 4️⃣ SEMANTIC
+    results = semantic_search(query)
+    if entities:
+        results = [r for r in results if contains_entity(r, entities)]
+
+    return to_timeline(results)
+
+
+# ---------- CLI ----------
+def main():
+    print("👉 Gõ câu hỏi (exit để thoát)\n")
+    while True:
+        q = input("🧑 Bạn: ").strip()
+        if q.lower() in {"exit", "quit"}:
+            break
+
+        result = answer(q)
+
+        if not result:
+            print("\n🤖 AI: Không có thông tin phù hợp\n")
+        else:
+            print("\n🤖 AI (TIMELINE JSON):")
+            print(json.dumps(result, ensure_ascii=False, indent=2))
+            print()
+
+
 if __name__ == "__main__":
     main()
