@@ -1,56 +1,48 @@
 import os
 import json
 import faiss
-import sys
+import numpy as np
 from sentence_transformers import SentenceTransformer
 
-# Cấu hình
-MODEL_NAME = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2" #
-DOC_FILE = "./data/history_docs.txt" #
-INDEX_DIR = "faiss_index" #
+DATA_PATH = "data/history_docs.txt"
+OUT_DIR = "faiss_index"
+INDEX_PATH = f"{OUT_DIR}/history.index"
+META_PATH = f"{OUT_DIR}/meta.json"
+
+EMBED_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 
 def main():
-    # Sửa lỗi hiển thị tiếng Việt trên Terminal Windows
-    if sys.platform == "win32":
-        import io
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    os.makedirs(OUT_DIR, exist_ok=True)
 
-    if not os.path.exists(DOC_FILE):
-        print(f"[Error] Không tìm thấy file {DOC_FILE}. Hãy chạy run.py trước!")
-        return
+    with open(DATA_PATH, encoding="utf-8") as f:
+        docs = [line.strip() for line in f if len(line.strip()) > 30]
 
-    print("[INFO] Đang nạp model embedding...")
-    model = SentenceTransformer(MODEL_NAME) #
+    print(f"[INFO] Docs: {len(docs)}")
 
-    print("[INFO] Đang đọc tài liệu lịch sử...")
-    with open(DOC_FILE, encoding="utf-8") as f:
-        # Lọc bỏ các dòng trống và các dòng quá ngắn (dưới 10 ký tự thường là rác)
-        docs = [line.strip() for line in f if len(line.strip()) > 10] 
+    embedder = SentenceTransformer(EMBED_MODEL)
 
-    if not docs:
-        print("[Error] Dữ liệu trong history_docs.txt quá ít hoặc trống!")
-        return
+    embeddings = embedder.encode(
+        docs,
+        convert_to_numpy=True,
+        show_progress_bar=True
+    ).astype("float32")
 
-    print(f"[INFO] Tổng số đoạn văn bản: {len(docs)}")
-    
-    # Tạo vector đại diện cho văn bản
-    print("[INFO] Đang tạo vector (embeddings)...")
-    embeddings = model.encode(docs, show_progress_bar=True) #
+    faiss.normalize_L2(embeddings)
 
-    # Tạo FAISS index
-    dimension = embeddings.shape[1] #
-    index = faiss.IndexFlatL2(dimension) #
-    index.add(embeddings) #
+    index = faiss.IndexFlatIP(embeddings.shape[1])
+    index.add(embeddings)
 
-    # Lưu index và metadata
-    os.makedirs(INDEX_DIR, exist_ok=True) #
-    faiss.write_index(index, os.path.join(INDEX_DIR, "history.index")) #
-    
-    # Lưu metadata (docs) để sau này chat.py có thể lấy nội dung gốc
-    with open(os.path.join(INDEX_DIR, "meta.json"), "w", encoding="utf-8") as f:
-        json.dump(docs, f, ensure_ascii=False, indent=2) #
+    faiss.write_index(index, INDEX_PATH)
 
-    print("[DONE] Đã tạo xong FAISS index!")
+    with open(META_PATH, "w", encoding="utf-8") as f:
+        json.dump(
+            [{"id": i, "text": docs[i]} for i in range(len(docs))],
+            f,
+            ensure_ascii=False,
+            indent=2
+        )
+
+    print("[DONE] FAISS built")
 
 if __name__ == "__main__":
     main()
