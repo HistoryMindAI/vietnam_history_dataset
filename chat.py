@@ -1,113 +1,170 @@
-import sys, os, types, io
-
-# ===================== SIÊU VÁ LỖI TRANSFORMERS (WINDOWS) =====================
-import transformers
-
-# 1. Đánh lừa transformers rằng flash_attn KHÔNG tồn tại (để tránh lỗi __spec__)
-original_is_package_available = transformers.utils.import_utils._is_package_available
-def patched_is_package_available(pkg_name):
-    if pkg_name in ["flash_attn", "triton"]:
-        return False
-    return original_is_package_available(pkg_name)
-
-transformers.utils.import_utils._is_package_available = patched_is_package_available
-
-# 2. Vô hiệu hóa Triton ở mức hệ thống
-os.environ["TORCH_COMPILE_DISABLE"] = "1"
-os.environ["DISABLE_TRITON"] = "1"
-
-# ===================== IMPORT CHÍNH =====================
+import os
+import sys
 import json
+import re
 import faiss
-import torch
+import numpy as np
 from sentence_transformers import SentenceTransformer
-from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, BloomTokenizerFast
+from llama_cpp import Llama
 
-# Fix Unicode hiển thị trên Console Windows
+# ===================== FIX WINDOWS ENCODING =====================
 if sys.platform == "win32":
+    import io
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 # ===================== CONFIG =====================
 EMBED_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
-CHAT_MODEL  = "vinai/PhoGPT-4B-Chat"
-INDEX_PATH = "./faiss_index/history.index"
-META_PATH  = "./faiss_index/meta.json"
 
-def main():
-    print("[INFO] Nạp embedding model (CPU)...")
-    embedder = SentenceTransformer(EMBED_MODEL, device="cpu")
+FAISS_INDEX_PATH = "./faiss_index/history.index"
+META_PATH = "./faiss_index/meta.json"
 
-    if not os.path.exists(INDEX_PATH):
-        print("[LỖI] Không tìm thấy FAISS index. Hãy chạy index_docs.py!")
-        return
+MODEL_PATH = "./models/qwen2.5-7b-instruct-q4_k_m.gguf"
 
+TOP_K = 8
+
+SYSTEM_RULES = """Bạn là trợ lý AI lịch sử Việt Nam.
+CHỈ sử dụng thông tin trong tài liệu.
+KHÔNG suy đoán.
+KHÔNG dùng kiến thức bên ngoài.
+Nếu tài liệu không có thông tin, chỉ trả lời đúng 1 câu:
+Không có thông tin trong tài liệu.
+Chỉ trả lời bằng tiếng Việt.
+"""
+
+YEAR_PATTERN = re.compile(r"\b(1[0-9]{3})\b")
+
+# ===================== LOAD FAISS =====================
+def load_faiss():
+    index = faiss.read_index(FAISS_INDEX_PATH)
     with open(META_PATH, encoding="utf-8") as f:
-        docs = json.load(f)
-    index = faiss.read_index(INDEX_PATH)
+        meta = json.load(f)
+    docs = [m["text"] for m in meta]
+    return index, docs
 
-    print("[INFO] Nạp PhoGPT-4B-Chat (CPU – Yêu cầu ~12GB RAM)...")
+# ===================== YEAR EXTRACTION =====================
+def extract_year(query: str):
+    m = YEAR_PATTERN.search(query)
+    return m.group(1) if m else None
 
-    # Nạp cấu hình
-    config = AutoConfig.from_pretrained(CHAT_MODEL, trust_remote_code=True)
-    
-    # Ép sử dụng kiến trúc attention cơ bản (eager) để không gọi Triton/Flash
-    config.attn_config = {"attn_impl": "torch"} 
-    
-    # Nạp Tokenizer
-    try:
-        tokenizer = AutoTokenizer.from_pretrained(CHAT_MODEL, trust_remote_code=True, use_fast=False)
-    except:
-        tokenizer = BloomTokenizerFast.from_pretrained(CHAT_MODEL, trust_remote_code=True)
+# ===================== QUERY EXPANSION =====================
+def expand_query(query: str):
+    """
+    Giữ mở rộng NHẸ để tăng recall,
+    KHÔNG quyết định logic ở đây
+    """
+    queries = [query]
+    year = extract_year(query)
+    if year:
+        queries.append(f"Năm {year}")
+    return queries
 
-    # Nạp Model
-    model = AutoModelForCausalLM.from_pretrained(
-        CHAT_MODEL,
-        config=config,
-        trust_remote_code=True,
-        torch_dtype=torch.float32,
-        device_map={"": "cpu"},
-        attn_implementation="eager",
-        low_cpu_mem_usage=True
+# ===================== FAISS RETRIEVAL =====================
+def retrieve_context(query, embedder, index, docs):
+    queries = expand_query(query)
+    results = []
+
+    for q in queries:
+        emb = embedder.encode([q], convert_to_numpy=True).astype("float32")
+        faiss.normalize_L2(emb)
+        _, ids = index.search(emb, TOP_K)
+
+        for i in ids[0]:
+            if 0 <= i < len(docs):
+                results.append(docs[i])
+
+    # unique, giữ thứ tự
+    seen = set()
+    uniq = []
+    for r in results:
+        if r not in seen:
+            uniq.append(r)
+            seen.add(r)
+
+    return uniq
+
+# ===================== HARD FILTER BY YEAR =====================
+def filter_by_year(docs, year):
+    """
+    QUYẾT ĐỊNH BẰNG CODE – KHÔNG GIAO CHO LLM
+    """
+    if not year:
+        return docs
+
+    filtered = []
+    for d in docs:
+        if d.startswith(f"Năm {year},"):
+            filtered.append(d)
+
+    return filtered
+
+# ===================== PROMPT =====================
+def build_prompt(context_docs, question):
+    context = "\n".join(context_docs)
+    return f"""{SYSTEM_RULES}
+
+TÀI LIỆU:
+{context}
+
+CÂU HỎI:
+{question}
+
+TRẢ LỜI:
+"""
+
+# ===================== MAIN =====================
+def main():
+    embedder = SentenceTransformer(EMBED_MODEL)
+    index, docs = load_faiss()
+
+    llm = Llama(
+        model_path=MODEL_PATH,
+        n_ctx=4096,
+        temperature=0.0,
+        n_threads=8,
+        n_gpu_layers=0,
+        verbose=False
     )
-    model.eval()
 
-    print("\n" + "="*40)
-    print("🇻🇳 HistoryMindAI – Đã sẵn sàng trả lời!")
-    print("="*40 + "\n")
+    print("\n👉 Gõ câu hỏi (exit để thoát)\n")
 
     while True:
-        try:
-            query = input("Bạn hỏi: ").strip()
-        except EOFError: break
-        if not query or query.lower() in ["exit", "thoát"]: break
+        query = input("🧑 Bạn: ").strip()
+        if query.lower() == "exit":
+            break
 
-        # RAG: Tìm ngữ cảnh
-        q_emb = embedder.encode([query])
-        _, I = index.search(q_emb, 2)
-        context = "\n".join(docs[i] for i in I[0])
+        year = extract_year(query)
 
-        # Prompt format chuẩn PhoGPT
-        prompt = f"### Câu hỏi: {query} Dựa trên thông tin: {context} ### Trả lời:"
+        # 1️⃣ Retrieve
+        ctx_raw = retrieve_context(query, embedder, index, docs)
 
-        inputs = tokenizer(prompt, return_tensors="pt")
-        with torch.no_grad():
-            outputs = model.generate(
-                **inputs,
-                # max_new_tokens=400,
-                # temperature=0.1,
-                # top_p=0.9,
-                # do_sample=True,
-                # eos_token_id=tokenizer.eos_token_id
+        # 2️⃣ HARD FILTER (QUAN TRỌNG NHẤT)
+        ctx = filter_by_year(ctx_raw, year)
 
-                max_new_tokens=100,  # Giới hạn trả lời ngắn gọn
-                do_sample=False,     # Quan trọng: Tắt cái này giúp CPU chạy nhanh hơn
-                num_beams=1,         # Không dùng tìm kiếm chùm
-                use_cache=True
-            )
+        # 3️⃣ Không có → trả lời cứng
+        if not ctx:
+            print("\n🤖 AI: Không có thông tin trong tài liệu.\n")
+            continue
 
-        text = tokenizer.decode(outputs[0], skip_special_tokens=True)
-        answer = text.split("### Trả lời:")[-1].strip()
-        print(f"\nBot: {answer}\n")
+        # 4️⃣ Build prompt & generate
+        prompt = build_prompt(ctx, query)
 
+        output = llm(
+            prompt,
+            max_tokens=120,
+            stop=["\n", "Human:", "Assistant:", "请", "Premier", "。"]
+        )
+
+        raw = output["choices"][0]["text"].strip()
+        answer = raw.split("\n")[0].strip()
+
+        if "." in answer:
+            answer = answer.split(".")[0] + "."
+
+        if not answer:
+            answer = "Không có thông tin trong tài liệu."
+
+        print(f"\n🤖 AI: {answer}\n")
+
+# ===================== RUN =====================
 if __name__ == "__main__":
     main()
