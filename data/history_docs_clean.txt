@@ -1,5 +1,5 @@
-Năm 1009, Lý Công Uẩn được tôn lập . Sau khi Lê Long Đĩnh qua đời, Lý Công Uẩn được tôn làm vua. Về lâu dài, mở ra triều Lý với nhiều cải cách và thịnh trị.
-Năm 1010, Chiếu dời đô . Văn kiện nêu lý do dời đô và tầm nhìn phát triển ở Đại La. Về lâu dài, tư tưởng quy hoạch, tầm nhìn chiến lược thời Lý.
+Năm 1009, Lý Công Uẩn được tôn lập. Sau khi Lê Long Đĩnh qua đời, Lý Công Uẩn được tôn làm vua. Về lâu dài, mở ra triều Lý với nhiều cải cách và thịnh trị.
+Năm 1010, Chiếu dời đô. Văn kiện nêu lý do dời đô và tầm nhìn phát triển ở Đại La. Về lâu dài, tư tưởng quy hoạch, tầm nhìn chiến lược thời Lý.
 Năm 1054, Đổi quốc hiệu thành Đại Việt. Thời Lý Thánh Tông, quốc hiệu đổi từ Đại Cồ Việt sang Đại Việt. Về lâu dài, khẳng định bản sắc và vị thế quốc gia độc lập.
 Năm 1075, Lý Thường Kiệt chủ động tiến công Ung–Khâm–Liêm. Quân Đại Việt tấn công trước để phá thế xâm lược của nhà Tống. Về lâu dài, ngăn chặn nguy cơ xâm lược, thể hiện nghệ thuật quân sự chủ động.
 Năm 1077, Phòng tuyến Như Nguyệt. Quân Đại Việt chặn quân Tống ở sông Như Nguyệt; bài 'Nam quốc sơn hà' vang vọng. Về lâu dài, bảo vệ bờ cõi, củng cố ý thức độc lập dân tộc.
@@ -7,35 +7,36 @@ Năm 1225, Nhà Trần thành lập. Lý Chiêu Hoàng nhường ngôi cho Trầ
 Năm 1258, Kháng chiến lần 1 chống Mông Cổ. Đại Việt đánh bại cuộc xâm lược đầu tiên của quân Mông Cổ. Về lâu dài, bảo vệ độc lập, mở ra chuỗi thắng lợi chống xâm lăng phương Bắc.
 Năm 1284, Hịch tướng sĩ. Trần Hưng Đạo soạn Hịch tướng sĩ khích lệ quân dân trước kháng chiến lần 2. Về lâu dài, tác phẩm quân sự – chính trị cổ vũ mạnh mẽ.
 Năm 1285, Kháng chiến lần 2 chống Nguyên. Quân dân Đại Việt giành thắng lợi lớn trước quân Nguyên. Về lâu dài, củng cố sức mạnh quốc gia và nghệ thuật chiến tranh nhân dân.
-Năm 1288, Trận Bạch Đằng . Trần Hưng Đạo nhử địch vào bãi cọc ngầm trên sông Bạch Đằng, tiêu diệt thủy quân Nguyên. Về lâu dài, đập tan ý đồ xâm lược, kết thúc chiến tranh, ghi dấu mốc chói lọi.
+Năm 1288, Trận Bạch Đằng. Trần Hưng Đạo nhử địch vào bãi cọc ngầm trên sông Bạch Đằng, tiêu diệt thủy quân Nguyên. Về lâu dài, đập tan ý đồ xâm lược, kết thúc chiến tranh, ghi dấu mốc chói lọi.
 Năm 1400, Hồ Quý Ly lập nhà Hồ. Hồ Quý Ly cải cách mạnh, đổi quốc hiệu Đại Ngu. Về lâu dài, cải cách táo bạo nhưng không vững bền, dẫn tới họa xâm lăng.
 Năm 1407, Nhà Minh xâm lược, bắt đầu thời kỳ Minh thuộc. Đại Việt rơi vào ách đô hộ của nhà Minh. Về lâu dài, mở ra giai đoạn đấu tranh giải phóng khốc liệt.
 Năm 1418, Khởi nghĩa Lam Sơn bùng nổ. Lê Lợi dựng cờ khởi nghĩa ở Lam Sơn chống quân Minh. Về lâu dài, khởi đầu cuộc giải phóng dân tộc kéo dài gần 10 năm.
-Năm 1427, Toàn thắng chống Minh . Nghĩa quân Lam Sơn giành thắng lợi quyết định, buộc quân Minh rút. Về lâu dài, chấm dứt thời Minh thuộc, khôi phục độc lập.
+Năm 1427, Toàn thắng chống Minh. Nghĩa quân Lam Sơn giành thắng lợi quyết định, buộc quân Minh rút. Về lâu dài, chấm dứt thời Minh thuộc, khôi phục độc lập.
 Năm 1428, Lê Lợi lên ngôi, lập nhà Hậu Lê. Lê Lợi xưng vương, ban Bình Ngô đại cáo tuyên cáo độc lập. Về lâu dài, mở ra thời kỳ Lê sơ thịnh trị.
 Năm 1460, Lê Thánh Tông trị vì. Lê Thánh Tông đẩy mạnh cải cách, hoàn thiện bộ máy nhà nước. Về lâu dài, đỉnh cao thịnh trị của Lê sơ trên nhiều lĩnh vực.
 Năm 1471, Đại Việt đánh bại Champa tại Vijaya. Quân Đại Việt hạ kinh đô Vijaya của Champa. Về lâu dài, làm suy yếu Champa, mở rộng lãnh thổ về phương Nam.
 Năm 1483, Bộ luật Hồng Đức. Bộ luật Hồng Đức hoàn thiện dưới thời Lê Thánh Tông. Về lâu dài, bộ luật tiêu biểu của Việt Nam thời phong kiến.
 Năm 1527, Mạc Đăng Dung lập nhà Mạc. Mạc Đăng Dung soán ngôi, mở ra thời kỳ Nam–Bắc triều. Về lâu dài, gây chia cắt chính trị kéo dài, xung đột với Lê trung hưng.
 Năm 1533, Lê trung hưng khôi phục danh nghĩa nhà Lê. Các thế lực trung hưng dựng lại cơ nghiệp nhà Lê, thực quyền thuộc chúa Trịnh. Về lâu dài, hình thành cục diện Lê–Trịnh ở Đàng Ngoài, đối đầu với họ Nguyễn ở Đàng Trong.
-Năm 1627, Khởi đầu Trịnh–Nguyễn phân tranh. Chiến tranh kéo dài giữa Chúa Trịnh và Chúa Nguyễn . Về lâu dài, đất nước chia cắt hơn 150 năm, ranh giới sông Gianh.
+Năm 1627, Khởi đầu Trịnh–Nguyễn phân tranh. Chiến tranh kéo dài giữa Chúa Trịnh  và Chúa Nguyễn. Về lâu dài, đất nước chia cắt hơn 150 năm, ranh giới sông Gianh.
 Năm 1672, Tạm đình chiến Trịnh–Nguyễn. Hai bên ngừng giao tranh, giữ nguyên cục diện chia cắt. Về lâu dài, củng cố ranh giới, ổn định tương đối.
 Năm 1771, Khởi nghĩa Tây Sơn bùng nổ. Anh em Tây Sơn khởi nghĩa, chống các thế lực Trịnh – Nguyễn. Về lâu dài, đặt nền tảng thống nhất, cải cách mạnh mẽ.
 Năm 1785, Rạch Gầm – Xoài Mút. Nguyễn Huệ đánh bại quân Xiêm trên sông Tiền. Về lâu dài, ngăn chặn can thiệp ngoại bang, củng cố Tây Sơn ở Nam Bộ.
-Năm 1789, Ngọc Hồi – Đống Đa . Quang Trung thần tốc tiến ra Bắc, đánh bại quân Thanh. Về lâu dài, bảo vệ độc lập, khẳng định tài thao lược quân sự.
+Năm 1789, Ngọc Hồi – Đống Đa. Quang Trung thần tốc tiến ra Bắc, đánh bại quân Thanh. Về lâu dài, bảo vệ độc lập, khẳng định tài thao lược quân sự.
 Năm 1802, Nguyễn Ánh lên ngôi Gia Long, lập nhà Nguyễn. Gia Long thống nhất đất nước sau khi đánh bại Tây Sơn. Về lâu dài, mở đầu triều Nguyễn – triều đại phong kiến cuối cùng.
 Năm 1839, Đổi quốc hiệu Đại Nam thời Minh Mạng. Triều Nguyễn dùng quốc hiệu Đại Nam dưới thời Minh Mạng. Về lâu dài, khẳng định chủ quyền và cơ cấu quản lý thống nhất.
 Năm 1858, Liên quân Pháp – Tây Ban Nha tấn công Đà Nẵng. Mở đầu cuộc chiến xâm lược của Pháp tại Việt Nam. Về lâu dài, khởi đầu thời kỳ thực dân xâm lược kéo dài gần một thế kỷ.
-Năm 1862, Hòa ước Nhâm Tuất . Triều Nguyễn nhượng cho Pháp ba tỉnh miền Đông Nam Kỳ. Về lâu dài, mất đất, mất quyền kiểm soát Nam Kỳ vào tay Pháp.
+Năm 1862, Hòa ước Nhâm Tuất. Triều Nguyễn nhượng cho Pháp ba tỉnh miền Đông Nam Kỳ. Về lâu dài, mất đất, mất quyền kiểm soát Nam Kỳ vào tay Pháp.
 Năm 1867, Pháp chiếm nốt ba tỉnh miền Tây Nam Kỳ. Toàn bộ Nam Kỳ rơi vào tay Pháp. Về lâu dài, củng cố nền cai trị của Pháp tại Nam Kỳ.
-Năm 1884, Hòa ước Patenôtre . Triều Nguyễn ký hiệp ước đặt Việt Nam dưới chế độ bảo hộ của Pháp. Về lâu dài, chính thức hóa ách cai trị của Pháp trên toàn cõi Việt Nam.
+Năm 1884, Hòa ước Patenôtre. Triều Nguyễn ký hiệp ước đặt Việt Nam dưới chế độ bảo hộ của Pháp. Về lâu dài, chính thức hóa ách cai trị của Pháp trên toàn cõi Việt Nam.
 Năm 1885, Phong trào Cần Vương. Vua Hàm Nghi hạ Chiếu Cần Vương, kêu gọi chống Pháp. Về lâu dài, lan rộng kháng chiến chống Pháp cuối thế kỷ XIX.
 Năm 1905, Phong trào Đông Du. Phan Bội Châu khởi xướng phong trào đưa thanh niên sang Nhật du học. Về lâu dài, tìm đường cứu nước theo con đường mới, tiếp thu tư tưởng và kỹ thuật hiện đại.
-Năm 1911, Bác Hồ ra đi tìm đường cứu nước, Bác rời bến Nhà Rồng, bắt đầu hành trình qua nhiều châu lục. Về lâu dài, đặt nền móng cho con đường cách mạng sau này của Bác.
+Năm 1911, Bác Hồ ra đi tìm đường cứu nước, Bác rời bến Nhà Rồng, bắt đầu hành trình qua nhiều châu lục. Về lâu dài, đặt nền móng cho con đường cách mạng sau này của Bác Hồ.
 Năm 1930, Khởi nghĩa Yên Bái. Việt Nam Quốc dân Đảng phát động khởi nghĩa chống Pháp tại Yên Bái. Về lâu dài, tiêu biểu cho tinh thần yêu nước đầu thế kỷ XX, dù thất bại.
 Năm 1941, Việt Minh ra đời. Mặt trận Việt Nam Độc lập Đồng minh được thành lập, đoàn kết lực lượng cứu quốc. Về lâu dài, tập hợp rộng rãi lực lượng chuẩn bị cho tổng khởi nghĩa.
 Năm 1945, Cách mạng Tháng Tám và Tuyên ngôn Độc lập. Tổng khởi nghĩa giành chính quyền; 2/9/1945, Bác Hồ đọc Tuyên ngôn Độc lập. Về lâu dài, khai sinh nước Việt Nam Dân chủ Cộng hòa, chấm dứt chế độ thực dân – phong kiến.
-Năm 1954, Hiệp định Genève. Ký Hiệp định Genève về chấm dứt chiến sự ở Việt Nam. Về lâu dài, tạm chia cắt đất nước ở vĩ tuyến 17, chuẩn bị tổng tuyển cử.
+Năm 1946, Toàn quốc kháng chiến. Lời kêu gọi Toàn quốc kháng chiến; cả nước bước vào kháng chiến chống Pháp. Về lâu dài, mở đầu Chiến tranh Đông Dương lần thứ nhất.
+Năm 1954, Chiến thắng Điện Biên Phủ. Quân đội Việt Nam giành thắng lợi quyết định tại Điện Biên Phủ. Về lâu dài, bước ngoặt lịch sử, dẫn tới Hiệp định Genève.
 Năm 1955, Hình thành Việt Nam Cộng hòa ở miền Nam. Miền Nam thành lập chính thể Việt Nam Cộng hòa. Về lâu dài, củng cố tình trạng chia cắt đất nước.
 Năm 1960, Thành lập Mặt trận Dân tộc Giải phóng miền Nam. Mặt trận ra đời nhằm đoàn kết lực lượng yêu nước ở miền Nam. Về lâu dài, tạo mặt trận chính trị – quân sự chống Mỹ và chính quyền Sài Gòn.
 Năm 1964, Sự kiện Vịnh Bắc Bộ. Sự kiện trên Vịnh Bắc Bộ dẫn đến Mỹ leo thang chiến tranh ở Việt Nam. Về lâu dài, mở rộng chiến tranh, ném bom miền Bắc.
@@ -50,3 +51,14 @@ Năm 1986, Đổi Mới. Đại hội VI đề ra đường lối Đổi Mới v
 Năm 1989, Rút quân khỏi Campuchia. Việt Nam hoàn tất rút quân, đóng góp giải pháp chính trị. Về lâu dài, giảm căng thẳng đối ngoại, thuận lợi bình thường hóa.
 Năm 1992, Hiến pháp 1992. Ban hành Hiến pháp phù hợp Đổi Mới. Về lâu dài, khung pháp lý cho phát triển kinh tế – xã hội.
 Năm 1995, Bình thường hóa Việt–Mỹ; gia nhập ASEAN. Việt Nam và Hoa Kỳ bình thường hóa; Việt Nam gia nhập ASEAN. Về lâu dài, mở rộng hội nhập quốc tế và khu vực.
+Năm 2007, Gia nhập WTO. Việt Nam trở thành thành viên WTO. Về lâu dài, thúc đẩy thương mại và cải cách thể chế.
+Năm 2016, Sự cố môi trường biển miền Trung. Ô nhiễm biển gây thiệt hại tại 4 tỉnh miền Trung. Về lâu dài, nâng cao nhận thức bảo vệ môi trường.
+Năm 2018, Ký kết CPTPP. Tham gia Hiệp định Đối tác Toàn diện và Tiến bộ xuyên Thái Bình Dương. Về lâu dài, mở rộng thị trường, nâng chuẩn thương mại.
+Năm 2020, Đại dịch COVID-19. COVID-19 tác động sâu rộng đến y tế, kinh tế và xã hội. Về lâu dài, thử thách quản trị khủng hoảng và y tế công.
+Năm 905, Khúc Thừa Dụ dựng chính quyền tự chủ. Khúc Thừa Dụ nắm quyền ở Tống Bình, khôi phục quyền tự chủ sau thời Bắc thuộc muộn. Về lâu dài, mở đầu thời kỳ tự chủ của người Việt sau nhiều thế kỷ bị phương Bắc cai trị.
+Năm 931, Dương Đình Nghệ đánh tan quân Nam Hán. Dương Đình Nghệ lãnh đạo nghĩa quân, đẩy lui quân Nam Hán. Về lâu dài, củng cố nền tự chủ, tạo tiền đề cho thời Ngô.
+Năm 938, Trận Bạch Đằng. Ngô Quyền dùng cọc gỗ đặt ngầm trên sông Bạch Đằng, đánh bại thủy quân Nam Hán. Về lâu dài, chấm dứt hơn một thiên niên kỷ Bắc thuộc, mở ra kỷ nguyên độc lập của người Việt.
+Năm 939, Ngô Quyền xưng vương, đóng đô Cổ Loa. Sau chiến thắng Bạch Đằng, Ngô Quyền lên ngôi, chọn Cổ Loa làm kinh đô. Về lâu dài, xác lập quốc gia độc lập, khởi đầu nhà Ngô.
+Năm 968, Đinh Bộ Lĩnh dẹp loạn 12 sứ quân, lập Đại Cồ Việt. Đinh Bộ Lĩnh thống nhất cát cứ, lên ngôi Hoàng đế, đặt quốc hiệu Đại Cồ Việt. Về lâu dài, chấm dứt cát cứ, xây dựng nhà nước trung ương tập quyền đầu tiên sau độc lập.
+Năm 980, Lê Hoàn lên ngôi. Lê Hoàn được suy tôn sau biến cố cuối triều Đinh. Về lâu dài, Ổn định triều chính, chuẩn bị chống Tống.
+Năm 981, Kháng Tống thắng lợi thời Lê Hoàn. Quân Đại Cồ Việt đánh lui quân Tống xâm lược. Về lâu dài, bảo vệ nền độc lập non trẻ, khẳng định vị thế quốc gia.
