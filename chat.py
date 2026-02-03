@@ -22,9 +22,9 @@ def normalize(text: str) -> str:
     return "".join(c for c in text if unicodedata.category(c) != "Mn")
 
 
-# ---------- CLEAN TEXT ----------
+# ---------- CLEAN & NORMALIZE TEXT (🔥 FIX DẤU CÂU TRIỆT ĐỂ) ----------
 def clean_text(text: str) -> str:
-    t = text
+    t = text.strip()
 
     # remove markdown
     t = re.sub(r"\*\*(.*?)\*\*", r"\1", t)
@@ -34,9 +34,22 @@ def clean_text(text: str) -> str:
     t = re.sub(r"xảy ra năm\s*\d{3,4}", "", t, flags=re.IGNORECASE)
     t = re.sub(r"Năm\s*\d{3,4},?\s*", "", t)
 
-    # normalize spaces + punctuation
-    t = re.sub(r"\s+([.,])", r"\1", t)
+    # ===== FIX CORE =====
+    # thiếu khoảng trắng sau dấu chấm
+    t = re.sub(r"\.(\S)", r". \1", t)
+
+    # nhiều dấu chấm liên tiếp
+    t = re.sub(r"\.{2,}", ".", t)
+
+    # khoảng trắng trước dấu câu
+    t = re.sub(r"\s+([.,;:])", r"\1", t)
+
+    # normalize spaces
     t = re.sub(r"\s+", " ", t).strip()
+
+    # ensure kết câu
+    if not t.endswith("."):
+        t += "."
 
     return t
 
@@ -167,7 +180,7 @@ def to_timeline(texts):
     return out
 
 
-# ---------- CORE ENGINE (JSON ONLY) ----------
+# ---------- CORE ENGINE ----------
 def engine_answer(query: str) -> dict:
     query = query.strip()
 
@@ -176,34 +189,26 @@ def engine_answer(query: str) -> dict:
     entities = extract_entities(query)
 
     if single_year:
-        return {
-            "query": query,
-            "intent": "year",
-            "events": to_timeline(scan_by_year(single_year)),
-        }
-
-    if year_range:
-        return {
-            "query": query,
-            "intent": "range",
-            "events": to_timeline(scan_by_year_range(*year_range)),
-        }
-
-    if entities:
-        return {
-            "query": query,
-            "intent": "entity",
-            "events": to_timeline(scan_by_entity(entities)),
-        }
+        intent = "year"
+        events = to_timeline(scan_by_year(single_year))
+    elif year_range:
+        intent = "range"
+        events = to_timeline(scan_by_year_range(*year_range))
+    elif entities:
+        intent = "entity"
+        events = to_timeline(scan_by_entity(entities))
+    else:
+        intent = "semantic"
+        events = to_timeline(semantic_search(query))
 
     return {
         "query": query,
-        "intent": "semantic",
-        "events": to_timeline(semantic_search(query)),
+        "intent": intent,
+        "events": events,
     }
 
 
-# ---------- HUMAN RENDER ----------
+# ---------- HUMAN RENDER (KHÔNG CÒN '..') ----------
 def render_human(data: dict) -> str:
     events = data["events"]
 
@@ -212,14 +217,13 @@ def render_human(data: dict) -> str:
 
     def apply_vietnamese_style(text: str) -> str:
         for name in BAC_HO_NAMES:
-            if name in text:
-                text = text.replace(name, "Bác")
+            text = text.replace(name, "Bác")
         return text
 
     if len(events) == 1:
         e = events[0]
         desc = apply_vietnamese_style(e["description"])
-        return f"Năm {e['year']}, {desc}."
+        return f"Năm {e['year']}, {desc}"
 
     lines = [f"Mình tìm thấy {len(events)} sự kiện:"]
     for e in events:
