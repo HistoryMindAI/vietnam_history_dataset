@@ -8,7 +8,7 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 
 # ================== CONFIG ==================
-DATA_PATH = "data/history_docs_clean.txt"
+DATA_PATH = "data/history_docs_story.txt"
 OUT_DIR = "faiss_index"
 INDEX_PATH = f"{OUT_DIR}/history.index"
 META_PATH = f"{OUT_DIR}/meta.json"
