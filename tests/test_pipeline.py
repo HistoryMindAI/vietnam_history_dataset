@@ -162,7 +162,7 @@ def test_normalize_person_and_place():
     res = normalize(text)
     assert res is not None
 
-    year, body, nature, tone, persons, persons_all = res
+    year, body, nature, tone, persons, persons_all, places = res
 
     assert year == "1288"
     assert "Trần Hưng Đạo" in persons_all
@@ -180,7 +180,7 @@ def test_normalize_no_false_persons():
     res = normalize(text)
     assert res is not None
 
-    _, _, _, _, persons, persons_all = res
+    _, _, _, _, persons, persons_all, _ = res
 
     assert persons == set()
     assert persons_all == set()
@@ -190,7 +190,7 @@ def test_place_not_recognized_as_person():
     res = normalize(text)
 
     assert res is not None
-    year, body, nature, tone, persons, persons_all = res
+    year, body, nature, tone, persons, persons_all, _ = res
 
     assert "Bạch Đằng" not in persons
     assert "Bạch Đằng" not in persons_all
@@ -200,7 +200,7 @@ def test_dynasty_not_person():
     res = normalize(text)
 
     assert res is not None
-    _, _, _, _, persons, persons_all = res
+    _, _, _, _, persons, persons_all, _ = res
 
     assert not persons
     assert not persons_all
@@ -214,7 +214,7 @@ def test_person_and_place_together():
     res = normalize(text)
     assert res is not None
 
-    _, _, _, _, persons, persons_all = res
+    _, _, _, _, persons, persons_all, _ = res
 
     assert "Trần Hưng Đạo" in persons_all
     assert "Bạch Đằng" not in persons_all
@@ -233,7 +233,7 @@ def test_alias_in_normalize():
     res = normalize(text)
 
     assert res is not None
-    _, _, _, _, persons, persons_all = res
+    _, _, _, _, persons, persons_all, _ = res
 
     assert "Nguyễn Huệ" in persons_all
     assert "Quang Trung" not in persons_all
@@ -243,7 +243,7 @@ def test_collective_not_person():
     res = normalize(text)
 
     assert res is not None
-    _, _, _, _, persons, persons_all = res
+    _, _, _, _, persons, persons_all, _ = res
 
     assert not persons
     assert not persons_all
@@ -253,7 +253,7 @@ def test_campaign_not_person():
     res = normalize(text)
 
     assert res is not None
-    _, _, _, _, persons, persons_all = res
+    _, _, _, _, persons, persons_all, _ = res
 
     assert "Điện Biên Phủ" not in persons_all
 
@@ -380,7 +380,7 @@ def test_normalize_keeps_collective_with_strong_action():
     text = "Năm 1945, nhân dân ta vùng lên giành độc lập."
     res = normalize(text)
     assert res is not None
-    year, body, nature, _, persons_subject, _ = res
+    year, body, nature, _, persons_subject, _, _ = res
     assert year == "1945"
     assert "historical_event" in nature
     assert not persons_subject # Không có cá nhân cụ thể là đúng
@@ -389,8 +389,8 @@ def test_normalize_keeps_place_event():
     text = "Năm 1975, giải phóng hoàn toàn miền Nam."
     res = normalize(text)
     assert res is not None
-    # Phải giải nén đầy đủ 6 giá trị trả về từ normalize()
-    year, body, nature, tone, persons_subject, persons_all = res 
+    # Phải giải nén đầy đủ 7 giá trị trả về từ normalize()
+    year, body, nature, tone, persons_subject, persons_all, places = res
     assert "historical_event" in nature
 
 def test_normalize_rejects_vague_history():
@@ -750,8 +750,8 @@ def test_normalize_acceptance_logic():
     for t in valid_texts:
         res = normalize(t)
         assert res is not None
-        # Kiểm tra cấu trúc tuple trả về (year, body, nature, tone, subjects, persons_all)
-        assert len(res) == 6
+        # Kiểm tra cấu trúc tuple trả về (year, body, nature, tone, subjects, persons_all, places)
+        assert len(res) == 7
         assert res[0] in t # Năm phải đúng
 
 
@@ -845,7 +845,7 @@ def test_normalize_traps():
     text_2 = "Năm 1285, quân dân nhà Trần đại phá quân Nguyên."
     res = normalize(text_2)
     assert res is not None
-    _, _, nature, _, persons_subject, _ = res
+    _, _, nature, _, persons_subject, _, _ = res
     assert "military" in nature
     assert len(persons_subject) == 0 # 'Quân dân nhà Trần' không phải là Person cụ thể
 
