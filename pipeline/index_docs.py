@@ -88,7 +88,8 @@ def main():
     embeddings = embedder.encode(
         texts,
         convert_to_numpy=True,
-        show_progress_bar=True
+        show_progress_bar=True,
+        batch_size=64
     ).astype("float32")
 
     # 📐 Normalize cosine
