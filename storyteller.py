@@ -41,8 +41,8 @@ YEAR_INLINE = re.compile(
 PERSON_PATTERN = re.compile(
     r"\b(?:Vua\s+)?"
     r"("
-        # Nguyễn Huệ, Trần Hưng Đạo
-        r"(?:Nguyễn|Lê|Lý|Trần|Đinh|Hồ|Ngô|Phạm|Phan|Bùi|Đỗ|Vũ|Võ|Hoàng|Huỳnh)"
+        # Nguyễn Huệ, Trần Hưng Đạo...
+        r"(?:Nguyễn|Lê|Lý|Trần|Đinh|Hồ|Ngô|Phạm|Phan|Bùi|Đỗ|Vũ|Võ|Hoàng|Huỳnh|Đặng|Dương|Khúc|Mạc)"
         r"(?:\s+[A-ZĐÂÊÔƯ][a-zà-ỹ]+){1,3}"
     r"|"
         # Lý Thái Tổ, Trần Thánh Tông
@@ -64,24 +64,29 @@ ROYAL_TITLES = {
     "hàm nghi",
 }
 
-PERSON_ALIASES = {
+CANONICAL_PERSON = {
     "quang trung": "Nguyễn Huệ",
     "bắc bình vương": "Nguyễn Huệ",
     "gia long": "Nguyễn Ánh",
-}
-
-PERSON_ALIAS = {
-    "Quang Trung": "Nguyễn Huệ",
-    "Nguyễn Huệ": "Nguyễn Huệ",
-    "Gia Long": "Nguyễn Ánh",
-    "Nguyễn Ánh": "Nguyễn Ánh",
-    "Lý Công Uẩn": "Lý Thái Tổ",
-    "Lý Thái Tổ": "Lý Thái Tổ",
-    "Minh Mạng": "Minh Mạng",
+    "minh mạng": "Minh Mạng",
+    "tự đức": "Tự Đức",
+    "thiệu trị": "Thiệu Trị",
+    "hàm nghi": "Hàm Nghi",
+    "lý công uẩn": "Lý Thái Tổ",
+    "vua lý thái tổ": "Lý Thái Tổ",
+    "nguyễn tất thành": "Nguyễn Tất Thành",
+    "hồ chí minh": "Hồ Chí Minh",
+    # Thêm các tên chuẩn để is_valid_person nhận diện
+    "nguyễn huệ": "Nguyễn Huệ",
+    "nguyễn ánh": "Nguyễn Ánh",
+    "lý thái tổ": "Lý Thái Tổ",
 }
 
 def normalize_person(name: str) -> str:
-    return PERSON_ALIAS.get(name.strip(), name.strip())
+    if not name:
+        return name
+    key = name.strip().lower()
+    return CANONICAL_PERSON.get(key, name.strip())
 
 JUNK_PATTERNS = [
     r"Để trả lời\.?",
@@ -124,12 +129,16 @@ INFORMATIVE_VERBS = [
     "tấn công", "phòng thủ", "chặn",
     "nhượng", "mất", "rơi vào",
     "thống nhất", "chia cắt",
+    "khôi phục", "soán ngôi", "lật đổ", "thành lập",
+    "phát động", "hạ", "chiếm", "giữ", "giải phóng",
+    "ban bố", "hạ chiếu", "ký kết"
 ]
 
 STATE_VERBS = [
     "suy yếu", "tan rã", "thất bại",
     "khủng hoảng", "ổn định",
-    "phát triển", "rơi vào", "bước vào"
+    "phát triển", "rơi vào", "bước vào",
+    "mở ra", "chấm dứt", "khẳng định"
 ]
 
 STOPWORDS = {
@@ -255,15 +264,6 @@ def classify_entity(name: str) -> str | None:
     return ENTITY_LOOKUP.get(name)
 
 
-CANONICAL_PERSON = {
-    "quang trung": "Nguyễn Huệ",
-    "bắc bình vương": "Nguyễn Huệ",
-    "gia long": "Nguyễn Ánh",
-    "lý công uẩn": "Lý Thái Tổ",
-    "vua lý thái tổ": "Lý Thái Tổ",
-    "nguyễn tất thành": "Nguyễn Tất Thành",
-    "hồ chí minh": "Hồ Chí Minh",
-}
 
 INVALID_PERSON_HINTS = {
     "quân", "nhà nước", "mặt trận", "đảng",
@@ -290,8 +290,8 @@ def is_valid_person(name: str) -> bool:
     if re.search(r"(thái\s+(tổ|tông)|thánh\s+tông|nhân\s+tông)$", name_l):
         return True
 
-    # alias vua
-    if name_l in CANONICAL_PERSON:
+    # alias vua hoặc miếu hiệu chuẩn
+    if name_l in CANONICAL_PERSON or name_l in ROYAL_TITLES:
         return True
 
     # tối thiểu 2 token
@@ -376,8 +376,8 @@ def is_person_actor(text: str, person: str) -> bool:
 
     # tập alias: Quang Trung ↔ Nguyễn Huệ
     aliases = {p}
-    for k, v in PERSON_ALIASES.items():
-        if v.lower() == p:
+    for k, v in CANONICAL_PERSON.items():
+        if v.lower() == p.lower():
             aliases.add(k)
 
     ACTIONS = [
@@ -387,7 +387,9 @@ def is_person_actor(text: str, person: str) -> bool:
         "dựng", "lập", "ban",
         "soạn", "viết",
         "ra đi", "khởi xướng",
-        "lãnh đạo", "chỉ huy"
+        "lãnh đạo", "chỉ huy",
+        "soán ngôi", "lật đổ", "thành lập",
+        "phát động", "hạ", "chiếm", "giữ"
     ]
 
     for name in aliases:
@@ -414,6 +416,11 @@ def is_political_actor(text: str, person: str) -> bool:
         "lập nhà",
         "dựng chính quyền",
         "ra đi",
+        "soán ngôi",
+        "lật đổ",
+        "thành lập",
+        "hạ chiếu",
+        "ban bố",
     ]:
         if re.search(rf"{p}.{{0,40}}{k}|{k}.{{0,40}}{p}", t):
             return True
@@ -567,7 +574,9 @@ def remove_non_informative_clauses(text):
 
     for c in clauses:
         # ✅ có PERSON → giữ
-        set(cached_extract_all_persons(c))
+        if cached_extract_all_persons(c):
+            kept.append(c)
+            continue
 
 
         lc = c.lower()
@@ -1050,7 +1059,8 @@ def prune_event_sentence(text: str) -> str:
 
     # 1️⃣ clause có PERSON
     for c in clauses:
-        set(cached_extract_all_persons(c))
+        if cached_extract_all_persons(c):
+            kept.append(c)
 
 
     # 2️⃣ nếu chưa có → clause có action
