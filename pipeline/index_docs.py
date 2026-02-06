@@ -6,7 +6,7 @@ import json
 import faiss
 import numpy as np
 from sentence_transformers import SentenceTransformer
-import random
+from pipeline.storyteller import storyteller, pick_tone
 
 # ================== CONFIG ==================
 TIMELINE_PATH = "data/history_timeline.json"
@@ -17,36 +17,6 @@ META_PATH = f"{OUT_DIR}/meta.json"
 EMBED_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 MIN_LEN = 30
 # ============================================
-
-
-# 🔁 copy đúng storyteller
-HEROIC_ENDINGS = [
-    "Sự kiện này mở ra một chương sử hào hùng của dân tộc.",
-    "Chiến công ấy khẳng định ý chí tự chủ và sức sống bền bỉ của người Việt.",
-    "Đây là dấu mốc thể hiện bản lĩnh và khát vọng làm chủ vận mệnh dân tộc.",
-]
-
-TRAGIC_ENDINGS = [
-    "Đó là giai đoạn bi thương, khi đất nước rơi vào thử thách khắc nghiệt.",
-    "Biến cố này để lại những mất mát sâu sắc cho vận mệnh dân tộc.",
-    "Thời kỳ ấy ghi dấu nỗi đau và những tổn thất nặng nề của đất nước.",
-]
-
-def storyteller(year, tone, content):
-    content = content.rstrip(".")
-    if tone == "heroic":
-        return f"Năm {year}, {content}. {random.choice(HEROIC_ENDINGS)}"
-    if tone == "tragic":
-        return f"Năm {year}, {content}. {random.choice(TRAGIC_ENDINGS)}"
-    return f"Năm {year}, {content}."
-
-
-def pick_tone(tones: list[str]) -> str:
-    if "heroic" in tones:
-        return "heroic"
-    if "tragic" in tones:
-        return "tragic"
-    return "neutral"
 
 
 def main():
