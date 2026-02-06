@@ -35,7 +35,7 @@ YEAR_INLINE = re.compile(
 
 PERSON_PATTERN = re.compile(
     r"\b(?:Vua\s+|Chúa\s+|Tướng\s+|Trung tướng\s+)?"
-    r"((?:Nguyễn|Lê|Lý|Trần|Đinh|Hồ|Ngô|Phạm|Phan|Bùi|Đỗ|Vũ|Võ|Hoàng|Huỳnh)(?:\s+[A-ZĐÂÊÔƯ][a-zà-ỹ]+){1,3}"
+    r"((?:Nguyễn|Lê|Lý|Trần|Đinh|Hồ|Ngô|Phạm|Phan|Bùi|Đỗ|Vũ|Võ|Hoàng|Huỳnh|Đặng|Dương|Khúc|Mạc)(?:\s+[A-ZĐÂÊÔƯ][a-zà-ỹ]+){1,3}"
     r"|[A-ZĐÂÊÔƯ][a-zà-ỹ]+\s+(?:Thái|Thánh|Nhân)\s+(?:Tổ|Tông)"
     r"|(?:Quang\s+Trung|Gia\s+Long|Minh\s+Mạng|Tự\s+Đức|Hàm\s+Nghi|Bác\s+Hồ|Hồ\s+Chí\s+Minh))\b"
 )
@@ -235,7 +235,10 @@ ENTITY_REGISTRY = {
     "place": {
         "Bạch Đằng", "Chi Lăng", "Đống Đa", "Điện Biên Phủ", "Hà Nội", 
         "Thăng Long", "Ngọc Hồi", "Lam Sơn", "Ba Đình", "Huế", "Sài Gòn",
-        "Nghệ An", "Rạch Gầm", "Xoài Mút", "Vạn Kiếp", "Hàm Tử", "Chương Dương"
+        "Nghệ An", "Rạch Gầm", "Xoài Mút", "Vạn Kiếp", "Hàm Tử", "Chương Dương",
+        "Thanh Hóa", "Phú Xuân", "Gia Định", "Định Tường", "Biên Hòa", "Vĩnh Long",
+        "Hà Tiên", "Quảng Trị", "Quảng Nam", "Đà Nẵng", "Lạng Sơn", "Cao Bằng",
+        "Tây Bắc"
     },
     "other": set([
         "Đại Việt",
@@ -311,7 +314,9 @@ EVENT_WORKS_DENY = {
 }
 
 PLACE_DENY = {
-    "bạch đằng", "chi lăng", "đống đa", "điện biên phủ", "thăng long", "hà nội", "ba đình", "việt nam"
+    "bạch đằng", "chi lăng", "đống đa", "điện biên phủ", "thăng long", "hà nội", "ba đình", "việt nam",
+    "thanh hóa", "phú xuân", "gia định", "định tường", "biên hòa", "vĩnh long", "hà tiên",
+    "quảng trị", "quảng nam", "đà nẵng", "lạng sơn", "cao bằng", "nghệ an", "rạch gầm", "xoài mút"
 }
 
 # Gộp danh sách chặn để tra cứu nhanh trong is_valid_person
@@ -447,7 +452,8 @@ def is_person_actor(text: str, person: str) -> bool:
         "dựng", "lập", "ban",
         "soạn", "viết",
         "ra đi", "khởi xướng",
-        "lãnh đạo", "chỉ huy"
+        "lãnh đạo", "chỉ huy",
+        "đại phá", "tiêu diệt", "giải phóng"
     ]
 
     for name in aliases:
@@ -552,6 +558,33 @@ def choose_representative_event(events: list[str]) -> str:
         return s
 
     return max(events, key=score)
+
+def extract_all_places(text: str) -> set[str]:
+    places = set()
+    if not text:
+        return places
+
+    # 1. Kiểm tra Registry
+    for p in ENTITY_REGISTRY["place"]:
+        if p in text:
+            places.add(p)
+
+    # 2. Regex cho các thực thể địa lý phổ biến
+    geo_pattern = re.compile(
+        r"\b(?:tỉnh|thành phố|thành|huyện|đảo|quần đảo|sông|núi|vùng núi|đèo|cửa|vịnh|biển|vùng|đất|miền|kinh đô|phủ|làng|xã|quận)\s+"
+        r"([A-ZĐÂÊÔƯ][a-zà-ỹ]+(?:\s+[A-ZĐÂÊÔƯ][a-zà-ỹ]+){0,4})",
+        re.I
+    )
+
+    for m in geo_pattern.finditer(text):
+        p = m.group(1).strip()
+        # Đảm bảo các từ trong tên địa danh đều viết hoa (chống bắt nhầm "Bạch Đằng năm")
+        words = p.split()
+        if words and all(w[0].isupper() for w in words):
+            if len(p) > 2 and p.lower() not in STOPWORDS:
+                places.add(p)
+
+    return places
 
 def extract_all_persons(text: str) -> set[str]:
     persons: set[str] = set()
@@ -711,6 +744,9 @@ def merge_events_by_year(events: list[dict]) -> list[dict]:
             "persons_all": sorted(
                 set(p for b in bucket for p in b.get("persons_all", []))
             ),
+            "places": sorted(
+                set(p for b in bucket for p in b.get("places", []))
+            ),
             "nature": sorted(
                 set(n for b in bucket for n in b.get("nature", []))
             ),
@@ -854,6 +890,7 @@ def normalize(text: str):
     all_extracted = extract_all_persons(body)
     persons_valid = {p for p in all_extracted if is_valid_person(p)}
     subjects = extract_persons_from_body(body)
+    places = extract_all_places(body)
     
     # 5. Logic GIỮ LẠI (Sửa lỗi "Nhân dân vùng lên")
     keep = False
@@ -891,7 +928,8 @@ def normalize(text: str):
         list(nature),
         list(tone),
         set(subjects),
-        set(persons_valid)
+        set(persons_valid),
+        set(places)
     )
 
 HEROIC_ENDINGS = [
@@ -1138,27 +1176,28 @@ def event_signature(text: str) -> str:
 
 def extract_keywords(text: str) -> list[str]:
     keywords = set()
+    if not text:
+        return []
 
-    persons = re.findall(
-        r"[A-ZĐÂÊÔƯ][a-zà-ỹ]+(?:\s+[A-ZĐÂÊÔƯ][a-zà-ỹ]+){1,3}",
-        text
-    )
-
-    for p in persons:
-        if is_valid_person(p):
-            keywords.add(p)
-            break
-
+    # 1. Hành động và Sự kiện lịch sử cốt lõi
     actions = re.findall(
-        r"(đánh bại|đánh tan|lên ngôi|xưng vương|"
-        r"khởi nghĩa|kháng chiến|"
-        r"ban chiếu|ký hiệp định|"
-        r"thành lập|giải phóng|thống nhất)",
+        r"(đánh bại|đánh tan|lên ngôi|xưng vương|dời đô|thành lập|giải phóng|thống nhất|"
+        r"khởi nghĩa|kháng chiến|chiến dịch|phong trào|hiệp định|tuyên ngôn|ban hành|ký kết|"
+        r"đại phá|tiêu diệt|phản công|tấn công|đình chiến|quốc hiệu|hiến pháp|luật|hình thư|chiếu)",
         text.lower()
     )
-
     keywords.update(actions)
-    return sorted(keywords)
+
+    # 2. Tác phẩm/Văn kiện nổi tiếng (nếu có trong text)
+    works = [
+        "bình ngô đại cáo", "hịch tướng sĩ", "tuyên ngôn độc lập",
+        "nhật ký trong tù", "bộ hình thư", "luật hồng đức"
+    ]
+    for w in works:
+        if w in text.lower():
+            keywords.add(w)
+
+    return sorted(list(keywords))
 
 def merge_events(events: list[str]) -> str:
     clauses = []
@@ -1614,13 +1653,14 @@ def main():
         if not res:
             continue
 
-        year, body, nature, tone, persons_subject, persons_all = res
+        year, body, nature, tone, persons_subject, persons_all, places = res
 
         timeline.setdefault(year, []).append({
             "year": int(year),
             "event": body,
             "persons": sorted(persons_subject),
             "persons_all": sorted(persons_all),
+            "places": sorted(places),
             "nature": set(nature),
             "tone": tone,
             "keywords": set(extract_keywords(body))
