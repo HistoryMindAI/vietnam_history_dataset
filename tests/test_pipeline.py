@@ -1,4 +1,6 @@
 import pytest
+import random
+import string
 
 from pipeline.storyteller import (
     extract_all_persons,
@@ -10,6 +12,9 @@ from pipeline.storyteller import (
     normalize,
     ask,
     ask_by_person,
+    classify_tone,
+    pick_tone,
+    storyteller
 )
 
 __all__ = [
@@ -854,22 +859,305 @@ def test_normalize_traps():
     res = normalize(text_3)
     # Nếu câu không có thực thể thật, normalize nên trả về None để sạch data
     if res:
-        _, _, _, _, _, persons_all, _ = res
+        _, _, _, _, _, persons_all = res
         assert "Lịch Sử" not in persons_all
 
+@pytest.mark.parametrize("text, expected_tone", [
+    # Tone: Hào hùng (Heroic) - Thường đi kèm các động từ mạnh, chiến thắng
+    ("Quân ta đại phá quân Thanh, khí thế ngút trời.", "heroic"),
+    ("Chiến thắng Điện Biên Phủ lừng lẫy năm châu, chấn động địa cầu.", "heroic"),
+    
+    # Tone: Bi thương/Trầm mặc (Somber) - Thường đi kèm mất mát, đau thương
+    ("Nhân dân ta phải chịu cảnh lầm than dưới ách đô hộ.", "somber"),
+    ("Sự hy sinh anh dũng của các chiến sĩ để lại nỗi đau vô hạn.", "somber"),
+    ("Kinh thành bị tàn phá, vạn vật điêu linh.", "somber"),
+    
+    # Tone: Trung tính/Trang trọng (Neutral/Formal) - Các sự kiện hành chính
+    ("Năm 1042, nhà Lý ban hành bộ Hình thư.", "neutral"), 
+    ("Hai bên ký kết hiệp định đình chiến tại Giơ-ne-vơ.", "neutral"),
+])
+def test_classify_tone_specific(text, expected_tone):
+    # Giả sử hàm trả về một list các nhãn tone
+    tones = classify_tone(text)
+    if expected_tone == "neutral":
+        # Neutral thường là khi không có từ khóa đặc biệt cho heroic/somber
+        assert "heroic" not in tones and "somber" not in tones
+    else:
+        assert expected_tone in tones
+
+
+# =========================================================
+# 2. CÁC TEST CASE NGHI NGỜ (BOUNDARY & AMBIGUITY)
+# =========================================================
+
+def test_person_vs_honorific_titles():
+    """Nghi ngờ: Hệ thống có bị nhầm 'Vua', 'Chúa', 'Bác' thành tên người không?"""
+    text = "Vua quyết định dời đô. Bác cùng các chú bàn việc nước."
+    persons = extract_all_persons(text)
+    
+    # Các từ xưng hô chung không nên được coi là Person thực thể nếu đứng một mình
+    for p in persons:
+        assert p not in ["Vua", "Chúa", "Bác", "Các chú"]
 
 def test_normalize_with_ambiguous_dates():
     """Nghi ngờ: Các con số không phải năm (số quân, khoảng cách) gây nhiễu."""
     text = "Năm 1288, 30 vạn quân Nguyên bị tiêu diệt tại sông Bạch Đằng."
     res = normalize(text)
     assert res is not None
-    year, _, _, _, _, _, _ = res
-    assert year == "1288"
+    year, _, _, _, _, _ = res
+    assert year == "1288" # Phải trích xuất đúng năm, không phải 30 (vạn)
 
 def test_complex_sentence_structure():
     """Nghi ngờ: Câu phức có nhiều tên người và địa danh gây nhiễu chủ thể."""
     text = "Năm 1789, tại Thăng Long, Nguyễn Huệ đã hội kiến với các tướng lĩnh sau khi đánh đuổi quân Thanh."
     res = normalize(text)
     assert res is not None
-    _, _, _, _, subjects, _, _ = res
+    _, _, _, _, subjects, _ = res
+    # Chủ thể thực hiện hành động chính phải là Nguyễn Huệ
     assert "Nguyễn Huệ" in subjects
+
+def test_false_positive_locations():
+    """Nghi ngờ: Các danh từ riêng viết hoa đầu câu bị nhận nhầm là Person."""
+    text = "Lịch sử là gương soi của tương lai. Việt Nam là quốc gia yêu hòa bình."
+    persons = extract_all_persons(text)
+    valid_persons = {p for p in persons if is_valid_person(p)}
+    
+    assert "Lịch sử" not in valid_persons
+    assert "Việt Nam" not in valid_persons
+
+def test_mixed_tone_priority():
+    """Nghi ngờ: Câu có cả từ hào hùng và bi thương (ví dụ: chiến thắng nhưng tổn thất)."""
+    text = "Dù giành chiến thắng vang dội, nhưng tổn thất về người là vô cùng đau đớn."
+    tones = classify_tone(text)
+    # Tùy vào logic ưu tiên, nhưng thường hệ thống NLP sẽ gắn cả hai nhãn
+    assert "heroic" in tones
+    assert "somber" in tones
+
+# =========================================================
+# 3. KIỂM TRA TÍNH TOÀN VẸN CỦA PIPELINE (INTEGRITY)
+# =========================================================
+
+def test_normalize_empty_or_garbage_input():
+    """Kiểm tra input rác hoặc không có dữ liệu lịch sử."""
+    assert normalize("") is None
+    assert normalize("1 2 3 4 5") is None
+    assert normalize("Hôm nay trời đẹp quá, tôi đi chơi.") is None
+
+def test_pick_tone_empty_string():
+    assert pick_tone("") in ["neutral", "formal"]
+
+def test_pick_tone_none():
+    with pytest.raises(Exception):
+        pick_tone(None)
+
+def test_pick_tone_number():
+    with pytest.raises(Exception):
+        pick_tone(123)
+
+def test_pick_tone_very_short_text():
+    assert pick_tone("Ok") in ["neutral", "casual"]
+
+def test_pick_tone_very_long_text():
+    text = "Lịch sử Việt Nam " * 1000
+    tone = pick_tone(text)
+    assert tone in ["formal", "neutral"]
+
+def test_pick_tone_mixed_language():
+    text = "Nguyễn Huệ defeated the Qing army in 1789"
+    tone = pick_tone(text)
+    assert tone is not None
+
+
+def test_storyteller_empty_events():
+    result = storyteller([])
+    assert isinstance(result, str)
+    assert result.strip() == ""
+
+def test_storyteller_missing_fields():
+    events = [
+        {"year": 938},
+        {"content": "Ngô Quyền thắng Bạch Đằng"}
+    ]
+    result = storyteller(events)
+    assert isinstance(result, str)
+
+def test_storyteller_invalid_year():
+    events = [
+        {"year": "chín trăm ba tám", "content": "Bạch Đằng"}
+    ]
+    result = storyteller(events)
+    assert "Bạch Đằng" in result
+
+def test_storyteller_duplicate_events():
+    events = [
+        {"year": 938, "content": "Ngô Quyền chiến thắng"},
+        {"year": 938, "content": "Ngô Quyền chiến thắng"},
+    ]
+    result = storyteller(events)
+    assert result.count("Ngô Quyền") <= 2
+
+def test_storyteller_unsorted_years():
+    events = [
+        {"year": 1009, "content": "Lý Công Uẩn"},
+        {"year": 938, "content": "Ngô Quyền"},
+    ]
+    result = storyteller(events)
+    pos_938 = result.find("938")
+    pos_1009 = result.find("1009")
+    assert pos_938 < pos_1009
+
+def test_infer_subject_ambiguous():
+    text = "Quân Tây Sơn dưới sự lãnh đạo của Nguyễn Huệ"
+    subject = infer_subject(text)
+    assert subject in ["PERSON", "COLLECTIVE"]
+
+def test_infer_subject_person_and_place():
+    text = "Nguyễn Huệ tiến quân ra Thăng Long"
+    subject = infer_subject(text)
+    assert subject == "PERSON"
+
+def test_infer_subject_no_subject():
+    text = "Năm 938 diễn ra một trận đánh lớn"
+    subject = infer_subject(text)
+    assert subject in ["DOCUMENT", "UNKNOWN"]
+
+def test_unicode_weird_characters():
+    text = "Ngô Quyền \u0000 \uFFFF ⚔️⚔️"
+    tone = pick_tone(text)
+    assert tone is not None
+
+def test_random_noise_input():
+    text = "".join(random.choices(string.printable, k=500))
+    tone = pick_tone(text)
+    assert tone is not None
+
+def test_person_not_document():
+    text = "Nguyễn Huệ là một trong những anh hùng dân tộc"
+    subject = infer_subject(text)
+    assert subject == "PERSON"
+
+def test_collective_not_person():
+    text = "Quân Tây Sơn đánh tan quân Thanh"
+    subject = infer_subject(text)
+    assert subject == "COLLECTIVE"
+
+def test_infer_subject_with_passive_voice():
+    """Kiểm tra câu bị động: Người thực hiện hành động bị đẩy ra sau."""
+    body = "Quân Nguyên bị đánh bại bởi Trần Hưng Đạo."
+    persons = {"Trần Hưng Đạo"}
+    # Hệ thống cần nhận diện Trần Hưng Đạo là actor dù đứng sau 'bởi'
+    assert infer_subject(body, persons, ["military"]) == "Trần Hưng Đạo"
+
+def test_infer_subject_multiple_persons_priority():
+    """Nhiều người xuất hiện: Ưu tiên người đầu tiên hoặc người có hành động chính."""
+    body = "Lê Lợi cùng Nguyễn Trãi bàn kế sách tại Lam Sơn."
+    persons = {"Lê Lợi", "Nguyễn Trãi"}
+    # Thông thường chủ thể chính (vua) sẽ được ưu tiên
+    assert infer_subject(body, persons, ["political"]) == "Lê Lợi"
+
+def test_infer_subject_with_unknown_enemy():
+    """Tránh nhận diện quân thù làm chủ thể tích cực."""
+    body = "Quân Thanh tiến vào Thăng Long nhưng bị Nguyễn Huệ chặn đánh."
+    persons = {"Nguyễn Huệ"}
+    # Dù 'Quân Thanh' đứng đầu, nhưng Nguyễn Huệ mới là chủ thể lịch sử cần track
+    assert infer_subject(body, persons, ["military"]) == "Nguyễn Huệ"
+
+@pytest.mark.parametrize("text, expected_nature", [
+    ("Thương cảng Vân Đồn được thành lập.", "economy"), # Sự kiện kinh tế
+    ("Năm 1070, xây dựng Văn Miếu.", "culture"), # Văn hóa - Giáo dục
+    ("Dịch bệnh hoành hành khắp kinh thành.", "general"), # Thiên tai/Dịch bệnh (không phải military/political)
+])
+def test_classify_nature_diverse_fields(text, expected_nature):
+    from pipeline.storyteller import classify_nature
+    labels = classify_nature(text)
+    assert expected_nature in labels
+
+def test_classify_tone_sarcastic_or_complex():
+    """Kiểm tra các câu có từ ngữ mạnh nhưng không phải hào hùng."""
+    text = "Nỗi nhục mất nước không bao giờ quên."
+    tones = classify_tone(text)
+    assert "somber" in tones
+    assert "heroic" not in tones # Tránh bắt nhầm từ 'không bao giờ' thành hào hùng
+
+def test_ask_with_partial_data():
+    """Timeline chỉ có năm, không có event bên trong."""
+    timeline = {"1010": {"events": []}}
+    # Không được crash, phải trả về câu thông báo không tìm thấy hoặc None
+    assert ask(timeline, "Năm 1010 có gì?") is None
+
+def test_ask_by_person_case_insensitive():
+    """Người dùng hỏi bằng chữ thường."""
+    timeline = {"1789": {"events": [{"event": "Nguyễn Huệ thắng quân Thanh", "persons_all": ["Nguyễn Huệ"]}]}}
+    res = ask_by_person(timeline, "nguyễn huệ")
+    assert res is not None
+    assert len(res) > 0
+
+def test_normalize_traps_advanced():
+    # Bẫy 1: Năm quá lớn (tương lai) hoặc quá nhỏ (không hợp lệ)
+    assert normalize("Năm 3000, người máy xâm lược.") is None
+    
+    # Bẫy 2: Câu chứa từ khóa lịch sử nhưng là ví dụ hoặc câu hỏi
+    assert normalize("Tại sao năm 938 Ngô Quyền lại dùng cọc gỗ?") is None
+    
+    # Bẫy 3: Thực thể địa danh trùng tên người (Ví dụ: tỉnh Thái Bình vs người tên Thái Bình)
+    text = "Năm 1945, tại Thái Bình, nhân dân nổi dậy."
+    res = normalize(text)
+    if res:
+        _, _, _, _, _, persons_all, places = res
+        assert "Thái Bình" in places
+        assert "Thái Bình" not in persons_all
+
+def test_canonical_person_unmapped():
+    """Nếu gặp tên không có trong từ điển chuẩn hóa, phải giữ nguyên tên đó."""
+    unknown_person = "Ông Giáp Râu" 
+    # Nếu không có mapping, không được trả về rỗng mà phải trả về chính nó hoặc bản chuẩn hóa thô
+    assert canonical_person(unknown_person) == unknown_person
+
+@pytest.mark.parametrize("text, expected_year", [
+    ("Đại lễ kỉ niệm 1000 năm Thăng Long diễn ra vào năm 2010.", "2010"),
+    ("Năm 2024, chúng ta kỉ niệm 70 năm chiến thắng Điện Biên Phủ.", "2024"),
+    ("Lễ kỉ niệm 2000 năm khởi nghĩa Hai Bà Trưng được tổ chức năm 1940.", "1940"),
+    ("Hướng tới kỉ niệm 100 năm ngày sinh Võ Nguyên Giáp vào năm 2011.", "2011"),
+])
+def test_extract_year_anniversary_confusion(text, expected_year):
+    """Bắt lỗi lấy nhầm số năm kỉ niệm (100, 1000) làm năm sự kiện."""
+    from pipeline.storyteller import extract_year
+    assert extract_year(text) == expected_year
+
+def test_normalize_ignore_military_numbers():
+    """Kiểm tra xem 1000 quân hay 2000 chiến thuyền có bị nhầm thành năm không."""
+    text = "Năm 938, Ngô Quyền với 1000 chiến thuyền đã đánh bại quân Nam Hán."
+    res = normalize(text)
+    assert res is not None
+    year = res[0]
+    assert year == "938"
+    assert year != "1000"
+
+def test_normalize_with_large_army_counts():
+    text = "Năm 1285, 50 vạn quân Nguyên xâm lược nước ta."
+    res = normalize(text)
+    assert res is not None
+    assert res[0] == "1285"
+
+def test_normalize_duration_vs_year():
+    text = "Sau 1000 năm Bắc thuộc, năm 939 Ngô Quyền lên ngôi vua."
+    res = normalize(text)
+    assert res is not None
+    assert res[0] == "939"
+    assert res[0] != "1000"
+
+def test_normalize_age_rejection():
+    text = "Năm 1010, khi đó Lý Thái Tổ đã 36 tuổi."
+    res = normalize(text)
+    assert res is not None
+    assert res[0] == "1010"
+    assert "36" not in res[0]
+
+def test_year_inside_document_names():
+    text = "Năm 2010, các nhà khoa học nghiên cứu về sự kiện năm 1010."
+    # Nếu logic là lấy năm đầu tiên xuất hiện (theo storyteller.py hiện tại)
+    # thì 2010 phải được ưu tiên.
+    res = normalize(text)
+    assert res is not None
+    assert res[0] == "2010"
+
