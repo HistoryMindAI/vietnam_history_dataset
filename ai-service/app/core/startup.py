@@ -4,33 +4,44 @@ import os
 from sentence_transformers import SentenceTransformer
 from app.core.config import *
 from collections import defaultdict
-from unittest.mock import MagicMock
 
 print("[STARTUP] Loading embedding model & FAISS...")
 
 embedder = SentenceTransformer(EMBED_MODEL)
 
-# Load FAISS index with fallback for testing/missing files
-try:
-    if os.path.exists(INDEX_PATH):
+# Load FAISS index
+if os.path.exists(INDEX_PATH):
+    try:
         index = faiss.read_index(INDEX_PATH)
-    else:
-        print(f"[WARNING] FAISS index not found at {INDEX_PATH}. Using mock index.")
-        index = MagicMock()
-except Exception as e:
-    print(f"[WARNING] Failed to load FAISS index: {e}. Using mock index.")
-    index = MagicMock()
+    except Exception as e:
+        print(f"[ERROR] Failed to read FAISS index: {e}")
+        index = None
+else:
+    print(f"[ERROR] FAISS index not found at {INDEX_PATH}.")
+    index = None
 
-# Load metadata with fallback
-try:
-    if os.path.exists(META_PATH):
+# Fallback for index if it failed to load or is missing (mostly for tests)
+if index is None:
+    try:
+        # Try to get dimension from embedder
+        d = embedder.get_sentence_embedding_dimension()
+        # If embedder is a mock, d will be a mock. IndexFlatL2 needs an int.
+        if not isinstance(d, int):
+            d = 384 # Default dimension for paraphrase-multilingual-MiniLM-L12-v2
+        index = faiss.IndexFlatL2(d)
+    except:
+        index = faiss.IndexFlatL2(384)
+
+# Load metadata
+if os.path.exists(META_PATH):
+    try:
         with open(META_PATH, encoding="utf-8") as f:
             META_RAW = json.load(f)
-    else:
-        print(f"[WARNING] Metadata not found at {META_PATH}. Using empty documents.")
+    except Exception as e:
+        print(f"[ERROR] Failed to read metadata: {e}")
         META_RAW = {"documents": []}
-except Exception as e:
-    print(f"[WARNING] Failed to load metadata: {e}. Using empty documents.")
+else:
+    print(f"[ERROR] Metadata not found at {META_PATH}.")
     META_RAW = {"documents": []}
 
 DOCUMENTS = META_RAW.get("documents", [])
