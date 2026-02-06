@@ -10,6 +10,7 @@ from pipeline.storyteller import (
     normalize,
     ask,
     ask_by_person,
+    classify_tone
 )
 
 __all__ = [
@@ -856,3 +857,84 @@ def test_normalize_traps():
     if res:
         _, _, _, _, _, persons_all = res
         assert "Lịch Sử" not in persons_all
+
+@pytest.mark.parametrize("text, expected_tone", [
+    # Tone: Hào hùng (Heroic) - Thường đi kèm các động từ mạnh, chiến thắng
+    ("Quân ta đại phá quân Thanh, khí thế ngút trời.", "heroic"),
+    ("Chiến thắng Điện Biên Phủ lừng lẫy năm châu, chấn động địa cầu.", "heroic"),
+    
+    # Tone: Bi thương/Trầm mặc (Somber) - Thường đi kèm mất mát, đau thương
+    ("Nhân dân ta phải chịu cảnh lầm than dưới ách đô hộ.", "somber"),
+    ("Sự hy sinh anh dũng của các chiến sĩ để lại nỗi đau vô hạn.", "somber"),
+    ("Kinh thành bị tàn phá, vạn vật điêu linh.", "somber"),
+    
+    # Tone: Trung tính/Trang trọng (Neutral/Formal) - Các sự kiện hành chính
+    ("Năm 1042, nhà Lý ban hành bộ Hình thư.", "neutral"), 
+    ("Hai bên ký kết hiệp định đình chiến tại Giơ-ne-vơ.", "neutral"),
+])
+def test_classify_tone_specific(text, expected_tone):
+    # Giả sử hàm trả về một list các nhãn tone
+    tones = classify_tone(text)
+    if expected_tone == "neutral":
+        # Neutral thường là khi không có từ khóa đặc biệt cho heroic/somber
+        assert "heroic" not in tones and "somber" not in tones
+    else:
+        assert expected_tone in tones
+
+
+# =========================================================
+# 2. CÁC TEST CASE NGHI NGỜ (BOUNDARY & AMBIGUITY)
+# =========================================================
+
+def test_person_vs_honorific_titles():
+    """Nghi ngờ: Hệ thống có bị nhầm 'Vua', 'Chúa', 'Bác' thành tên người không?"""
+    text = "Vua quyết định dời đô. Bác cùng các chú bàn việc nước."
+    persons = extract_all_persons(text)
+    
+    # Các từ xưng hô chung không nên được coi là Person thực thể nếu đứng một mình
+    for p in persons:
+        assert p not in ["Vua", "Chúa", "Bác", "Các chú"]
+
+def test_normalize_with_ambiguous_dates():
+    """Nghi ngờ: Các con số không phải năm (số quân, khoảng cách) gây nhiễu."""
+    text = "Năm 1288, 30 vạn quân Nguyên bị tiêu diệt tại sông Bạch Đằng."
+    res = normalize(text)
+    assert res is not None
+    year, _, _, _, _, _ = res
+    assert year == "1288" # Phải trích xuất đúng năm, không phải 30 (vạn)
+
+def test_complex_sentence_structure():
+    """Nghi ngờ: Câu phức có nhiều tên người và địa danh gây nhiễu chủ thể."""
+    text = "Tại Thăng Long, Nguyễn Huệ đã hội kiến với các tướng lĩnh sau khi đánh đuổi quân Thanh."
+    res = normalize(text)
+    assert res is not None
+    _, _, _, _, subjects, _ = res
+    # Chủ thể thực hiện hành động chính phải là Nguyễn Huệ
+    assert "Nguyễn Huệ" in subjects
+
+def test_false_positive_locations():
+    """Nghi ngờ: Các danh từ riêng viết hoa đầu câu bị nhận nhầm là Person."""
+    text = "Lịch sử là gương soi của tương lai. Việt Nam là quốc gia yêu hòa bình."
+    persons = extract_all_persons(text)
+    valid_persons = {p for p in persons if is_valid_person(p)}
+    
+    assert "Lịch sử" not in valid_persons
+    assert "Việt Nam" not in valid_persons
+
+def test_mixed_tone_priority():
+    """Nghi ngờ: Câu có cả từ hào hùng và bi thương (ví dụ: chiến thắng nhưng tổn thất)."""
+    text = "Dù giành chiến thắng vang dội, nhưng tổn thất về người là vô cùng đau đớn."
+    tones = classify_tone(text)
+    # Tùy vào logic ưu tiên, nhưng thường hệ thống NLP sẽ gắn cả hai nhãn
+    assert "heroic" in tones
+    assert "somber" in tones
+
+# =========================================================
+# 3. KIỂM TRA TÍNH TOÀN VẸN CỦA PIPELINE (INTEGRITY)
+# =========================================================
+
+def test_normalize_empty_or_garbage_input():
+    """Kiểm tra input rác hoặc không có dữ liệu lịch sử."""
+    assert normalize("") is None
+    assert normalize("1 2 3 4 5") is None
+    assert normalize("Hôm nay trời đẹp quá, tôi đi chơi.") is None
