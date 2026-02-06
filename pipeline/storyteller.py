@@ -905,7 +905,8 @@ def normalize(text: str):
     core_historical_actions = {
         "dời đô", "lên ngôi", "xưng vương", "đánh bại", "đánh tan", 
         "giải phóng", "tuyên ngôn", "hiệp định", "chiến thắng", "thắng lợi",
-        "thành lập", "ban hành", "khởi nghĩa", "đại phá", "vùng lên", "giành độc lập"
+        "thành lập", "ban hành", "khởi nghĩa", "đại phá", "vùng lên", "giành độc lập",
+        "tiêu diệt", "đánh đuổi"
     }
     if any(act in body_low for act in core_historical_actions):
         keep = True
