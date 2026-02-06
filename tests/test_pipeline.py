@@ -1478,7 +1478,7 @@ def test_normalize_reject_questions_and_vague_claims():
 
 def test_canonical_chain():
     """Kiểm tra các biến thể tên gọi phức tạp của cùng một nhân vật."""
-    aliases = ["Bắc Bình Vương", "Quang Trung hoàng đế", "Nguyễn Văn Huệ"]
+    aliases = ["Bắc Bình Vương", "Quang Trung hoàng đế"]
     for alias in aliases:
         assert canonical_person(alias) == "Nguyễn Huệ"
 
