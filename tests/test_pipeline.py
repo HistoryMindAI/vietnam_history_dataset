@@ -854,5 +854,22 @@ def test_normalize_traps():
     res = normalize(text_3)
     # Nếu câu không có thực thể thật, normalize nên trả về None để sạch data
     if res:
-        _, _, _, _, _, persons_all = res
+        _, _, _, _, _, persons_all, _ = res
         assert "Lịch Sử" not in persons_all
+
+
+def test_normalize_with_ambiguous_dates():
+    """Nghi ngờ: Các con số không phải năm (số quân, khoảng cách) gây nhiễu."""
+    text = "Năm 1288, 30 vạn quân Nguyên bị tiêu diệt tại sông Bạch Đằng."
+    res = normalize(text)
+    assert res is not None
+    year, _, _, _, _, _, _ = res
+    assert year == "1288"
+
+def test_complex_sentence_structure():
+    """Nghi ngờ: Câu phức có nhiều tên người và địa danh gây nhiễu chủ thể."""
+    text = "Năm 1789, tại Thăng Long, Nguyễn Huệ đã hội kiến với các tướng lĩnh sau khi đánh đuổi quân Thanh."
+    res = normalize(text)
+    assert res is not None
+    _, _, _, _, subjects, _, _ = res
+    assert "Nguyễn Huệ" in subjects
