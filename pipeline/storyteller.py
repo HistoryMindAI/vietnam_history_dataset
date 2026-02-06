@@ -806,6 +806,7 @@ def classify_tone(text: str, year: str | None = None) -> set[str]:
 
     # Nhóm Hào hùng (Heroic) - Thêm các từ khóa từ test case
     heroic_keywords = [
+        "chiến thắng", "lừng lẫy", "chấn động",
         "đánh bại", "đánh tan", "đẩy lui", "toàn thắng", "giải phóng",
         "thống nhất", "giành độc lập", "tự chủ", "chấm dứt ách",
         "vang dội", "hào khí", "oanh liệt", "thắng lợi", "đại phá"
@@ -813,6 +814,7 @@ def classify_tone(text: str, year: str | None = None) -> set[str]:
     
     # Nhóm Bi thương/Trầm lắng (Somber/Tragic)
     tragic_keywords = [
+        "tàn phá", "điêu linh", "tổn thất", "đau đớn",
         "bị xâm lược", "mất nước", "bắc thuộc", "minh thuộc",
         "chia cắt", "áp đặt", "lầm than", "đau thương", "mất mát",
         "hy sinh", "khó khăn", "thất bại", "chiếm đóng"
@@ -871,9 +873,8 @@ def classify_nature(text: str) -> list[str]:
 def normalize(text: str):
     """Chuẩn hóa và phân loại thông tin sự kiện lịch sử."""
     # 1. Trích xuất năm
-    year_match = YEAR_ANY.search(text)
-    if not year_match: return None
-    year = year_match.group(1)
+    year = extract_year(text)
+    if not year: return None
     
     if text.strip().endswith("?"): return None
 
@@ -903,7 +904,7 @@ def normalize(text: str):
     # B. Có hành động lịch sử mạnh (Dù không có tên người cụ thể)
     # Thêm "vùng lên", "giành độc lập" để pass test_normalize_keeps_collective_with_strong_action
     core_historical_actions = {
-        "dời đô", "lên ngôi", "xưng vương", "đánh bại", "đánh tan", 
+        "tiêu diệt", "dời đô", "lên ngôi", "xưng vương", "đánh bại", "đánh tan",
         "giải phóng", "tuyên ngôn", "hiệp định", "chiến thắng", "thắng lợi",
         "thành lập", "ban hành", "khởi nghĩa", "đại phá", "vùng lên", "giành độc lập",
         "tiêu diệt", "đánh đuổi"
@@ -913,7 +914,10 @@ def normalize(text: str):
 
     # C. Chứa địa danh/tập thể quan trọng đang có nature chính trị/quân sự
     nature = classify_nature(body)
-    important_anchors = {"thăng long", "nhà trần", "nhà lê", "nhà lý", "nhân dân"}
+    important_anchors = {
+        "thăng long", "nhà trần", "nhà lê", "nhà lý", "nhân dân",
+        "bạch đằng", "điện biên phủ", "ngọc hồi", "đống đa"
+    }
     if any(anchor in body_low for anchor in important_anchors):
         if any(n in nature for n in ["military", "institutional", "historical_event"]):
             keep = True
