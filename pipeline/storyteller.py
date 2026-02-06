@@ -37,7 +37,7 @@ PERSON_PATTERN = re.compile(
     r"\b(?:Vua\s+|Chúa\s+|Tướng\s+|Trung tướng\s+)?"
     r"((?:Nguyễn|Lê|Lý|Trần|Đinh|Hồ|Ngô|Phạm|Phan|Bùi|Đỗ|Vũ|Võ|Hoàng|Huỳnh)(?:\s+[A-ZĐÂÊÔƯ][a-zà-ỹ]+){1,3}"
     r"|[A-ZĐÂÊÔƯ][a-zà-ỹ]+\s+(?:Thái|Thánh|Nhân)\s+(?:Tổ|Tông)"
-    r"|(?:Quang\s+Trung|Gia\s+Long|Minh\s+Mạng|Tự\s+Đức|Hàm\s+Nghi))\b"
+    r"|(?:Quang\s+Trung|Gia\s+Long|Minh\s+Mạng|Tự\s+Đức|Hàm\s+Nghi|Bác\s+Hồ|Hồ\s+Chí\s+Minh))\b"
 )
 
 ROYAL_TITLES = {
@@ -235,7 +235,7 @@ ENTITY_REGISTRY = {
     "place": {
         "Bạch Đằng", "Chi Lăng", "Đống Đa", "Điện Biên Phủ", "Hà Nội", 
         "Thăng Long", "Ngọc Hồi", "Lam Sơn", "Ba Đình", "Huế", "Sài Gòn",
-        "Nghệ An", "Rạch Gầm", "Xoài Mút", "Vạn Kiếp"
+        "Nghệ An", "Rạch Gầm", "Xoài Mút", "Vạn Kiếp", "Hàm Tử", "Chương Dương"
     },
     "other": set([
         "Đại Việt",
@@ -314,6 +314,17 @@ PLACE_DENY = {
     "bạch đằng", "chi lăng", "đống đa", "điện biên phủ", "thăng long", "hà nội", "ba đình", "việt nam"
 }
 
+# Gộp danh sách chặn để tra cứu nhanh trong is_valid_person
+GLOBAL_PERSON_DENY = (
+    COLLECTIVE_DENY | EVENT_WORKS_DENY | PLACE_DENY |
+    {
+        "nhân dân việt nam", "quân đội nhân dân", "triều đình nhà lê",
+        "chiến dịch lịch sử", "khởi nghĩa ba đình", "phát xít nhật",
+        "thực dân pháp", "đế quốc mỹ", "giặc tống", "thăng long", "hà nội",
+        "việt nam", "đại việt", "đại nam", "đại cồ việt", "lịch sử"
+    }
+)
+
 def is_valid_person(name: str) -> bool:
     if not name: return False
     name_stripped = name.strip()
@@ -321,32 +332,27 @@ def is_valid_person(name: str) -> bool:
     
     name_low = name_stripped.lower()
     
-    # 1. Danh sách chặn cứng (Bao gồm địa danh và tập thể từ test case)
-    # Gộp tất cả PLACE_DENY, COLLECTIVE_DENY vào một set để tra cứu O(1)
-    GLOBAL_DENY = {
-        "bạch đằng", "chi lăng", "đống đa", "ngọc hồi", "điện biên phủ",
-        "rạch gầm", "xoài mút", "hàm tử", "chương dương", "vạn kiếp",
-        "nhân dân", "quân đội", "triều đình", "giặc", "phát xít", "thực dân", 
-        "đế quốc", "chính phủ", "quốc hội", "việt nam", "đại việt", "đại nam",
-        "khởi nghĩa", "chiến dịch", "phong trào", "hiệp định", "tuyên ngôn"
-    }
-    
-    if name_low in GLOBAL_DENY:
+    # 1. Kiểm tra Registry để tránh nhầm Place/Collective thành Person
+    if name_stripped in ENTITY_REGISTRY["place"] or name_stripped in ENTITY_REGISTRY["collective"]:
         return False
 
-    # 2. Chặn theo tiền tố và hậu tố (Suffix check quan trọng cho "Mạc triều", "Tây Sơn quân")
+    # 2. Chặn theo danh sách GLOBAL_PERSON_DENY (Substring check)
+    if any(deny in name_low for deny in GLOBAL_PERSON_DENY):
+        return False
+
+    # 3. Chặn theo tiền tố và hậu tố (Suffix check quan trọng cho "Mạc triều", "Tây Sơn quân")
     collective_prefixes = ("nhà ", "triều ", "quân ", "nghĩa quân ", "đội ", "đảng ", "mặt trận ")
     collective_suffixes = (" triều", " quân", " tộc")
     
     if name_low.startswith(collective_prefixes) or name_low.endswith(collective_suffixes):
         return False
 
-    # 3. Chặn từ khóa sự vật/sự kiện
-    artifact_keywords = {"tuyên ngôn", "hiệp định", "chiến dịch", "trận", "đại phá", "khởi nghĩa"}
+    # 4. Chặn từ khóa sự vật/sự kiện
+    artifact_keywords = {"tuyên ngôn", "hiệp định", "chiến dịch", "trận", "đại phá", "khởi nghĩa", "bản đồ", "tác phẩm"}
     if any(k in name_low for k in artifact_keywords):
         return False
     
-    # 4. Kiểm tra số từ (Tên người Việt: 2-5 từ)
+    # 5. Kiểm tra số từ (Tên người Việt: 2-5 từ)
     words = name_low.split()
     if len(words) < 2 or len(words) > 5:
         return False
@@ -515,7 +521,8 @@ def clean_text(text):
     # Mở rộng danh sách hành động cốt lõi để giữ lại các sự kiện như 'giải phóng'
     core_actions = {
         "lên ngôi", "xưng vương", "dời đô", "thành lập", "đánh bại", 
-        "ký", "ban hành", "giải phóng", "khởi nghĩa", "đại phá"
+        "ký", "ban hành", "giải phóng", "khởi nghĩa", "đại phá",
+        "chiến thắng", "thắng lợi", "tuyên ngôn"
     }
     is_important = any(act in final.lower() for act in core_actions)
     
@@ -803,11 +810,11 @@ def classify_nature(text: str) -> list[str]:
     labels = []
     
     # Nhóm quân sự
-    mil_keywords = ["đánh bại", "đại phá", "chiến thắng", "đập tan", "chiến dịch", "giải phóng", "vùng lên"]
+    mil_keywords = ["đánh bại", "đại phá", "chiến thắng", "đập tan", "chiến dịch", "giải phóng", "vùng lên", "thắng lợi"]
     # Nhóm thể chế / chính trị
-    inst_keywords = ["ban hành", "luật", "hình thư", "hiến pháp", "ký kết", "hiệp định", "dời đô", "giành chính quyền", "tuyên ngôn"]
+    inst_keywords = ["ban hành", "luật", "hình thư", "hiến pháp", "ký kết", "hiệp định", "dời đô", "giành chính quyền", "tuyên ngôn", "chiếu"]
     # Nhóm sự kiện chung
-    event_keywords = ["thành lập", "lên ngôi", "xưng vương", "khởi nghĩa", "đổi tên"]
+    event_keywords = ["thành lập", "lên ngôi", "xưng vương", "khởi nghĩa", "đổi tên", "thành phố", "dời đô"]
 
     if any(k in text_low for k in mil_keywords):
         labels.append("military")
