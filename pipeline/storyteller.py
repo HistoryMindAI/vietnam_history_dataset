@@ -23,14 +23,14 @@ UNKNOWN_ENTITIES = set()
 
 OUT_PATH = "data/history_timeline.json"
 
-YEAR_ANY = re.compile(r"(?<![\d-])([1-9][0-9]{2,3})(?!\d)", re.UNICODE)
+YEAR_ANY = re.compile(r"(?<![\d-])([1-9][0-9]{1,3})(?!\d)", re.UNICODE)
 
 DATE_WITH_YEAR = re.compile(
-    r"\b([0-3]?\d/[01]?\d/([1-9][0-9]{2,3}))\b"
+    r"\b([0-3]?\d/[01]?\d/([1-9][0-9]{1,3}))\b"
 )
 
 YEAR_INLINE = re.compile(
-    r"(?:đầu|giữa|cuối|mùa\s+\w+)?\s*năm\s+([1-9][0-9]{2,3})",
+    r"(?:đầu|giữa|cuối|mùa\s+\w+)?\s*năm\s+([1-9][0-9]{1,3})",
     re.I
 )
 
@@ -705,7 +705,9 @@ def remove_non_informative_clauses(text):
 
     for c in clauses:
         # ✅ có PERSON → giữ
-        set(cached_extract_all_persons(c))
+        if cached_extract_all_persons(c):
+            kept.append(c)
+            continue
 
 
         lc = c.lower()
@@ -1338,7 +1340,8 @@ def prune_event_sentence(text: str) -> str:
 
     # 1️⃣ clause có PERSON
     for c in clauses:
-        set(cached_extract_all_persons(c))
+        if cached_extract_all_persons(c):
+            kept.append(c)
 
 
     # 2️⃣ nếu chưa có → clause có action
