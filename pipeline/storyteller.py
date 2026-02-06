@@ -74,7 +74,6 @@ PERSON_ALIAS = {
     "Quang Trung": "Nguyễn Huệ",
     "Bắc Bình Vương": "Nguyễn Huệ",
     "Nguyễn Huệ": "Nguyễn Huệ",
-    "Nguyễn Văn Huệ": "Nguyễn Huệ",
     "Gia Long": "Nguyễn Ánh",
     "Nguyễn Ánh": "Nguyễn Ánh",
     "Lý Công Uẩn": "Lý Thái Tổ",
