@@ -373,7 +373,7 @@ def test_classify_nature_strong_actions(text, expected_label):
     if expected_label == "historical_event":
         assert "historical_event" in labels
     else:
-        assert labels == ["general"]
+        assert list(labels) == ["general"]
 
 
 # =========================================================
@@ -859,7 +859,7 @@ def test_normalize_traps():
     res = normalize(text_3)
     # Nếu câu không có thực thể thật, normalize nên trả về None để sạch data
     if res:
-        _, _, _, _, _, persons_all = res
+        _, _, _, _, _, persons_all, _ = res
         assert "Lịch Sử" not in persons_all
 
 @pytest.mark.parametrize("text, expected_tone", [
@@ -904,7 +904,7 @@ def test_normalize_with_ambiguous_dates():
     text = "Năm 1288, 30 vạn quân Nguyên bị tiêu diệt tại sông Bạch Đằng."
     res = normalize(text)
     assert res is not None
-    year, _, _, _, _, _ = res
+    year, _, _, _, _, _, _ = res
     assert year == "1288" # Phải trích xuất đúng năm, không phải 30 (vạn)
 
 def test_complex_sentence_structure():
@@ -912,7 +912,7 @@ def test_complex_sentence_structure():
     text = "Năm 1789, tại Thăng Long, Nguyễn Huệ đã hội kiến với các tướng lĩnh sau khi đánh đuổi quân Thanh."
     res = normalize(text)
     assert res is not None
-    _, _, _, _, subjects, _ = res
+    _, _, _, _, subjects, _, _ = res
     # Chủ thể thực hiện hành động chính phải là Nguyễn Huệ
     assert "Nguyễn Huệ" in subjects
 
@@ -1008,18 +1008,18 @@ def test_storyteller_unsorted_years():
 
 def test_infer_subject_ambiguous():
     text = "Quân Tây Sơn dưới sự lãnh đạo của Nguyễn Huệ"
-    subject = infer_subject(text)
-    assert subject in ["PERSON", "COLLECTIVE"]
+    subject = infer_subject(text, {"Nguyễn Huệ"}, ["military"])
+    assert subject == "Nguyễn Huệ"
 
 def test_infer_subject_person_and_place():
     text = "Nguyễn Huệ tiến quân ra Thăng Long"
-    subject = infer_subject(text)
-    assert subject == "PERSON"
+    subject = infer_subject(text, {"Nguyễn Huệ"}, ["military"])
+    assert subject == "Nguyễn Huệ"
 
 def test_infer_subject_no_subject():
     text = "Năm 938 diễn ra một trận đánh lớn"
-    subject = infer_subject(text)
-    assert subject in ["DOCUMENT", "UNKNOWN"]
+    subject = infer_subject(text, set(), ["military"])
+    assert subject == "Quân dân Việt Nam"
 
 def test_unicode_weird_characters():
     text = "Ngô Quyền \u0000 \uFFFF ⚔️⚔️"
@@ -1033,13 +1033,13 @@ def test_random_noise_input():
 
 def test_person_not_document():
     text = "Nguyễn Huệ là một trong những anh hùng dân tộc"
-    subject = infer_subject(text)
-    assert subject == "PERSON"
+    subject = infer_subject(text, {"Nguyễn Huệ"}, ["general"])
+    assert subject == "Nguyễn Huệ"
 
 def test_collective_not_person():
     text = "Quân Tây Sơn đánh tan quân Thanh"
-    subject = infer_subject(text)
-    assert subject == "COLLECTIVE"
+    subject = infer_subject(text, set(), ["military"])
+    assert subject == "Quân dân Việt Nam"
 
 def test_infer_subject_with_passive_voice():
     """Kiểm tra câu bị động: Người thực hiện hành động bị đẩy ra sau."""
