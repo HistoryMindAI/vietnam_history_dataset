@@ -6,7 +6,8 @@ import os
 import numpy as np
 
 # Add ai-service to path
-sys.path.append(os.path.abspath("ai-service"))
+base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.join(base_dir, "ai-service"))
 
 from app.services.search_service import get_cached_embedding, scan_by_year
 from app.services.engine import engine_answer
