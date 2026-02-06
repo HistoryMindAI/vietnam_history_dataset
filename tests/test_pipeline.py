@@ -1,0 +1,858 @@
+import pytest
+
+from pipeline.storyteller import (
+    extract_all_persons,
+    extract_persons_from_body,
+    is_valid_person,
+    canonical_person,
+    classify_entity,
+    infer_subject,
+    normalize,
+    ask,
+    ask_by_person,
+)
+
+__all__ = [
+    "normalize",
+    "infer_subject",
+    "extract_all_persons",
+    "extract_persons_from_body",
+    "canonical_person",
+    "is_valid_person",
+    "classify_entity",
+    "ask",
+    "ask_by_person",
+]
+
+
+# =========================================================
+# BASIC PERSON vs PLACE
+# =========================================================
+
+def test_person_not_place_simple():
+    text = "Trần Hưng Đạo chỉ huy quân đội tại Bạch Đằng"
+    persons = extract_all_persons(text)
+
+    assert "Trần Hưng Đạo" in persons
+    assert "Bạch Đằng" not in persons
+
+
+def test_place_not_person():
+    text = "Chiến thắng Bạch Đằng diễn ra năm 1288"
+    persons = extract_all_persons(text)
+
+    assert "Bạch Đằng" not in persons
+    assert persons == set()
+
+
+def test_country_not_person():
+    text = "Quân dân Đại Việt đánh bại quân Nguyên"
+    persons = extract_all_persons(text)
+
+    assert "Đại Việt" not in persons
+
+
+# =========================================================
+# DYNASTY / COLLECTIVE SHOULD NOT BE PERSON
+# =========================================================
+
+@pytest.mark.parametrize("entity", [
+    "Nhà Trần",
+    "Nhà Lý",
+    "Triều Nguyễn",
+    "Quân Thanh",
+    "Quân Minh",
+])
+def test_dynasty_and_army_not_person(entity):
+    assert not is_valid_person(entity)
+
+
+# =========================================================
+# KING TITLES & ALIASES
+# =========================================================
+
+def test_king_alias_normalization():
+    assert canonical_person("Quang Trung") == "Nguyễn Huệ"
+    assert canonical_person("Gia Long") == "Nguyễn Ánh"
+
+
+def test_mieu_hieu_is_person():
+    text = "Lý Thái Tổ ban Chiếu dời đô"
+    persons = extract_all_persons(text)
+
+    assert "Lý Thái Tổ" in persons
+
+
+def test_alias_and_real_name_not_duplicated():
+    text = "Quang Trung (Nguyễn Huệ) đại phá quân Thanh"
+    persons = extract_all_persons(text)
+
+    assert "Nguyễn Huệ" in persons
+    assert len(persons) == 1
+
+
+# =========================================================
+# MIXED PERSON + PLACE IN ONE SENTENCE
+# =========================================================
+
+def test_person_and_place_same_sentence():
+    text = "Ngô Quyền đánh bại quân Nam Hán trên sông Bạch Đằng"
+    persons = extract_all_persons(text)
+
+    assert "Ngô Quyền" in persons
+    assert "Bạch Đằng" not in persons
+
+
+def test_two_places_no_person():
+    text = "Trận đánh diễn ra tại Ngọc Hồi và Đống Đa"
+    persons = extract_all_persons(text)
+
+    assert persons == set()
+
+
+# =========================================================
+# SUBJECT EXTRACTION (ACTOR)
+# =========================================================
+
+def test_extract_subject_person_actor():
+    body = "Trần Hưng Đạo chỉ huy quân đội đánh bại quân Nguyên"
+    persons = extract_persons_from_body(body)
+
+    assert persons == {"Trần Hưng Đạo"}
+
+
+def test_collective_subject_when_no_person():
+    body = "Quân dân đánh bại quân xâm lược"
+    subject = infer_subject(body, set(), ["military"])
+
+    assert subject == "Quân dân Việt Nam"
+
+
+def test_political_subject_fallback():
+    body = "Ban hành hiệp định quan trọng"
+    subject = infer_subject(body, set(), ["diplomacy"])
+
+    assert subject == "Chính quyền đương thời"
+
+
+# =========================================================
+# ENTITY REGISTRY CHECK
+# =========================================================
+
+def test_classify_entity_place():
+    assert classify_entity("Bạch Đằng") == "place"
+    assert classify_entity("Thăng Long") == "place"
+
+
+def test_classify_entity_person():
+    assert classify_entity("Trần Hưng Đạo") == "person"
+    assert classify_entity("Ngô Quyền") == "person"
+
+
+# =========================================================
+# NORMALIZE PIPELINE – PERSON VS PLACE
+# =========================================================
+
+def test_normalize_person_and_place():
+    text = (
+        "Năm 1288, Trần Hưng Đạo chỉ huy quân dân Đại Việt "
+        "đánh bại quân Nguyên Mông trên sông Bạch Đằng."
+    )
+
+    res = normalize(text)
+    assert res is not None
+
+    year, body, nature, tone, persons, persons_all = res
+
+    assert year == "1288"
+    assert "Trần Hưng Đạo" in persons_all
+    assert "Bạch Đằng" not in persons_all
+    assert "military" in nature
+    assert "heroic" in tone
+
+
+def test_normalize_no_false_persons():
+    text = (
+        "Năm 1789, chiến thắng Ngọc Hồi – Đống Đa "
+        "đập tan quân Thanh."
+    )
+
+    res = normalize(text)
+    assert res is not None
+
+    _, _, _, _, persons, persons_all = res
+
+    assert persons == set()
+    assert persons_all == set()
+
+def test_place_not_recognized_as_person():
+    text = "Năm 1288, chiến thắng Bạch Đằng diễn ra vang dội."
+    res = normalize(text)
+
+    assert res is not None
+    year, body, nature, tone, persons, persons_all = res
+
+    assert "Bạch Đằng" not in persons
+    assert "Bạch Đằng" not in persons_all
+
+def test_dynasty_not_person():
+    text = "Năm 1225, nhà Trần được thành lập."
+    res = normalize(text)
+
+    assert res is not None
+    _, _, _, _, persons, persons_all = res
+
+    assert not persons
+    assert not persons_all
+
+def test_person_and_place_together():
+    text = (
+        "Năm 1288, Trần Hưng Đạo chỉ huy quân dân Đại Việt "
+        "đánh bại quân Nguyên Mông trên sông Bạch Đằng."
+    )
+
+    res = normalize(text)
+    assert res is not None
+
+    _, _, _, _, persons, persons_all = res
+
+    assert "Trần Hưng Đạo" in persons_all
+    assert "Bạch Đằng" not in persons_all
+    assert "Đại Việt" not in persons_all
+
+def test_alias_normalization():
+    assert canonical_person("Quang Trung") == "Nguyễn Huệ"
+    assert canonical_person("Gia Long") == "Nguyễn Ánh"
+
+def test_royal_title_is_valid_person():
+    assert is_valid_person("Lý Thái Tổ")
+    assert is_valid_person("Trần Thánh Tông")
+
+def test_alias_in_normalize():
+    text = "Năm 1789, Quang Trung đánh tan quân Thanh."
+    res = normalize(text)
+
+    assert res is not None
+    _, _, _, _, persons, persons_all = res
+
+    assert "Nguyễn Huệ" in persons_all
+    assert "Quang Trung" not in persons_all
+
+def test_collective_not_person():
+    text = "Năm 1945, nhân dân Việt Nam giành chính quyền."
+    res = normalize(text)
+
+    assert res is not None
+    _, _, _, _, persons, persons_all = res
+
+    assert not persons
+    assert not persons_all
+
+def test_campaign_not_person():
+    text = "Năm 1954, chiến dịch Điện Biên Phủ kết thúc thắng lợi."
+    res = normalize(text)
+
+    assert res is not None
+    _, _, _, _, persons, persons_all = res
+
+    assert "Điện Biên Phủ" not in persons_all
+
+def test_infer_subject_person_priority():
+    s = infer_subject(
+        "Trần Hưng Đạo chỉ huy quân đội",
+        {"Trần Hưng Đạo"},
+        ["military"]
+    )
+    assert s == "Trần Hưng Đạo"
+
+def test_infer_subject_collective():
+    s = infer_subject(
+        "quân dân đánh bại quân xâm lược",
+        set(),
+        ["military"]
+    )
+    assert s == "Quân dân Việt Nam"
+
+def test_infer_subject_document():
+    s = infer_subject(
+        "ban Chiếu dời đô",
+        set(),
+        ["institutional"]
+    )
+    assert s == "Văn kiện lịch sử"
+
+def test_ask_by_person_safe_with_empty_persons_all():
+    timeline = {
+        "1010": {
+            "events": [
+                {
+                    "event": "Ban Chiếu dời đô",
+                    "persons": [],
+                    "persons_all": [],
+                    "nature": ["institutional"],
+                    "tone": ["heroic"],
+                }
+            ]
+        }
+    }
+
+    res = ask_by_person(timeline, "Lý Công Uẩn")
+    assert res is None or res == []
+
+def test_ask_fallback_event_only():
+    timeline = {
+        "1010": {
+            "events": [
+                {
+                    "event": "Lý Công Uẩn ban Chiếu dời đô",
+                    "persons": ["Lý Thái Tổ"],
+                    "persons_all": ["Lý Thái Tổ"],
+                    "nature": ["institutional"],
+                    "tone": ["heroic"],
+                }
+            ]
+        }
+    }
+
+    res = ask(timeline, "Chiếu dời đô là gì")
+    assert isinstance(res, str)
+    assert "Chiếu dời đô" in res
+
+def test_normalize_filters_question():
+    assert normalize("Năm 1010, Chiếu dời đô là gì?") is None
+
+def test_normalize_too_short():
+    assert normalize("Năm 1000, có sự kiện.") is None
+
+def test_extract_all_persons_complex_sentence():
+    text = (
+        "Trần Hưng Đạo cùng vua Trần Thánh Tông "
+        "chỉ huy quân dân Đại Việt."
+    )   
+
+    persons = extract_all_persons(text)
+
+    assert "Trần Hưng Đạo" in persons
+    assert "Trần Thánh Tông" in persons
+    assert "Đại Việt" not in persons
+
+
+
+# =========================================================
+# REGRESSION CASES – COMMON BUGS
+# =========================================================
+
+@pytest.mark.parametrize("text", [
+    "Nhà Trần đánh bại quân Nguyên",
+    "Quân Thanh tiến vào Thăng Long",
+    "Khởi nghĩa Lam Sơn bùng nổ",
+])
+def test_no_fake_persons(text):
+    persons = extract_all_persons(text)
+    assert persons == set()
+
+# =========================================================
+# DEEP TEST: CLASSIFY_NATURE (Kiểm tra trọng số hành động)
+# =========================================================
+
+@pytest.mark.parametrize("text, expected_label", [
+    ("Năm 938, Ngô Quyền đại phá quân Nam Hán", "historical_event"),
+    ("Năm 1945, giành chính quyền tại Hà Nội", "historical_event"),
+    ("Năm 1010, Lý Thái Tổ dời đô về Thăng Long", "historical_event"),
+    ("Năm 1954, ký kết Hiệp định Giơ-ne-vơ", "historical_event"),
+    ("Năm đó, tình hình vô cùng phức tạp", "general"), # Câu mơ hồ
+])
+def test_classify_nature_strong_actions(text, expected_label):
+    from pipeline.storyteller import classify_nature
+    labels = classify_nature(text)
+    if expected_label == "historical_event":
+        assert "historical_event" in labels
+    else:
+        assert labels == ["general"]
+
+
+# =========================================================
+# DEEP TEST: NORMALIZE (Kiểm tra khả năng lọc sạch data)
+# =========================================================
+
+def test_normalize_keeps_collective_with_strong_action():
+    # Không có tên người, nhưng có "Hành động mạnh" + "Tập thể"
+    text = "Năm 1945, nhân dân ta vùng lên giành độc lập."
+    res = normalize(text)
+    assert res is not None
+    year, body, nature, _, persons_subject, _ = res
+    assert year == "1945"
+    assert "historical_event" in nature
+    assert not persons_subject # Không có cá nhân cụ thể là đúng
+
+def test_normalize_keeps_place_event():
+    text = "Năm 1975, giải phóng hoàn toàn miền Nam."
+    res = normalize(text)
+    assert res is not None
+    # Phải giải nén đầy đủ 6 giá trị trả về từ normalize()
+    year, body, nature, tone, persons_subject, persons_all = res 
+    assert "historical_event" in nature
+
+def test_normalize_rejects_vague_history():
+    # Có năm, có từ liên quan lịch sử nhưng không có sự kiện cụ thể/người/địa danh
+    texts = [
+        "Năm 1945, một thời kỳ đầy hào hùng đã bắt đầu.",
+        "Năm 1802, triều đại mới có nhiều sự thay đổi đáng kể.",
+        "Năm 1288, quân và dân ta vô cùng phấn khởi."
+    ]
+    for t in texts:
+        assert normalize(t) is None, f"Should reject vague text: {t}"
+
+
+# =========================================================
+# DEEP TEST: IS_VALID_PERSON (Chống nhận diện nhầm)
+# =========================================================
+
+@pytest.mark.parametrize("name", [
+    "Nhân dân Việt Nam",
+    "Quân đội Nhân dân",
+    "Triều đình nhà Lê",
+    "Chiến dịch lịch sử",
+    "Khởi nghĩa Ba Đình",
+])
+def test_is_valid_person_strict_filter(name):
+    # Đảm bảo các danh từ tập thể không bao giờ bị coi là Person
+    assert is_valid_person(name) is False
+
+
+# =========================================================
+# DEEP TEST: SUBJECT INFERENCE (Chủ thể sự kiện tập thể)
+# =========================================================
+
+def test_infer_subject_with_strong_collectives():
+    # Kiểm tra hàm infer_subject có đoán đúng chủ thể khi không có tên người
+    assert infer_subject("Nhân dân giành chính quyền", set(), ["political"]) == "Nhân dân Việt Nam"
+    assert infer_subject("Quân đội ta tiến công", set(), ["military"]) == "Quân dân Việt Nam"
+    assert infer_subject("Ban hành sắc lệnh mới", set(), ["political"]) == "Chính quyền đương thời"
+
+
+# =========================================================
+# DEEP TEST: ALIAS & NESTED ENTITIES
+# =========================================================
+
+def test_complex_alias_and_title():
+    # Kiểm tra việc xử lý tước hiệu đi kèm tên
+    text = "Hưng Đạo Đại Vương Trần Quốc Tuấn chuẩn bị kháng chiến."
+    persons = extract_all_persons(text)
+    # Tùy vào cách bạn implement, nhưng ít nhất phải ra được "Trần Quốc Tuấn"
+    # và sau khi canonical phải là "Trần Hưng Đạo" (nếu bạn quy định vậy)
+    normalized_persons = {canonical_person(p) for p in persons}
+    assert "Trần Hưng Đạo" in normalized_persons
+
+# =========================================================
+# ADVANCED TESTS: PERSON vs PLACE vs COLLECTIVE
+# =========================================================
+
+@pytest.mark.parametrize("text, expected_persons", [
+    # Trường hợp tên người có chứa tiền tố chức vụ/tước hiệu phức tạp
+    ("Thái sư Trần Thủ Độ quyền khuynh thiên hạ.", {"Trần Thủ Độ"}),
+    ("Hưng Đạo Đại Vương Trần Quốc Tuấn là vị tướng tài.", {"Trần Hưng Đạo"}), # Sau khi canonical
+    
+    # Địa danh dễ nhầm lẫn
+    ("Nghĩa quân Lam Sơn đánh chiếm Nghệ An.", set()), # Lam Sơn là địa danh/tên khởi nghĩa
+    ("Ba Đình là nơi diễn ra cuộc khởi nghĩa.", set()),
+    
+    # Hỗn hợp nhiều thực thể
+    ("Nguyễn Trãi viết Bình Ngô Đại Cáo tại Lam Sơn.", {"Nguyễn Trãi"}),
+    ("Lê Lợi lên ngôi ở Thăng Long sau khi đuổi quân Minh.", {"Lê Lợi"}),
+])
+def test_advanced_entity_extraction(text, expected_persons):
+    persons = extract_all_persons(text)
+    normalized = {canonical_person(p) for p in persons if is_valid_person(p)}
+    assert normalized == expected_persons
+
+
+def test_collective_vs_person_edge_cases():
+    # Kiểm tra các danh từ tập thể có cấu trúc giống tên người (Viết hoa chữ cái đầu)
+    collectives = [
+        "Quân Nam Hán", 
+        "Quân Tống", 
+        "Phát xít Nhật", 
+        "Thực dân Pháp", 
+        "Đế quốc Mỹ",
+        "Triều đình Huế"
+    ]
+    for c in collectives:
+        assert is_valid_person(c) is False, f"Thực thể '{c}' không được coi là Person"
+
+
+def test_place_registry_boundary():
+    # Kiểm tra xem hệ thống có bị nhầm địa danh trong Registry thành người không
+    places = ["Bạch Đằng", "Chi Lăng", "Đống Đa", "Điện Biên Phủ", "Hà Nội"]
+    for p in places:
+        # Giả sử Registry đã nạp các địa danh này
+        assert classify_entity(p) == "place"
+        assert is_valid_person(p) is False
+
+
+def test_infer_subject_complex_logic():
+    # Test 1: Có cả người và tập thể -> Ưu tiên người
+    s1 = infer_subject("Quang Trung chỉ huy quân Tây Sơn", {"Nguyễn Huệ"}, ["military"])
+    assert s1 == "Nguyễn Huệ"
+    
+    # Test 2: Chỉ có tập thể quân đội nhưng không có tên người cụ thể
+    s2 = infer_subject("Quân ta đánh tan quân địch trên sông", set(), ["military"])
+    assert s2 == "Quân dân Việt Nam"
+    
+    # Test 3: Sự kiện hành chính/ngoại giao
+    s3 = infer_subject("Ký kết hiệp định phân định biên giới", set(), ["diplomacy"])
+    assert s3 == "Chính quyền đương thời"
+
+
+def test_normalize_cleanliness_high_bar():
+    # Những câu này phải bị loại bỏ vì quá mơ hồ hoặc không có thực thể định danh
+    vague_texts = [
+        "Năm 1427, quân địch thất bại thảm hại.", # Quân địch không phải đối tượng cần track
+        "Năm 1010, thành phố trở nên đông đúc.", # Không có tên thành phố cụ thể
+        "Năm 1945, một cuộc họp quan trọng đã diễn ra.", # Không rõ ai họp, họp ở đâu
+    ]
+    for t in vague_texts:
+        assert normalize(t) is None
+
+
+def test_person_alias_mapping_consistency():
+    # Kiểm tra tính đồng nhất của việc ánh xạ bí danh
+    aliases = {
+        "Nguyễn Ánh": "Nguyễn Ánh",
+        "Gia Long": "Nguyễn Ánh",
+        "Nguyễn Huệ": "Nguyễn Huệ",
+        "Quang Trung": "Nguyễn Huệ",
+        "Bắc Bình Vương": "Nguyễn Huệ",
+        "Lý Công Uẩn": "Lý Thái Tổ",
+        "Trần Quốc Tuấn": "Trần Hưng Đạo",
+    }
+    for alias, canonical in aliases.items():
+        assert canonical_person(alias) == canonical
+
+# =========================================================
+# EDGE CASES: YEAR EXTRACTION & REJECTION
+# =========================================================
+
+@pytest.mark.parametrize("text", [
+    "Vào năm 1010, thành phố Thăng Long...",      # Năm nằm giữa câu
+    "Ngày 2/9/1945, Bác Hồ đọc bản Tuyên ngôn.",  # Năm trong định dạng ngày tháng
+    "Năm 938, Ngô Quyền chiến thắng...",         # Năm 3 chữ số
+])
+def test_normalize_valid_years(text):
+    res = normalize(text)
+    assert res is not None
+
+@pytest.mark.parametrize("text", [
+    "Có khoảng 2000 người tham gia.",   # Con số chỉ số lượng, không phải năm
+    "Mức lương 1000 USD.",             # Đơn vị tiền tệ
+    "Năm nay là một năm khó khăn.",    # Không có số cụ thể
+])
+def test_normalize_reject_non_year_numbers(text):
+    assert normalize(text) is None
+
+
+# =========================================================
+# EDGE CASES: PERSON EXTRACTION & CLEANING
+# =========================================================
+
+def test_extract_all_persons_with_noise():
+    # Kiểm tra việc bóc tách tên khi có dấu ngoặc và chức danh phức tạp
+    text = "Vua Lê Thánh Tông (tên húy Lê Tư Thành) ban hành luật Hồng Đức."
+    persons = extract_all_persons(text)
+    # Kỳ vọng bóc được cả 2 tên và chuẩn hóa về cùng 1 người (nếu có mapping)
+    normalized = {canonical_person(p) for p in persons if is_valid_person(p)}
+    assert "Lê Thánh Tông" in normalized or "Lê Tư Thành" in normalized
+
+
+def test_person_not_recognized_from_common_words():
+    # Chống nhận diện nhầm các từ viết hoa đầu câu không phải tên người
+    text = "Lịch sử Việt Nam trải qua nhiều thăng trầm."
+    persons = extract_all_persons(text)
+    valid_persons = {p for p in persons if is_valid_person(p)}
+    assert "Lịch" not in valid_persons
+    assert "Lịch sử" not in valid_persons
+
+
+# =========================================================
+# COMPLEX SUBJECT INFERENCE (Chủ thể phức tạp)
+# =========================================================
+
+def test_infer_subject_priority_logic():
+    # Khi có cả Quân đội và Tên người, Tên người phải là Subject chính
+    body = "Đại tướng Võ Nguyên Giáp chỉ huy chiến dịch Điện Biên Phủ."
+    persons = {"Võ Nguyên Giáp"}
+    nature = ["military", "historical_event"]
+    subject = infer_subject(body, persons, nature)
+    assert subject == "Võ Nguyên Giáp"
+
+def test_infer_subject_with_unknown_place():
+    # Nếu không có người, nhưng có địa danh lịch sử (trong registry)
+    # thì vẫn nên giữ nhãn sự kiện
+    body = "Chiến thắng tại Rạch Gầm - Xoài Mút vang dội."
+    subject = infer_subject(body, set(), ["military"])
+    assert subject == "Quân dân Việt Nam"
+
+
+# =========================================================
+# PIPELINE INTEGRITY: NATURE & TONE MAPPING
+# =========================================================
+
+def test_classify_nature_institutional_expansion():
+    # Kiểm tra các từ khóa mang tính thể chế/luật pháp
+    texts = [
+        "Năm 1483, ban hành Luật Hồng Đức.",
+        "Năm 1042, nhà Lý soạn bộ Hình thư.",
+        "Năm 1946, Quốc hội thông qua Hiến pháp."
+    ]
+    from pipeline.storyteller import classify_nature
+    for t in texts:
+        labels = classify_nature(t)
+        assert "institutional" in labels
+
+def test_classify_tone_determination():
+    # Kiểm tra khả năng nhận diện sắc thái hào hùng vs bi thương
+    from pipeline.storyteller import classify_tone
+    
+    heroic_text = "Chiến thắng vang dội, đập tan quân thù, hào khí ngút trời."
+    assert "heroic" in classify_tone(heroic_text)
+    
+    somber_text = "Nhân dân rơi vào cảnh lầm than, mất mát, đau thương."
+    assert "somber" in classify_tone(somber_text)
+
+
+# =========================================================
+# ASKING SYSTEM (Hệ thống hỏi đáp)
+# =========================================================
+
+def test_ask_by_person_alias_recognition():
+    # Kiểm tra hàm ask_by_person có hiểu bí danh khi tìm trong timeline không
+    timeline = {
+        "1789": {
+            "events": [{
+                "event": "Nguyễn Huệ đại phá quân Thanh.",
+                "persons_all": ["Nguyễn Huệ"]
+            }]
+        }
+    }
+    # Người dùng hỏi "Quang Trung", hệ thống phải tìm được "Nguyễn Huệ"
+    res = ask_by_person(timeline, "Quang Trung")
+    assert res is not None
+    assert len(res) > 0
+
+import pytest
+from pipeline.storyteller import (
+    normalize, 
+    extract_all_persons, 
+    is_valid_person, 
+    canonical_person,
+    infer_subject,
+    classify_entity,
+    extract_year
+)
+
+# =========================================================
+# 1. KIỂM TRA TRÍCH XUẤT NĂM (YEAR EXTRACTION)
+# =========================================================
+
+@pytest.mark.parametrize("text, expected_year", [
+    ("Mùa xuân năm 1010, Lý Thái Tổ dời đô.", "1010"),
+    ("Vào cuối năm 1788, quân Thanh xâm lược.", "1788"),
+    ("Ngày 02/09/1945 là ngày Quốc khánh.", "1945"),
+    ("Trận đánh diễn ra năm 938 trên sông Bạch Đằng.", "938"),
+    ("Năm 2024 không phải là năm 1010.", "2024"), # Lấy năm đầu tiên tìm thấy
+])
+def test_extract_year_edge_cases(text, expected_year):
+    assert extract_year(text) == expected_year
+
+
+# =========================================================
+# 2. KIỂM TRA PHÂN BIỆT NGƯỜI VS ĐỊA ĐIỂM VS TẬP THỂ
+# =========================================================
+
+@pytest.mark.parametrize("name, expected_kind", [
+    ("Trần Hưng Đạo", "person"),
+    ("Bạch Đằng", "place"),
+    ("Quân Thanh", "collective"),
+    ("Thăng Long", "place"),
+    ("Nhà Nguyễn", "collective"),
+    ("Hồ Chí Minh", "person"),
+    ("Điện Biên Phủ", "place"),
+])
+def test_entity_classification(name, expected_kind):
+    # Kiểm tra thông qua classify_entity hoặc các hàm hỗ trợ
+    if expected_kind == "person":
+        assert is_valid_person(name) is True
+    elif expected_kind == "place":
+        assert classify_entity(name) == "place"
+        assert is_valid_person(name) is False
+    elif expected_kind == "collective":
+        assert classify_entity(name) == "collective"
+        assert is_valid_person(name) is False
+
+
+# =========================================================
+# 3. KIỂM TRA CHUẨN HÓA TÊN (CANONICAL)
+# =========================================================
+
+def test_canonical_person_complex_titles():
+    # Kiểm tra việc bóc tách tước hiệu và ánh xạ bí danh
+    assert canonical_person("Thái sư Trần Thủ Độ") == "Trần Thủ Độ"
+    assert canonical_person("Hưng Đạo Đại Vương Trần Quốc Tuấn") == "Trần Hưng Đạo"
+    assert canonical_person("Vua Lý Thái Tổ") == "Lý Thái Tổ"
+    assert canonical_person("Bắc Bình Vương") == "Nguyễn Huệ"
+    assert canonical_person("Quang Trung") == "Nguyễn Huệ"
+
+
+# =========================================================
+# 4. KIỂM TRA SUY LUẬN CHỦ THỂ (INFER SUBJECT)
+# =========================================================
+
+def test_infer_subject_logic():
+    # Case 1: Có tên người cụ thể -> Phải ưu tiên người
+    body = "Ngô Quyền đại phá quân Nam Hán"
+    persons = {"Ngô Quyền"}
+    assert infer_subject(body, persons, ["military"]) == "Ngô Quyền"
+
+    # Case 2: Không có tên người, là sự kiện quân sự -> Quân dân Việt Nam
+    body = "Đánh tan quân xâm lược trên sông"
+    assert infer_subject(body, set(), ["military"]) == "Quân dân Việt Nam"
+
+    # Case 3: Sự kiện ban hành văn bản -> Văn kiện lịch sử
+    body = "Ban hành bộ luật Hồng Đức"
+    assert infer_subject(body, set(), ["institutional"]) == "Văn kiện lịch sử"
+
+    # Case 4: Sự kiện ngoại giao/chính trị chung
+    body = "Ký kết hiệp định đình chiến"
+    assert infer_subject(body, set(), ["diplomacy"]) == "Chính quyền đương thời"
+
+
+# =========================================================
+# 5. KIỂM TRA KHẢ NĂNG LỌC "NHIỄU" CỦA NORMALIZE
+# =========================================================
+
+def test_normalize_rejection_logic():
+    # Những câu này không mang giá trị lịch sử cụ thể, phải bị loại bỏ (trả về None)
+    vague_texts = [
+        "Năm 2000, mọi người rất vui vẻ.",           # Không có thực thể lịch sử
+        "Vào năm đó, tình hình rất phức tạp.",        # Không rõ năm nào
+        "Tại Thăng Long, năm 1010 có mưa.",          # Không có sự kiện/người quan trọng
+    ]
+    for t in vague_texts:
+        assert normalize(t) is None
+
+def test_normalize_acceptance_logic():
+    # Những câu này dù ngắn nhưng có thực thể quan trọng, phải được giữ lại
+    valid_texts = [
+        "Năm 1010, Lý Thái Tổ dời đô về Thăng Long.", # Có người + địa danh
+        "Năm 938, chiến thắng Bạch Đằng.",            # Có địa danh + sự kiện quân sự
+        "Năm 1483, ban hành luật Hồng Đức.",           # Có sự kiện thể chế (institutional)
+    ]
+    for t in valid_texts:
+        res = normalize(t)
+        assert res is not None
+        # Kiểm tra cấu trúc tuple trả về (year, body, nature, tone, subjects, persons_all)
+        assert len(res) == 6
+        assert res[0] in t # Năm phải đúng
+
+
+# =========================================================
+# 6. KIỂM TRA TRÙNG LẶP THỰC THỂ
+# =========================================================
+
+def test_extract_all_persons_no_duplicates():
+    text = "Nguyễn Huệ (tức Quang Trung) là anh của Nguyễn Nhạc."
+    persons = extract_all_persons(text)
+    # Nguyễn Huệ và Quang Trung phải được chuẩn hóa về "Nguyễn Huệ"
+    # Kết quả set chỉ nên chứa {"Nguyễn Huệ", "Nguyễn Nhạc"}
+    assert "Nguyễn Huệ" in persons
+    assert "Quang Trung" not in persons
+    assert "Nguyễn Nhạc" in persons
+    assert len(persons) == 2
+
+@pytest.mark.parametrize("name", [
+    "Bạch Đằng", "Chi Lăng", "Đống Đa", "Ngọc Hồi", "Điện Biên Phủ",
+    "Rạch Gầm", "Xoài Mút", "Hàm Tử", "Chương Dương", "Vạn Kiếp"
+])
+def test_place_is_not_person(name):
+    """Đảm bảo các địa danh chiến trường nổi tiếng không bị nhầm là tên người."""
+    assert not is_valid_person(name), f"Lỗi: '{name}' là địa danh, không phải người."
+    assert classify_entity(name) == "place"
+
+@pytest.mark.parametrize("text, expected_missing", [
+    ("Trận đánh tại Chi Lăng rất ác liệt.", "Chi Lăng"),
+    ("Nguyễn Huệ tiến quân vào Thăng Long.", "Thăng Long"),
+])
+def test_place_not_in_persons_list(text, expected_missing):
+    """Kiểm tra hàm trích xuất không đưa địa danh vào danh sách persons."""
+    persons = extract_all_persons(text)
+    assert expected_missing not in persons
+
+# =========================================================
+# 2. PHÂN BIỆT TẬP THỂ/TRIỀU ĐẠI VS TÊN NGƯỜI (COLLECTIVE vs PERSON)
+# =========================================================
+@pytest.mark.parametrize("collective", [
+    "Nhà Trần", "Nhà Lê", "Nhà Lý", "Triều Nguyễn", "Mạc triều",
+    "Quân Thanh", "Quân Minh", "Quân Nguyên", "Giặc Tống",
+    "Phát xít Nhật", "Thực dân Pháp", "Đế quốc Mỹ",
+    "Nghĩa quân Lam Sơn", "Tây Sơn quân", "Nhân dân"
+])
+def test_collective_is_not_person(collective):
+    """Các tổ chức, triều đại, quân đội không được là Person."""
+    assert not is_valid_person(collective), f"Lỗi: '{collective}' là tập thể, không phải cá nhân."
+
+# =========================================================
+# 3. TRƯỜNG HỢP TÊN NGƯỜI DỄ NHẦM LẪN (AMBIGUOUS NAMES)
+# =========================================================
+def test_person_with_place_prefix():
+    """Kiểm tra tên người có chứa địa danh hoặc chức vụ."""
+    # 'An Dương Vương' dễ bị nhầm vì 'An Dương' có thể là địa danh
+    assert is_valid_person("An Dương Vương")
+    # 'Trần Thủ Độ' không được nhầm thành 'Trần' (Họ) hay 'Thủ Độ' (Từ chung)
+    assert "Trần Thủ Độ" in extract_all_persons("Thái sư Trần Thủ Độ quyền thế.")
+
+def test_short_names_filter():
+    """Kiểm tra các từ viết hoa ngắn 1-2 chữ cái không phải tên người."""
+    noise_texts = ["Năm đó,", "Khi đó,", "Tại đó,", "Dân ta,"]
+    for text in noise_texts:
+        assert len(extract_all_persons(text)) == 0
+
+# =========================================================
+# 4. KIỂM TRA TỰ ĐỘNG CHUẨN HÓA (CANONICAL)
+# =========================================================
+@pytest.mark.parametrize("input_name, expected_canonical", [
+    ("Hưng Đạo Vương", "Trần Hưng Đạo"),
+    ("Trần Quốc Tuấn", "Trần Hưng Đạo"),
+    ("Quang Trung", "Nguyễn Huệ"),
+    ("Bắc Bình Vương", "Nguyễn Huệ"),
+    ("Gia Long", "Nguyễn Ánh"),
+    ("Lý Công Uẩn", "Lý Thái Tổ"),
+    ("Bác Hồ", "Hồ Chí Minh"),
+    ("Nguyễn Tất Thành", "Hồ Chí Minh")
+])
+def test_canonical_consistency(input_name, expected_canonical):
+    """Đảm bảo mọi bí danh đều trỏ về một thực thể duy nhất."""
+    assert canonical_person(input_name) == expected_canonical
+
+# =========================================================
+# 5. TEST NORMALIZE VỚI CÁC CÂU "BẪY" (INTEGRITY TRAPS)
+# =========================================================
+def test_normalize_traps():
+    # Bẫy 1: Câu có năm và địa danh nhưng không có hành động/người (Nên bỏ)
+    text_1 = "Năm 1010, Thăng Long là một vùng đất đẹp."
+    assert normalize(text_1) is None 
+
+    # Bẫy 2: Câu có tập thể + hành động mạnh (Nên giữ, nhưng persons rỗng)
+    text_2 = "Năm 1285, quân dân nhà Trần đại phá quân Nguyên."
+    res = normalize(text_2)
+    assert res is not None
+    _, _, nature, _, persons_subject, _ = res
+    assert "military" in nature
+    assert len(persons_subject) == 0 # 'Quân dân nhà Trần' không phải là Person cụ thể
+
+    # Bẫy 3: Tên người giả trong cấu trúc viết hoa
+    text_3 = "Năm 1945, Lịch Sử Việt Nam sang trang mới."
+    res = normalize(text_3)
+    # Nếu câu không có thực thể thật, normalize nên trả về None để sạch data
+    if res:
+        _, _, _, _, _, persons_all = res
+        assert "Lịch Sử" not in persons_all
