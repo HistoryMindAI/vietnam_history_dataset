@@ -905,7 +905,7 @@ def test_normalize_with_ambiguous_dates():
 
 def test_complex_sentence_structure():
     """Nghi ngờ: Câu phức có nhiều tên người và địa danh gây nhiễu chủ thể."""
-    text = "Tại Thăng Long, Nguyễn Huệ đã hội kiến với các tướng lĩnh sau khi đánh đuổi quân Thanh."
+    text = "Năm 1789, tại Thăng Long, Nguyễn Huệ đã hội kiến với các tướng lĩnh sau khi đánh đuổi quân Thanh."
     res = normalize(text)
     assert res is not None
     _, _, _, _, subjects, _ = res
