@@ -1486,3 +1486,30 @@ def test_canonical_unrecognized_keeps_original():
     """Nếu không biết là ai, phải giữ nguyên để không mất dữ liệu, chỉ trim khoảng trắng."""
     unknown = "  Vị Tướng Bí Ẩn  "
     assert canonical_person(unknown) == "Vị Tướng Bí Ẩn"
+
+# =========================================================
+# NEW TESTS: BUG FIXES & ENHANCEMENTS
+# =========================================================
+
+def test_extract_year_two_digits():
+    """Kiểm tra trích xuất năm có 2 chữ số (ví dụ: năm 40)."""
+    assert extract_year("Năm 40, Hai Bà Trưng khởi nghĩa.") == "40"
+    assert extract_year("Vào năm 90, có biến cố.") == "90"
+
+def test_remove_non_informative_clauses_with_person():
+    """Kiểm tra logic giữ lại clause chứa PERSON."""
+    from pipeline.storyteller import remove_non_informative_clauses
+    text = "Trần Hưng Đạo, một ngày đẹp trời, chỉ huy quân đội"
+    # 'một ngày đẹp trời' nên bị loại bỏ, 'Trần Hưng Đạo' và 'chỉ huy quân đội' nên được giữ
+    result = remove_non_informative_clauses(text)
+    assert "Trần Hưng Đạo" in result
+    assert "một ngày đẹp trời" not in result
+    assert "chỉ huy quân đội" in result
+
+def test_prune_event_sentence_with_person():
+    """Kiểm tra logic giữ lại clause chứa PERSON trong prune_event_sentence."""
+    from pipeline.storyteller import prune_event_sentence
+    text = "Lý Thái Tổ ban Chiếu dời đô, trời hôm đó rất trong xanh"
+    result = prune_event_sentence(text)
+    assert "Lý Thái Tổ ban Chiếu dời đô" in result
+    assert "trời hôm đó rất trong xanh" not in result
