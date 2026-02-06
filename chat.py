@@ -3,6 +3,7 @@ import re
 import faiss
 import unicodedata
 from sentence_transformers import SentenceTransformer
+from pipeline.storyteller import extract_year
 
 # ================== CONFIG ==================
 INDEX_DIR = "faiss_index"
@@ -154,16 +155,16 @@ def to_timeline(items):
 
 
 # ---------- YEAR PARSER ----------
-YEAR_RE = r"(?:nam\s*)?([1-9][0-9]{2,3})"
-
-
 def extract_single_year(text: str):
-    years = list(dict.fromkeys(map(int, re.findall(YEAR_RE, text))))
-    return years[0] if len(years) == 1 else None
+    y = extract_year(text)
+    return int(y) if y else None
 
 
 def extract_year_range(text: str):
-    years = sorted(set(map(int, re.findall(YEAR_RE, text))))
+    # Tìm tất cả các năm có thể có trong text
+    years = sorted(set(map(int, re.findall(r"(?<![\d-])([1-9][0-9]{1,3})(?!\d)", text))))
+    # Lọc năm hợp lệ
+    years = [y for y in years if 40 <= y <= 2025]
     if len(years) >= 2:
         return years[0], years[-1]
     return None
@@ -204,9 +205,22 @@ def render_human(data: dict) -> str:
     if not events:
         return "Mình chưa tìm thấy sự kiện lịch sử phù hợp."
 
+    # Sắp xếp và loại trùng lặp theo story
+    seen_stories = set()
     lines = []
-    for e in events:
-        lines.append(f"• {e['year']}: {e['event']}")
+
+    sorted_events = sorted(events, key=lambda x: x.get("year", 0))
+
+    for e in sorted_events:
+        story = e.get("story")
+        if story and story not in seen_stories:
+            seen_stories.add(story)
+            lines.append(f"• {story}")
+
+    # Fallback nếu không có story
+    if not lines:
+        for e in sorted_events:
+            lines.append(f"• {e['year']}: {e['event']}")
 
     return "\n".join(lines)
 
