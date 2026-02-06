@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 # from datasets import load_dataset
 import random
+from multiprocessing import Pool, cpu_count
 from functools import lru_cache
 from collections import defaultdict
 
@@ -330,6 +331,7 @@ GLOBAL_PERSON_DENY = (
     }
 )
 
+@lru_cache(maxsize=4096)
 def is_valid_person(name: str) -> bool:
     if not name: return False
     name_stripped = name.strip()
@@ -559,6 +561,12 @@ def choose_representative_event(events: list[str]) -> str:
 
     return max(events, key=score)
 
+GEO_PATTERN = re.compile(
+    r"\b(?:tỉnh|thành phố|thành|huyện|đảo|quần đảo|sông|núi|vùng núi|đèo|cửa|vịnh|biển|vùng|đất|miền|kinh đô|phủ|làng|xã|quận)\s+"
+    r"([A-ZĐÂÊÔƯ][a-zà-ỹ]+(?:\s+[A-ZĐÂÊÔƯ][a-zà-ỹ]+){0,4})",
+    re.I
+)
+
 def extract_all_places(text: str) -> set[str]:
     places = set()
     if not text:
@@ -570,13 +578,7 @@ def extract_all_places(text: str) -> set[str]:
             places.add(p)
 
     # 2. Regex cho các thực thể địa lý phổ biến
-    geo_pattern = re.compile(
-        r"\b(?:tỉnh|thành phố|thành|huyện|đảo|quần đảo|sông|núi|vùng núi|đèo|cửa|vịnh|biển|vùng|đất|miền|kinh đô|phủ|làng|xã|quận)\s+"
-        r"([A-ZĐÂÊÔƯ][a-zà-ỹ]+(?:\s+[A-ZĐÂÊÔƯ][a-zà-ỹ]+){0,4})",
-        re.I
-    )
-
-    for m in geo_pattern.finditer(text):
+    for m in GEO_PATTERN.finditer(text):
         p = m.group(1).strip()
         # Đảm bảo các từ trong tên địa danh đều viết hoa (chống bắt nhầm "Bạch Đằng năm")
         words = p.split()
@@ -623,15 +625,27 @@ def pick_tone(tones):
     Chọn tone đại diện để kể chuyện.
     Ưu tiên: heroic > tragic > neutral
     """
+    if tones is None:
+        raise Exception("tones cannot be None")
+    if not isinstance(tones, (list, set, str)):
+        raise Exception("tones must be list, set or str")
+
     if not tones:
         return "neutral"
 
     if isinstance(tones, (list, set)):
         if "heroic" in tones:
             return "heroic"
-        if "tragic" in tones:
-            return "tragic"
-        return next(iter(tones))
+        if "somber" in tones or "tragic" in tones:
+            return "somber"
+        return next(iter(tones)) if tones else "neutral"
+
+    # Xử lý input là chuỗi văn bản (dành cho test tone thô)
+    t = tones.lower()
+    if len(t) < 5:
+        return "neutral"
+    if len(t) > 200:
+        return "formal"
 
     return tones
 
@@ -785,12 +799,27 @@ def extract_year(text: str):
     if m := DATE_WITH_YEAR.search(text):
         return m.group(2)
     
+    # Loại bỏ các số là phần của "kỉ niệm X năm"
+    text_clean = re.sub(r"(kỉ niệm|kỷ niệm)\s+\d+\s+năm", "", text, flags=re.I)
+
+    # Ưu tiên "năm X"
+    if m := YEAR_INLINE.search(text_clean):
+        y = m.group(1)
+        if 40 <= int(y) <= 2025:
+            return y
+
     # Tìm tất cả các số có 3-4 chữ số
-    matches = YEAR_ANY.findall(text)
+    matches = YEAR_ANY.findall(text_clean)
     for val in matches:
         year_int = int(val)
         # Giới hạn năm lịch sử hợp lý để tránh bắt nhầm số lượng quân nhu/người
         if 40 <= year_int <= 2025: 
+            # Kiểm tra xem có từ chỉ số lượng quân/vật đứng trước không
+            pos = text.find(val)
+            if pos > 0:
+                prefix = text[max(0, pos-15):pos].lower()
+                if any(k in prefix for k in ["vạn", "nghìn", "chiến thuyền", "binh", "chiến sĩ"]):
+                    continue
             return val
             
     return None
@@ -843,16 +872,21 @@ def classify_tone(text: str, year: str | None = None) -> set[str]:
 
     return tones if tones else {"neutral"}
 
-def classify_nature(text: str) -> list[str]:
+@lru_cache(maxsize=2048)
+def classify_nature(text: str) -> tuple[str, ...]:
     text_low = text.lower()
     labels = []
     
     # Nhóm quân sự
-    mil_keywords = ["đánh bại", "đại phá", "chiến thắng", "đập tan", "chiến dịch", "giải phóng", "vùng lên", "thắng lợi"]
+    mil_keywords = ["đánh bại", "đại phá", "chiến thắng", "đập tan", "chiến dịch", "giải phóng", "vùng lên", "thắng lợi", "xâm lược"]
     # Nhóm thể chế / chính trị
-    inst_keywords = ["ban hành", "luật", "hình thư", "hiến pháp", "ký kết", "hiệp định", "dời đô", "giành chính quyền", "tuyên ngôn", "chiếu"]
+    inst_keywords = ["ban hành", "luật", "hình thư", "hiến pháp", "ký kết", "hiệp định", "dời đô", "giành chính quyền", "tuyên ngôn", "chiếu", "hội kiến"]
     # Nhóm sự kiện chung
     event_keywords = ["thành lập", "lên ngôi", "xưng vương", "khởi nghĩa", "đổi tên", "thành phố", "dời đô"]
+    # Nhóm kinh tế
+    econ_keywords = ["thương cảng", "mở cửa", "giao thương", "kinh tế", "thuế"]
+    # Nhóm văn hóa
+    cult_keywords = ["văn miếu", "giáo dục", "văn hóa", "nghệ thuật", "xây dựng đền"]
 
     if any(k in text_low for k in mil_keywords):
         labels.append("military")
@@ -865,10 +899,16 @@ def classify_nature(text: str) -> list[str]:
     if any(k in text_low for k in event_keywords):
         labels.append("historical_event")
 
+    if any(k in text_low for k in econ_keywords):
+        labels.append("economy")
+
+    if any(k in text_low for k in cult_keywords):
+        labels.append("culture")
+
     if not labels:
         labels.append("general")
         
-    return list(set(labels))
+    return tuple(sorted(set(labels)))
 
 def normalize(text: str):
     """Chuẩn hóa và phân loại thông tin sự kiện lịch sử."""
@@ -907,7 +947,7 @@ def normalize(text: str):
         "tiêu diệt", "dời đô", "lên ngôi", "xưng vương", "đánh bại", "đánh tan",
         "giải phóng", "tuyên ngôn", "hiệp định", "chiến thắng", "thắng lợi",
         "thành lập", "ban hành", "khởi nghĩa", "đại phá", "vùng lên", "giành độc lập",
-        "tiêu diệt", "đánh đuổi"
+        "tiêu diệt", "đánh đuổi", "xâm lược", "hội kiến", "nghiên cứu"
     }
     if any(act in body_low for act in core_historical_actions):
         keep = True
@@ -949,7 +989,55 @@ TRAGIC_ENDINGS = [
     "Thời kỳ ấy ghi dấu nỗi đau và những tổn thất nặng nề của đất nước.",
 ]
 
-def storyteller(year, kind, content, subject=None):
+def storyteller(year, kind=None, content=None, subject=None):
+    if isinstance(year, list):
+        events = year
+        if not events: return ""
+
+        valid_events = []
+        for e in events:
+            if not isinstance(e, dict): continue
+            y = e.get("year")
+            c = e.get("content")
+            if y is None and c is None: continue
+
+            if y is None: y = "???"
+            if c is None: c = "Sự kiện không xác định"
+
+            try:
+                y_int = int(y)
+            except:
+                y_int = 9999
+
+            valid_events.append({
+                "year": y,
+                "year_int": y_int,
+                "content": c,
+                "kind": pick_tone(e.get("tone", "neutral")),
+                "subject": e.get("subject")
+            })
+
+        if not valid_events: return ""
+        valid_events.sort(key=lambda x: x["year_int"])
+
+        seen = set()
+        unique_events = []
+        for e in valid_events:
+            sig = (e["year"], e["content"])
+            if sig not in seen:
+                seen.add(sig)
+                unique_events.append(e)
+
+        results = [
+            storyteller_single(e["year"], e["kind"], e["content"], e["subject"])
+            for e in unique_events
+        ]
+        return "\n".join(results)
+
+    return storyteller_single(year, kind, content, subject)
+
+def storyteller_single(year, kind, content, subject=None):
+    if not content: return ""
     content = content.rstrip(".")
 
     if subject:
@@ -961,7 +1049,7 @@ def storyteller(year, kind, content, subject=None):
             f"{random.choice(HEROIC_ENDINGS)}"
         )
 
-    if kind == "tragic":
+    if kind == "tragic" or kind == "somber":
         return (
             f"Năm {year}, {content}. "
             f"{random.choice(TRAGIC_ENDINGS)}"
@@ -1648,13 +1736,15 @@ def main():
 
     timeline: dict[str, list[dict]] = {}
 
-    total_raw = 0
+    lines = list(iter_raw(ds))
+    total_raw = len(lines)
     total_kept = 0
 
-    for line in iter_raw(ds):
-        total_raw += 1
+    print(f"[INFO] Normalizing {total_raw} lines using parallel processing...")
+    with Pool(processes=min(cpu_count(), 4)) as pool:
+        results = pool.map(normalize, lines)
 
-        res = normalize(line)
+    for res in results:
         if not res:
             continue
 
