@@ -23,7 +23,7 @@ UNKNOWN_ENTITIES = set()
 
 OUT_PATH = "data/history_timeline.json"
 
-YEAR_ANY = re.compile(r"(?<!\d)([1-9][0-9]{2,3})(?!\d)", re.UNICODE)
+YEAR_ANY = re.compile(r"(?<![\d-])([1-9][0-9]{2,3})(?!\d)", re.UNICODE)
 
 DATE_WITH_YEAR = re.compile(
     r"\b([0-3]?\d/[01]?\d/([1-9][0-9]{2,3}))\b"
@@ -74,6 +74,7 @@ PERSON_ALIAS = {
     "Quang Trung": "Nguyễn Huệ",
     "Bắc Bình Vương": "Nguyễn Huệ",
     "Nguyễn Huệ": "Nguyễn Huệ",
+    "Nguyễn Văn Huệ": "Nguyễn Huệ",
     "Gia Long": "Nguyễn Ánh",
     "Nguyễn Ánh": "Nguyễn Ánh",
     "Lý Công Uẩn": "Lý Thái Tổ",
@@ -327,7 +328,8 @@ GLOBAL_PERSON_DENY = (
         "nhân dân việt nam", "quân đội nhân dân", "triều đình nhà lê",
         "chiến dịch lịch sử", "khởi nghĩa ba đình", "phát xít nhật",
         "thực dân pháp", "đế quốc mỹ", "giặc tống", "thăng long", "hà nội",
-        "việt nam", "đại việt", "đại nam", "đại cồ việt", "lịch sử"
+        "việt nam", "đại việt", "đại nam", "đại cồ việt", "lịch sử",
+        "chiến thắng", "hào khí", "độc lập", "thái bình", "hòa bình", "sơn la", "an nam", "chăm pa"
     }
 )
 
@@ -343,12 +345,12 @@ def is_valid_person(name: str) -> bool:
     if name_stripped in ENTITY_REGISTRY["place"] or name_stripped in ENTITY_REGISTRY["collective"]:
         return False
 
-    # 2. Chặn theo danh sách GLOBAL_PERSON_DENY (Substring check)
-    if any(deny in name_low for deny in GLOBAL_PERSON_DENY):
+    # 2. Chặn theo danh sách GLOBAL_PERSON_DENY (Exact match check)
+    if name_low in GLOBAL_PERSON_DENY:
         return False
 
     # 3. Chặn theo tiền tố và hậu tố (Suffix check quan trọng cho "Mạc triều", "Tây Sơn quân")
-    collective_prefixes = ("nhà ", "triều ", "quân ", "nghĩa quân ", "đội ", "đảng ", "mặt trận ")
+    collective_prefixes = ("nhà ", "triều ", "quân ", "nghĩa quân ", "đội ", "đảng ", "mặt trận ", "công ty ", "tập đoàn ")
     collective_suffixes = (" triều", " quân", " tộc")
     
     if name_low.startswith(collective_prefixes) or name_low.endswith(collective_suffixes):
@@ -394,30 +396,41 @@ def strip_evaluation(text: str) -> str:
 def canonical_person(name: str) -> str:
     if not name: return ""
     
-    name_stripped = name.strip()
+    # 1. Chuẩn hóa khoảng trắng và hạ thấp chữ để lookup
+    name_norm = re.sub(r"\s+", " ", name.strip())
     
-    # 1. Thử tìm trực tiếp trong PERSON_ALIAS (Quan trọng cho tước hiệu đứng độc lập hoặc bí danh đặc biệt)
-    # Cần đảm bảo PERSON_ALIAS có: "Bác Hồ": "Hồ Chí Minh", "Hưng Đạo Vương": "Trần Hưng Đạo"...
-    if name_stripped in PERSON_ALIAS:
-        return PERSON_ALIAS[name_stripped]
+    # Thử tìm trực tiếp (case-insensitive)
+    for k, v in PERSON_ALIAS.items():
+        if k.lower() == name_norm.lower():
+            return v
     
-    # 2. Danh sách tước hiệu cần bóc tách (Sắp xếp từ dài đến ngắn để tránh khớp nhầm)
+    # 2. Danh sách tước hiệu cần bóc tách (Sắp xếp từ dài đến ngắn)
+    # Lưu ý: Không bóc "Thái Tổ", "Thánh Tông" vì chúng là một phần của tên (Miếu hiệu)
     titles = [
         "Hưng Đạo Đại Vương", "Hưng Đạo Vương", "Bắc Bình Vương", 
-        "Thái thượng hoàng", "Trung tướng", "Đại tướng", "Thái sư", 
-        "Thái tổ", "Thanh tông", "Thánh tông", "Nhân tông", "Vua", "Chúa"
+        "Thái thượng hoàng", "Hoàng đế", "Trung tướng", "Đại tướng", "Thái sư",
+        "Vua", "Chúa"
     ]
     
-    clean_name = name_stripped
+    clean_name = name_norm
+    name_low = name_norm.lower()
     for t in titles:
-        # Nếu tên bắt đầu bằng tước hiệu và còn phần tên phía sau
-        if name_stripped.startswith(t) and len(name_stripped) > len(t):
-            temp_name = name_stripped[len(t):].strip()
-            # Nếu phần còn lại có trong Alias (ví dụ: "Quốc Tuấn" -> "Trần Hưng Đạo")
-            clean_name = PERSON_ALIAS.get(temp_name, temp_name)
+        t_low = t.lower()
+        # Kiểm tra tiền tố
+        if name_low.startswith(t_low) and len(name_low) > len(t_low):
+            clean_name = name_norm[len(t):].strip()
+            break
+        # Kiểm tra hậu tố
+        if name_low.endswith(t_low) and len(name_low) > len(t_low):
+            clean_name = name_norm[:-len(t)].strip()
             break
             
-    return PERSON_ALIAS.get(clean_name, clean_name)
+    # Sau khi bóc tước hiệu, thử lookup lại
+    for k, v in PERSON_ALIAS.items():
+        if k.lower() == clean_name.lower():
+            return v
+
+    return clean_name
 
 def extract_parenthetical_persons(text: str):
     persons = []
@@ -594,7 +607,15 @@ def extract_all_persons(text: str) -> set[str]:
     if not text:
         return persons
 
+    # Danh sách các từ khóa tiền tố chỉ tổ chức/địa danh để loại trừ name match ngay sau nó
+    exclude_prefixes = ["công ty", "tập đoàn", "hãng", "tỉnh", "thành phố", "huyện", "xã"]
+
     for m in PERSON_PATTERN.finditer(text):
+        # Kiểm tra ngữ cảnh phía trước để tránh bắt nhầm tên công ty/địa danh là người
+        prefix_context = text[max(0, m.start()-20):m.start()].lower()
+        if any(ex in prefix_context for ex in exclude_prefixes):
+            continue
+
         raw = m.group(1).strip()
         p = canonical_person(raw)
 
@@ -838,7 +859,7 @@ def classify_tone(text: str, year: str | None = None) -> set[str]:
         "chiến thắng", "lừng lẫy", "chấn động",
         "đánh bại", "đánh tan", "đẩy lui", "toàn thắng", "giải phóng",
         "thống nhất", "giành độc lập", "tự chủ", "chấm dứt ách",
-        "vang dội", "hào khí", "oanh liệt", "thắng lợi", "đại phá"
+        "vang dội", "hào khí", "oanh liệt", "thắng lợi", "đại phá", "thắng trận"
     ]
     
     # Nhóm Bi thương/Trầm lắng (Somber/Tragic)
@@ -846,7 +867,8 @@ def classify_tone(text: str, year: str | None = None) -> set[str]:
         "tàn phá", "điêu linh", "tổn thất", "đau đớn",
         "bị xâm lược", "mất nước", "bắc thuộc", "minh thuộc",
         "chia cắt", "áp đặt", "lầm than", "đau thương", "mất mát",
-        "hy sinh", "khó khăn", "thất bại", "chiếm đóng"
+        "hy sinh", "khó khăn", "thất bại", "chiếm đóng",
+        "thiêu rụi", "máu chảy thành sông", "nỗi nhục"
     ]
 
     if any(k in t for k in heroic_keywords):
@@ -947,7 +969,7 @@ def normalize(text: str):
         "tiêu diệt", "dời đô", "lên ngôi", "xưng vương", "đánh bại", "đánh tan",
         "giải phóng", "tuyên ngôn", "hiệp định", "chiến thắng", "thắng lợi",
         "thành lập", "ban hành", "khởi nghĩa", "đại phá", "vùng lên", "giành độc lập",
-        "tiêu diệt", "đánh đuổi", "xâm lược", "hội kiến", "nghiên cứu"
+        "tiêu diệt", "đánh đuổi", "xâm lược", "hội kiến", "nghiên cứu", "giành chính quyền"
     }
     if any(act in body_low for act in core_historical_actions):
         keep = True
@@ -1038,7 +1060,7 @@ def storyteller(year, kind=None, content=None, subject=None):
 
 def storyteller_single(year, kind, content, subject=None):
     if not content: return ""
-    content = content.rstrip(".")
+    content = str(content).rstrip(".")
 
     if subject:
         content = subject + " " + content[0].lower() + content[1:]
@@ -1601,7 +1623,10 @@ def remove_duplicate_subjects_global(text):
 def infer_subject(body: str, persons: set, nature: list) -> str:
     # 1. Ưu tiên nhân vật cụ thể nếu có
     if persons:
-        return sorted(list(persons))[0]
+        # Lọc bỏ các nhân vật quá ngắn (ví dụ chỉ có họ 'Nguyễn')
+        valid_subjects = [p for p in persons if len(p.split()) >= 2]
+        if valid_subjects:
+            return sorted(valid_subjects)[0]
     
     body_low = body.lower()
     

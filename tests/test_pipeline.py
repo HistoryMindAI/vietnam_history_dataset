@@ -13,6 +13,7 @@ from pipeline.storyteller import (
     ask,
     ask_by_person,
     classify_tone,
+    classify_nature,
     pick_tone,
     storyteller
 )
