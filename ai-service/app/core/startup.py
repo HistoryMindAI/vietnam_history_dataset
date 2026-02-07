@@ -4,7 +4,7 @@ import faiss
 from collections import defaultdict
 from sentence_transformers import SentenceTransformer
 
-from app.core.config import (
+from .config import (
     EMBED_MODEL,
     INDEX_PATH,
     META_PATH,
