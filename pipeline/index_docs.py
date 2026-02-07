@@ -10,7 +10,7 @@ from pipeline.storyteller import storyteller, pick_tone
 
 # ================== CONFIG ==================
 TIMELINE_PATH = "data/history_timeline.json"
-OUT_DIR = "faiss_index"
+OUT_DIR = "ai-service/faiss_index"
 INDEX_PATH = f"{OUT_DIR}/history.index"
 META_PATH = f"{OUT_DIR}/meta.json"
 
