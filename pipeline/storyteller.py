@@ -1362,7 +1362,7 @@ def extract_keywords(text: str) -> list[str]:
     actions = re.findall(
         r"(đánh bại|đánh tan|lên ngôi|xưng vương|dời đô|thành lập|giải phóng|thống nhất|"
         r"khởi nghĩa|kháng chiến|chiến dịch|phong trào|hiệp định|tuyên ngôn|ban hành|ký kết|"
-        r"đại phá|tiêu diệt|phản công|tấn công|đình chiến|quốc hiệu|hiến pháp|luật|hình thư|chiếu)",
+        r"đại phá|tiêu diệt|phản công|tấn công|đình chiến|quốc hiệu|hiến pháp|luật|hình thư|chiếu|hòa ước|sắc lệnh|văn kiện)",
         text.lower()
     )
     keywords.update(actions)
