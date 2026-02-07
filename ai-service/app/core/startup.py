@@ -37,7 +37,7 @@ else:
     print(f"[WARN] FAISS index not found at {INDEX_PATH}")
 
 # ===============================
-# FALLBACK INDEX (ANTI-CRASH)
+# FALLBACK INDEX
 # ===============================
 if index is None:
     try:
