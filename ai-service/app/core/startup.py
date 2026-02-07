@@ -4,11 +4,18 @@ import faiss
 from collections import defaultdict
 from sentence_transformers import SentenceTransformer
 
-from .config import (
-    EMBED_MODEL,
-    INDEX_PATH,
-    META_PATH,
-)
+# Robust import strategy
+try:
+    from app.core import config
+    EMBED_MODEL = config.EMBED_MODEL
+    INDEX_PATH = config.INDEX_PATH
+    META_PATH = config.META_PATH
+    print(f"[DEBUG] Loaded config successfully. EMBED_MODEL={EMBED_MODEL}")
+except ImportError as e:
+    print(f"[ERROR] Import app.core.config failed: {e}. Falling back to defaults.")
+    EMBED_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+    INDEX_PATH = "faiss_index/history.index"
+    META_PATH = "faiss_index/meta.json"
 
 print("[STARTUP] Loading embedding model & FAISS...")
 
@@ -20,6 +27,7 @@ try:
     print(f"[STARTUP] Loaded embedding model: {EMBED_MODEL}")
 except Exception as e:
     print(f"[FATAL] Failed to load embedding model: {e}")
+    # Instead of raising immediately, maybe define a dummy? No, service is useless without it.
     raise e
 
 # ===============================
