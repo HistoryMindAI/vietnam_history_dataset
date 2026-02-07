@@ -9,7 +9,7 @@ transformers==4.37.2
 torch>=2.1.0
 
 # ===== Vector Search =====
-faiss-cpu==1.7.4
+faiss-cpu>=1.7.4
 
 # ===== Data Processing =====
 numpy==1.26.4
