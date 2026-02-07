@@ -1,26 +1,39 @@
 FROM python:3.11-slim
 
-# Không buffer log + UTF-8
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-ENV LANG=C.UTF-8
 
 WORKDIR /app
 
-# Cài dependency hệ thống (FAISS cần)
+# System deps tối thiểu cho numpy / faiss
 RUN apt-get update && apt-get install -y \
     build-essential \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy & cài Python libs
+# =====================
+# Python dependencies
+# =====================
 COPY requirements.txt .
-RUN python -m pip install --upgrade pip \
-    && python -m pip install --no-cache-dir -r requirements.txt
 
-# Copy toàn bộ source
-COPY . .
+# Torch CPU (nhẹ, không CUDA)
+RUN pip install --no-cache-dir \
+    torch==2.0.1+cpu \
+    -f https://download.pytorch.org/whl/torch_stable.html
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+# =====================
+# App source
+# =====================
+COPY app ./app
+COPY faiss_index ./faiss_index
+
+# HuggingFace cache
+ENV TRANSFORMERS_CACHE=/app/.cache/huggingface
+ENV HF_HOME=/app/.cache/huggingface
 
 EXPOSE 8000
 
-# Chạy FastAPI
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# ✅ CÁCH 2: Python đọc PORT
+CMD ["python", "-m", "app.main"]
