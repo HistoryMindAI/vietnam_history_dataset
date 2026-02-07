@@ -41,7 +41,12 @@ def main():
                 "year": int(year),
                 "event": e["event"],
                 "tone": tone,
-                "story": story
+                "story": story,
+                "persons": e.get("persons", []),
+                "places": e.get("places", []),
+                "nature": e.get("nature", []),
+                "keywords": e.get("keywords", []),
+                "dynasty": e.get("dynasty", "Khác")
             })
 
     print(f"[INFO] Stories collected: {len(documents)}")
