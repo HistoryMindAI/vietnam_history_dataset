@@ -5,11 +5,11 @@ uvicorn==0.27.1
 # ===== Embedding (CPU-only) =====
 sentence-transformers==2.5.1
 transformers==4.36.2
-torch==2.0.1+cpu
+torch>=2.2.0
 
 # ===== Vector Search =====
-faiss-cpu==1.7.4
+faiss-cpu>=1.8.0
 
 # ===== Minimal deps =====
-numpy==1.26.4
+numpy>=1.26.4
 scikit-learn==1.4.0
