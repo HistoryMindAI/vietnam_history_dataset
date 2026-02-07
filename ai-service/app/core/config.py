@@ -3,7 +3,6 @@ import os
 # ===============================
 # EMBEDDING MODEL CONFIG
 # ===============================
-# Model mặc định: nhẹ, chạy CPU ổn, dim = 384
 EMBED_MODEL = os.getenv(
     "EMBED_MODEL",
     "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
