@@ -30,6 +30,7 @@ COPY faiss_index ./faiss_index
 
 ENV TRANSFORMERS_CACHE=/app/.cache/huggingface
 ENV HF_HOME=/app/.cache/huggingface
+ENV PYTHONPATH=/app
 
 # ❌ KHÔNG EXPOSE CŨNG ĐƯỢC (Railway không cần)
 # EXPOSE 8000
