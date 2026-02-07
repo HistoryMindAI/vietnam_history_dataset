@@ -1,0 +1,10 @@
+vietnam_history_dataset/
+tests/
+.git/
+__pycache__/
+*.faiss
+*.index
+*.npy
+*.pt
+*.bin
+*.arrow
