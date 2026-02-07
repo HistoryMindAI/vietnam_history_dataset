@@ -85,8 +85,39 @@ PERSON_ALIAS = {
     "Hưng Đạo Vương": "Trần Hưng Đạo",
     "Hưng Đạo Đại Vương": "Trần Hưng Đạo",
     "Lê Tư Thành": "Lê Thánh Tông",
-    "Lê Thánh Tông": "Lê Thánh Tông"
+    "Lê Thánh Tông": "Lê Thánh Tông",
+    "Ngô Vương": "Ngô Quyền",
+    "Đinh Bộ Lĩnh": "Đinh Tiên Hoàng",
+    "Lê Hoàn": "Lê Đại Hành",
+    "Lê Lợi": "Lê Thái Tổ"
 }
+
+DYNASTIES = [
+    (40, 43, "Trưng Vương"),
+    (248, 248, "Bà Triệu"),
+    (544, 602, "Tiền Lý"),
+    (905, 938, "Tự chủ"),
+    (939, 967, "Ngô"),
+    (968, 980, "Đinh"),
+    (981, 1009, "Tiền Lê"),
+    (1009, 1225, "Lý"),
+    (1226, 1400, "Trần"),
+    (1400, 1407, "Hồ"),
+    (1407, 1427, "Hậu Trần/Thuộc Minh"),
+    (1428, 1527, "Lê sơ"),
+    (1527, 1592, "Mạc"),
+    (1533, 1789, "Lê trung hưng"),
+    (1778, 1802, "Tây Sơn"),
+    (1802, 1945, "Nguyễn"),
+    (1945, 1975, "Việt Nam Dân chủ Cộng hòa / Việt Nam Cộng hòa"),
+    (1976, 2025, "Cộng hòa Xã hội Chủ nghĩa Việt Nam")
+]
+
+def get_dynasty(year: int) -> str:
+    for start, end, name in DYNASTIES:
+        if start <= year <= end:
+            return name
+    return "Khác"
 
 def normalize_person(name: str) -> str:
     return PERSON_ALIAS.get(name.strip(), name.strip())
@@ -792,6 +823,7 @@ def merge_events_by_year(events: list[dict]) -> list[dict]:
             "keywords": sorted(
                 set(k for b in bucket for k in b.get("keywords", []))
             ),
+            "dynasty": bucket[0].get("dynasty", "Khác")
         }
 
         merged_events.append(base)
@@ -933,72 +965,103 @@ def classify_nature(text: str) -> tuple[str, ...]:
         
     return tuple(sorted(set(labels)))
 
-def normalize(text: str):
-    """Chuẩn hóa và phân loại thông tin sự kiện lịch sử."""
-    # 1. Trích xuất năm
-    year = extract_year(text)
-    if not year: return None
+def normalize(text: str) -> list[tuple]:
+    """Chuẩn hóa và phân loại thông tin sự kiện lịch sử, hỗ trợ tách nhiều sự kiện."""
+    year_str = extract_year(text)
+    if not year_str: return []
+    try:
+        year_int = int(year_str)
+    except ValueError:
+        return []
     
-    if text.strip().endswith("?"): return None
+    dynasty = get_dynasty(year_int)
+    if text.strip().endswith("?"): return []
 
-    # 2. Làm sạch body (Cẩn thận: clean_text có thể xóa mất năm làm keep = False)
-    body = clean_text(text)
-    if not body or len(body.split()) < 3: return None
+    # Tách sự kiện theo dấu chấm hoặc dấu phẩy (nếu có động từ mạnh)
+    raw_parts = re.split(r'\.\s*', text)
+    refined_parts = []
+    for p in raw_parts:
+        clauses = [c.strip() for c in p.split(',') if c.strip()]
+        if len(clauses) > 1:
+            current_event = ""
+            for c in clauses:
+                # Nếu clause có động từ lịch sử quan trọng -> coi là sự kiện mới
+                if any(v in c.lower() for v in INFORMATIVE_VERBS + ["đại phá", "giải phóng", "vùng lên", "giành"]):
+                    if current_event:
+                        refined_parts.append(current_event)
+                    current_event = c
+                else:
+                    if current_event:
+                        current_event += ", " + c
+                    else:
+                        current_event = c
+            if current_event:
+                refined_parts.append(current_event)
+        else:
+            refined_parts.append(p)
 
-    # 3. Lọc bẫy nội dung mơ hồ
-    vague_keywords = {"có mưa", "vui vẻ", "phức tạp", "bình thường", "đẹp", "là một vùng đất"}
-    if any(vk in body.lower() for vk in vague_keywords):
-        return None
+    results = []
+    primary_subject = None
 
-    # 4. Trích xuất thực thể
-    all_extracted = extract_all_persons(body)
-    persons_valid = {p for p in all_extracted if is_valid_person(p)}
-    subjects = extract_persons_from_body(body)
-    places = extract_all_places(body)
-    
-    # 5. Logic GIỮ LẠI (Sửa lỗi "Nhân dân vùng lên")
-    keep = False
-    body_low = body.lower()
-    
-    # A. Có nhân vật hợp lệ
-    if persons_valid: 
-        keep = True
-    
-    # B. Có hành động lịch sử mạnh (Dù không có tên người cụ thể)
-    # Thêm "vùng lên", "giành độc lập" để pass test_normalize_keeps_collective_with_strong_action
-    core_historical_actions = {
-        "tiêu diệt", "dời đô", "lên ngôi", "xưng vương", "đánh bại", "đánh tan",
-        "giải phóng", "tuyên ngôn", "hiệp định", "chiến thắng", "thắng lợi",
-        "thành lập", "ban hành", "khởi nghĩa", "đại phá", "vùng lên", "giành độc lập",
-        "tiêu diệt", "đánh đuổi", "xâm lược", "hội kiến", "nghiên cứu", "giành chính quyền"
-    }
-    if any(act in body_low for act in core_historical_actions):
-        keep = True
+    for part in refined_parts:
+        body = clean_text(part)
+        if not body or len(body.split()) < 3: continue
 
-    # C. Chứa địa danh/tập thể quan trọng đang có nature chính trị/quân sự
-    nature = classify_nature(body)
-    important_anchors = {
-        "thăng long", "nhà trần", "nhà lê", "nhà lý", "nhân dân",
-        "bạch đằng", "điện biên phủ", "ngọc hồi", "đống đa"
-    }
-    if any(anchor in body_low for anchor in important_anchors):
-        if any(n in nature for n in ["military", "institutional", "historical_event"]):
+        # Kiểm tra bẫy nội dung mơ hồ
+        vague_keywords = {"có mưa", "vui vẻ", "phức tạp", "bình thường", "đẹp", "là một vùng đất"}
+        if any(vk in body.lower() for vk in vague_keywords):
+            continue
+
+        all_extracted = extract_all_persons(body)
+        persons_valid = {p for p in all_extracted if is_valid_person(p)}
+        subjects = extract_persons_from_body(body)
+
+        # Kế thừa chủ thể nếu phần này thiếu chủ ngữ nhưng có hành động
+        if subjects:
+            primary_subject = sorted(list(subjects))[0]
+        elif primary_subject and (body[0].islower() or any(body.lower().startswith(v) for v in INFORMATIVE_VERBS)):
+            subjects = {primary_subject}
+
+        places = extract_all_places(body)
+        nature = classify_nature(body)
+        tone = list(classify_tone(body, year_str))
+
+        # Logic giữ lại sự kiện
+        keep = False
+        body_low = body.lower()
+        if persons_valid or subjects:
             keep = True
-    
-    if not keep: return None
 
-    # 6. Phân loại Tone
-    tone = classify_tone(body, year)
-    
-    return (
-        str(year),
-        body,
-        list(nature),
-        list(tone),
-        set(subjects),
-        set(persons_valid),
-        set(places)
-    )
+        core_historical_actions = {
+            "tiêu diệt", "dời đô", "lên ngôi", "xưng vương", "đánh bại", "đánh tan",
+            "giải phóng", "tuyên ngôn", "hiệp định", "chiến thắng", "thắng lợi",
+            "thành lập", "ban hành", "khởi nghĩa", "đại phá", "vùng lên", "giành độc lập",
+            "đánh đuổi", "xâm lược", "hội kiến", "nghiên cứu", "giành chính quyền"
+        }
+        if any(act in body_low for act in core_historical_actions):
+            keep = True
+
+        important_anchors = {
+            "thăng long", "nhà trần", "nhà lê", "nhà lý", "nhân dân",
+            "bạch đằng", "điện biên phủ", "ngọc hồi", "đống đa"
+        }
+        if any(anchor in body_low for anchor in important_anchors):
+            if any(n in nature for n in ["military", "institutional", "historical_event"]):
+                keep = True
+
+        if keep:
+            results.append((
+                year_str,
+                body,
+                list(nature),
+                tone,
+                set(subjects),
+                set(persons_valid),
+                set(places),
+                dynasty
+            ))
+
+    return results
 
 HEROIC_ENDINGS = [
     "Sự kiện này mở ra một chương sử hào hùng của dân tộc.",
@@ -1771,28 +1834,33 @@ def main():
     with Pool(processes=min(cpu_count(), 4)) as pool:
         results = pool.map(normalize, lines)
 
-    for res in results:
-        if not res:
+    for res_list in results:
+        if not res_list:
             continue
 
-        year, body, nature, tone, persons_subject, persons_all, places = res
+        for res in res_list:
+            year, body, nature, tone, persons_subject, persons_all, places, dynasty = res
 
-        timeline.setdefault(year, []).append({
-            "year": int(year),
-            "event": body,
-            "persons": sorted(persons_subject),
-            "persons_all": sorted(persons_all),
-            "places": sorted(places),
-            "nature": set(nature),
-            "tone": tone,
-            "keywords": set(extract_keywords(body))
-        })
+            timeline.setdefault(year, []).append({
+                "year": int(year),
+                "event": body,
+                "persons": sorted(persons_subject),
+                "persons_all": sorted(persons_all),
+                "places": sorted(places),
+                "nature": nature,
+                "tone": tone,
+                "keywords": extract_keywords(body),
+                "dynasty": dynasty
+            })
 
-        total_kept += 1
+            total_kept += 1
 
+    # Sắp xếp timeline theo năm
+    sorted_years = sorted(timeline.keys(), key=lambda x: int(x))
     final_timeline = {}
 
-    for year, events in timeline.items():
+    for year in sorted_years:
+        events = timeline[year]
         final_timeline[year] = {
             "summary": build_year_summary(events),
             "events": merge_events_by_year(events)
