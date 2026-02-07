@@ -16,7 +16,6 @@ RUN apt-get update && apt-get install -y \
 # =====================
 COPY requirements.txt .
 
-# Torch CPU (nhẹ, không CUDA)
 RUN pip install --no-cache-dir \
     torch==2.0.1+cpu \
     -f https://download.pytorch.org/whl/torch_stable.html
@@ -29,11 +28,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app ./app
 COPY faiss_index ./faiss_index
 
-# HuggingFace cache
 ENV TRANSFORMERS_CACHE=/app/.cache/huggingface
 ENV HF_HOME=/app/.cache/huggingface
 
-EXPOSE 8000
+# ❌ KHÔNG EXPOSE CŨNG ĐƯỢC (Railway không cần)
+# EXPOSE 8000
 
-# ✅ CÁCH 2: Python đọc PORT
-CMD ["python", "-m", "app.main"]
+# ✅ CMD ĐÚNG CHO RAILWAY
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
