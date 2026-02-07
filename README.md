@@ -43,12 +43,19 @@ Dịch vụ API xử lý các yêu cầu từ người dùng:
 -   Python 3.12+
 -   Các thư viện: `fastapi`, `uvicorn`, `faiss-cpu` (hoặc `faiss-gpu`), `sentence-transformers`, `pydantic`.
 
-### Khởi chạy API
-Để chạy dịch vụ API, di chuyển vào thư mục `ai-service` và sử dụng lệnh:
-```bash
-cd ai-service
-uvicorn app.main:app --reload
-```
+### 🚀 Hướng dẫn chạy API (Quan trọng)
+Để khởi chạy dịch vụ API cho chatbot, bạn cần thực hiện các bước sau:
+
+1. Di chuyển vào thư mục `ai-service`:
+   ```bash
+   cd ai-service
+   ```
+2. Chạy lệnh khởi động server (FastAPI):
+   ```bash
+   uvicorn app.main:app --reload
+   ```
+   *(Lưu ý: Đảm bảo bạn đã cài đặt đầy đủ các thư viện Python cần thiết)*
+
 API sẽ mặc định chạy tại: `http://localhost:8000`
 
 ### Chạy Pipeline dữ liệu (Khi cần cập nhật dữ liệu)
