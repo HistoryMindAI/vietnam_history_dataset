@@ -1,7 +1,3 @@
-faiss_index/
-*.index
-*.json
-
 venv/
 env/
 .env
