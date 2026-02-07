@@ -165,10 +165,11 @@ def test_normalize_person_and_place():
         "đánh bại quân Nguyên Mông trên sông Bạch Đằng."
     )
 
-    res = normalize(text)
-    assert res is not None
+    res_list = normalize(text)
+    assert res_list
+    res = res_list[0]
 
-    year, body, nature, tone, persons, persons_all, places = res
+    year, body, nature, tone, persons, persons_all, places, dynasty = res
 
     assert year == "1288"
     assert "Trần Hưng Đạo" in persons_all
@@ -183,30 +184,33 @@ def test_normalize_no_false_persons():
         "đập tan quân Thanh."
     )
 
-    res = normalize(text)
-    assert res is not None
+    res_list = normalize(text)
+    assert res_list
+    res = res_list[0]
 
-    _, _, _, _, persons, persons_all, _ = res
+    _, _, _, _, persons, persons_all, _, _ = res
 
     assert persons == set()
     assert persons_all == set()
 
 def test_place_not_recognized_as_person():
     text = "Năm 1288, chiến thắng Bạch Đằng diễn ra vang dội."
-    res = normalize(text)
+    res_list = normalize(text)
 
-    assert res is not None
-    year, body, nature, tone, persons, persons_all, _ = res
+    assert res_list
+    res = res_list[0]
+    year, body, nature, tone, persons, persons_all, _, _ = res
 
     assert "Bạch Đằng" not in persons
     assert "Bạch Đằng" not in persons_all
 
 def test_dynasty_not_person():
     text = "Năm 1225, nhà Trần được thành lập."
-    res = normalize(text)
+    res_list = normalize(text)
 
-    assert res is not None
-    _, _, _, _, persons, persons_all, _ = res
+    assert res_list
+    res = res_list[0]
+    _, _, _, _, persons, persons_all, _, _ = res
 
     assert not persons
     assert not persons_all
@@ -217,10 +221,11 @@ def test_person_and_place_together():
         "đánh bại quân Nguyên Mông trên sông Bạch Đằng."
     )
 
-    res = normalize(text)
-    assert res is not None
+    res_list = normalize(text)
+    assert res_list
+    res = res_list[0]
 
-    _, _, _, _, persons, persons_all, _ = res
+    _, _, _, _, persons, persons_all, _, _ = res
 
     assert "Trần Hưng Đạo" in persons_all
     assert "Bạch Đằng" not in persons_all
@@ -236,30 +241,33 @@ def test_royal_title_is_valid_person():
 
 def test_alias_in_normalize():
     text = "Năm 1789, Quang Trung đánh tan quân Thanh."
-    res = normalize(text)
+    res_list = normalize(text)
 
-    assert res is not None
-    _, _, _, _, persons, persons_all, _ = res
+    assert res_list
+    res = res_list[0]
+    _, _, _, _, persons, persons_all, _, _ = res
 
     assert "Nguyễn Huệ" in persons_all
     assert "Quang Trung" not in persons_all
 
 def test_collective_not_person():
     text = "Năm 1945, nhân dân Việt Nam giành chính quyền."
-    res = normalize(text)
+    res_list = normalize(text)
 
-    assert res is not None
-    _, _, _, _, persons, persons_all, _ = res
+    assert res_list
+    res = res_list[0]
+    _, _, _, _, persons, persons_all, _, _ = res
 
     assert not persons
     assert not persons_all
 
 def test_campaign_not_person():
     text = "Năm 1954, chiến dịch Điện Biên Phủ kết thúc thắng lợi."
-    res = normalize(text)
+    res_list = normalize(text)
 
-    assert res is not None
-    _, _, _, _, persons, persons_all, _ = res
+    assert res_list
+    res = res_list[0]
+    _, _, _, _, persons, persons_all, _, _ = res
 
     assert "Điện Biên Phủ" not in persons_all
 
@@ -325,10 +333,10 @@ def test_ask_fallback_event_only():
     assert "Chiếu dời đô" in res
 
 def test_normalize_filters_question():
-    assert normalize("Năm 1010, Chiếu dời đô là gì?") is None
+    assert not normalize("Năm 1010, Chiếu dời đô là gì?")
 
 def test_normalize_too_short():
-    assert normalize("Năm 1000, có sự kiện.") is None
+    assert not normalize("Năm 1000, có sự kiện.")
 
 def test_extract_all_persons_complex_sentence():
     text = (
@@ -384,19 +392,21 @@ def test_classify_nature_strong_actions(text, expected_label):
 def test_normalize_keeps_collective_with_strong_action():
     # Không có tên người, nhưng có "Hành động mạnh" + "Tập thể"
     text = "Năm 1945, nhân dân ta vùng lên giành độc lập."
-    res = normalize(text)
-    assert res is not None
-    year, body, nature, _, persons_subject, _, _ = res
+    res_list = normalize(text)
+    assert res_list
+    res = res_list[0]
+    year, body, nature, _, persons_subject, _, _, _ = res
     assert year == "1945"
     assert "historical_event" in nature
     assert not persons_subject # Không có cá nhân cụ thể là đúng
 
 def test_normalize_keeps_place_event():
     text = "Năm 1975, giải phóng hoàn toàn miền Nam."
-    res = normalize(text)
-    assert res is not None
-    # Phải giải nén đầy đủ 7 giá trị trả về từ normalize()
-    year, body, nature, tone, persons_subject, persons_all, places = res
+    res_list = normalize(text)
+    assert res_list
+    res = res_list[0]
+    # Phải giải nén đầy đủ 8 giá trị trả về từ normalize()
+    year, body, nature, tone, persons_subject, persons_all, places, _ = res
     assert "historical_event" in nature
 
 def test_normalize_rejects_vague_history():
@@ -407,7 +417,7 @@ def test_normalize_rejects_vague_history():
         "Năm 1288, quân và dân ta vô cùng phấn khởi."
     ]
     for t in texts:
-        assert normalize(t) is None, f"Should reject vague text: {t}"
+        assert not normalize(t), f"Should reject vague text: {t}"
 
 
 # =========================================================
@@ -465,7 +475,7 @@ def test_complex_alias_and_title():
     
     # Hỗn hợp nhiều thực thể
     ("Nguyễn Trãi viết Bình Ngô Đại Cáo tại Lam Sơn.", {"Nguyễn Trãi"}),
-    ("Lê Lợi lên ngôi ở Thăng Long sau khi đuổi quân Minh.", {"Lê Lợi"}),
+        ("Lê Lợi lên ngôi ở Thăng Long sau khi đuổi quân Minh.", {"Lê Thái Tổ"}),
 ])
 def test_advanced_entity_extraction(text, expected_persons):
     persons = extract_all_persons(text)
@@ -518,7 +528,7 @@ def test_normalize_cleanliness_high_bar():
         "Năm 1945, một cuộc họp quan trọng đã diễn ra.", # Không rõ ai họp, họp ở đâu
     ]
     for t in vague_texts:
-        assert normalize(t) is None
+        assert not normalize(t)
 
 
 def test_person_alias_mapping_consistency():
@@ -545,8 +555,8 @@ def test_person_alias_mapping_consistency():
     "Năm 938, Ngô Quyền chiến thắng...",         # Năm 3 chữ số
 ])
 def test_normalize_valid_years(text):
-    res = normalize(text)
-    assert res is not None
+    res_list = normalize(text)
+    assert res_list
 
 @pytest.mark.parametrize("text", [
     "Có khoảng 2000 người tham gia.",   # Con số chỉ số lượng, không phải năm
@@ -554,7 +564,7 @@ def test_normalize_valid_years(text):
     "Năm nay là một năm khó khăn.",    # Không có số cụ thể
 ])
 def test_normalize_reject_non_year_numbers(text):
-    assert normalize(text) is None
+    assert not normalize(text)
 
 
 # =========================================================
@@ -642,7 +652,7 @@ def test_ask_by_person_alias_recognition():
     }
     # Người dùng hỏi "Quang Trung", hệ thống phải tìm được "Nguyễn Huệ"
     res = ask_by_person(timeline, "Quang Trung")
-    assert res is not None
+    assert res
     assert len(res) > 0
 
 import pytest
@@ -744,7 +754,7 @@ def test_normalize_rejection_logic():
         "Tại Thăng Long, năm 1010 có mưa.",          # Không có sự kiện/người quan trọng
     ]
     for t in vague_texts:
-        assert normalize(t) is None
+        assert not normalize(t)
 
 def test_normalize_acceptance_logic():
     # Những câu này dù ngắn nhưng có thực thể quan trọng, phải được giữ lại
@@ -754,10 +764,11 @@ def test_normalize_acceptance_logic():
         "Năm 1483, ban hành luật Hồng Đức.",           # Có sự kiện thể chế (institutional)
     ]
     for t in valid_texts:
-        res = normalize(t)
-        assert res is not None
-        # Kiểm tra cấu trúc tuple trả về (year, body, nature, tone, subjects, persons_all, places)
-        assert len(res) == 7
+        res_list = normalize(t)
+        assert res_list
+        res = res_list[0]
+        # Kiểm tra cấu trúc tuple trả về (year, body, nature, tone, subjects, persons_all, places, dynasty)
+        assert len(res) == 8
         assert res[0] in t # Năm phải đúng
 
 
@@ -845,22 +856,24 @@ def test_canonical_consistency(input_name, expected_canonical):
 def test_normalize_traps():
     # Bẫy 1: Câu có năm và địa danh nhưng không có hành động/người (Nên bỏ)
     text_1 = "Năm 1010, Thăng Long là một vùng đất đẹp."
-    assert normalize(text_1) is None 
+    assert not normalize(text_1)
 
     # Bẫy 2: Câu có tập thể + hành động mạnh (Nên giữ, nhưng persons rỗng)
     text_2 = "Năm 1285, quân dân nhà Trần đại phá quân Nguyên."
-    res = normalize(text_2)
-    assert res is not None
-    _, _, nature, _, persons_subject, _, _ = res
+    res_list = normalize(text_2)
+    assert res_list
+    res = res_list[0]
+    _, _, nature, _, persons_subject, _, _, _ = res
     assert "military" in nature
     assert len(persons_subject) == 0 # 'Quân dân nhà Trần' không phải là Person cụ thể
 
     # Bẫy 3: Tên người giả trong cấu trúc viết hoa
     text_3 = "Năm 1945, Lịch Sử Việt Nam sang trang mới."
-    res = normalize(text_3)
+    res_list = normalize(text_3)
     # Nếu câu không có thực thể thật, normalize nên trả về None để sạch data
-    if res:
-        _, _, _, _, _, persons_all, _ = res
+    if res_list:
+        res = res_list[0]
+        _, _, _, _, _, persons_all, _, _ = res
         assert "Lịch Sử" not in persons_all
 
 @pytest.mark.parametrize("text, expected_tone", [
@@ -903,17 +916,19 @@ def test_person_vs_honorific_titles():
 def test_normalize_with_ambiguous_dates():
     """Nghi ngờ: Các con số không phải năm (số quân, khoảng cách) gây nhiễu."""
     text = "Năm 1288, 30 vạn quân Nguyên bị tiêu diệt tại sông Bạch Đằng."
-    res = normalize(text)
-    assert res is not None
-    year, _, _, _, _, _, _ = res
+    res_list = normalize(text)
+    assert res_list
+    res = res_list[0]
+    year, _, _, _, _, _, _, _ = res
     assert year == "1288" # Phải trích xuất đúng năm, không phải 30 (vạn)
 
 def test_complex_sentence_structure():
     """Nghi ngờ: Câu phức có nhiều tên người và địa danh gây nhiễu chủ thể."""
     text = "Năm 1789, tại Thăng Long, Nguyễn Huệ đã hội kiến với các tướng lĩnh sau khi đánh đuổi quân Thanh."
-    res = normalize(text)
-    assert res is not None
-    _, _, _, _, subjects, _, _ = res
+    res_list = normalize(text)
+    assert res_list
+    res = res_list[0]
+    _, _, _, _, subjects, _, _, _ = res
     # Chủ thể thực hiện hành động chính phải là Nguyễn Huệ
     assert "Nguyễn Huệ" in subjects
 
@@ -940,9 +955,9 @@ def test_mixed_tone_priority():
 
 def test_normalize_empty_or_garbage_input():
     """Kiểm tra input rác hoặc không có dữ liệu lịch sử."""
-    assert normalize("") is None
-    assert normalize("1 2 3 4 5") is None
-    assert normalize("Hôm nay trời đẹp quá, tôi đi chơi.") is None
+    assert not normalize("")
+    assert not normalize("1 2 3 4 5")
+    assert not normalize("Hôm nay trời đẹp quá, tôi đi chơi.")
 
 def test_pick_tone_empty_string():
     assert pick_tone("") in ["neutral", "formal"]
@@ -1060,7 +1075,7 @@ def test_infer_subject_with_unknown_enemy():
     """Tránh nhận diện quân thù làm chủ thể tích cực."""
     body = "Quân Thanh tiến vào Thăng Long nhưng bị Nguyễn Huệ chặn đánh."
     persons = {"Nguyễn Huệ"}
-    # Dù 'Quân Thanh' đứng đầu, nhưng Nguyễn Huệ mới là chủ thể lịch sử cần track
+    # Dù 'Quân Thanh' xuất hiện trước, nhưng Subject ghi nhận phải là Nguyễn Huệ
     assert infer_subject(body, persons, ["military"]) == "Nguyễn Huệ"
 
 @pytest.mark.parametrize("text, expected_nature", [
@@ -1090,21 +1105,22 @@ def test_ask_by_person_case_insensitive():
     """Người dùng hỏi bằng chữ thường."""
     timeline = {"1789": {"events": [{"event": "Nguyễn Huệ thắng quân Thanh", "persons_all": ["Nguyễn Huệ"]}]}}
     res = ask_by_person(timeline, "nguyễn huệ")
-    assert res is not None
+    assert res
     assert len(res) > 0
 
 def test_normalize_traps_advanced():
     # Bẫy 1: Năm quá lớn (tương lai) hoặc quá nhỏ (không hợp lệ)
-    assert normalize("Năm 3000, người máy xâm lược.") is None
+    assert not normalize("Năm 3000, người máy xâm lược.")
     
     # Bẫy 2: Câu chứa từ khóa lịch sử nhưng là ví dụ hoặc câu hỏi
-    assert normalize("Tại sao năm 938 Ngô Quyền lại dùng cọc gỗ?") is None
+    assert not normalize("Tại sao năm 938 Ngô Quyền lại dùng cọc gỗ?")
     
     # Bẫy 3: Thực thể địa danh trùng tên người (Ví dụ: tỉnh Thái Bình vs người tên Thái Bình)
     text = "Năm 1945, tại Thái Bình, nhân dân nổi dậy."
-    res = normalize(text)
-    if res:
-        _, _, _, _, _, persons_all, places = res
+    res_list = normalize(text)
+    if res_list:
+        res = res_list[0]
+        _, _, _, _, _, persons_all, places, _ = res
         assert "Thái Bình" in places
         assert "Thái Bình" not in persons_all
 
@@ -1128,29 +1144,33 @@ def test_extract_year_anniversary_confusion(text, expected_year):
 def test_normalize_ignore_military_numbers():
     """Kiểm tra xem 1000 quân hay 2000 chiến thuyền có bị nhầm thành năm không."""
     text = "Năm 938, Ngô Quyền với 1000 chiến thuyền đã đánh bại quân Nam Hán."
-    res = normalize(text)
-    assert res is not None
+    res_list = normalize(text)
+    assert res_list
+    res = res_list[0]
     year = res[0]
     assert year == "938"
     assert year != "1000"
 
 def test_normalize_with_large_army_counts():
     text = "Năm 1285, 50 vạn quân Nguyên xâm lược nước ta."
-    res = normalize(text)
-    assert res is not None
+    res_list = normalize(text)
+    assert res_list
+    res = res_list[0]
     assert res[0] == "1285"
 
 def test_normalize_duration_vs_year():
     text = "Sau 1000 năm Bắc thuộc, năm 939 Ngô Quyền lên ngôi vua."
-    res = normalize(text)
-    assert res is not None
+    res_list = normalize(text)
+    assert res_list
+    res = res_list[0]
     assert res[0] == "939"
     assert res[0] != "1000"
 
 def test_normalize_age_rejection():
     text = "Năm 1010, khi đó Lý Thái Tổ đã 36 tuổi."
-    res = normalize(text)
-    assert res is not None
+    res_list = normalize(text)
+    assert res_list
+    res = res_list[0]
     assert res[0] == "1010"
     assert "36" not in res[0]
 
@@ -1158,8 +1178,9 @@ def test_year_inside_document_names():
     text = "Năm 2010, các nhà khoa học nghiên cứu về sự kiện năm 1010."
     # Nếu logic là lấy năm đầu tiên xuất hiện (theo storyteller.py hiện tại)
     # thì 2010 phải được ưu tiên.
-    res = normalize(text)
-    assert res is not None
+    res_list = normalize(text)
+    assert res_list
+    res = res_list[0]
     assert res[0] == "2010"
 
 
@@ -1199,13 +1220,14 @@ def test_storyteller_with_garbage_structure():
     "Năm 99999 lịch sử sang trang.",
 ])
 def test_normalize_invalid_year_ranges(text):
-    assert normalize(text) is None
+    assert not normalize(text)
 
 
 def test_normalize_multiple_years_conflict():
     text = "Năm 938 và năm 939, Ngô Quyền tiếp tục củng cố chính quyền."
-    res = normalize(text)
-    assert res is not None
+    res_list = normalize(text)
+    assert res_list
+    res = res_list[0]
     year, *_ = res
     assert year in ["938", "939"]  # nhưng không được crash
 
@@ -1339,13 +1361,13 @@ def test_tone_neutral_not_polluted():
     "Năm 1288, cảm xúc dâng trào.",
 ])
 def test_normalize_reject_poetic_history(text):
-    assert normalize(text) is None
+    assert not normalize(text)
 
 
 def test_normalize_accept_strong_action_no_person():
     text = "Năm 1945, giành chính quyền trên cả nước."
-    res = normalize(text)
-    assert res is not None
+    res_list = normalize(text)
+    assert res_list
 
 
 # =========================================================
@@ -1469,7 +1491,7 @@ def test_normalize_reject_questions_and_vague_claims():
         "Hơn 1000 người đã tham gia lễ hội năm nay." # Số lượng người, không phải năm lịch sử
     ]
     for inp in bad_inputs:
-        assert normalize(inp) is None
+        assert not normalize(inp)
 
 
 # =========================================================
@@ -1513,3 +1535,19 @@ def test_prune_event_sentence_with_person():
     result = prune_event_sentence(text)
     assert "Lý Thái Tổ ban Chiếu dời đô" in result
     assert "trời hôm đó rất trong xanh" not in result
+
+def test_normalize_splitting_multi_events():
+    """Kiểm tra việc tách nhiều sự kiện trong một record."""
+    text = "Năm 938, Ngô Quyền dùng cọc gỗ đánh tan quân Nam Hán, sau đó lên ngôi vua."
+    res_list = normalize(text)
+
+    assert len(res_list) >= 2
+
+    # Sự kiện 1
+    assert "Ngô Quyền dùng cọc gỗ" in res_list[0][1]
+    assert "Ngô Quyền" in res_list[0][4]
+
+    # Sự kiện 2
+    assert "lên ngôi vua" in res_list[1][1]
+    # Kiểm tra kế thừa chủ thể
+    assert "Ngô Quyền" in res_list[1][4]
