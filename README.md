@@ -14,7 +14,7 @@ Hệ thống được thiết kế theo mô hình 3 lớp:
 Quá trình xây dựng cơ sở tri thức cho AI bao gồm các bước:
 
 ### 1. Chuẩn hóa và Trích xuất thực thể (`pipeline/storyteller.py`)
--   **Dữ liệu đầu vào**: Sử dụng tập dữ liệu lịch sử Việt Nam (dạng Arrow).
+-   **Dữ liệu đầu vào**: Sử dụng tập dữ liệu [Vietnam-History-1M-Vi](https://huggingface.co/datasets/minhxthanh/Vietnam-History-1M-Vi) (dạng Arrow).
 -   **Xử lý**:
     -   Làm sạch văn bản, loại bỏ các nội dung nhiễu.
     -   Trích xuất chính xác thời gian (năm diễn ra sự kiện).
@@ -44,7 +44,7 @@ Dịch vụ API xử lý các yêu cầu từ người dùng:
 -   Các thư viện: `fastapi`, `uvicorn`, `faiss-cpu` (hoặc `faiss-gpu`), `sentence-transformers`, `pydantic`.
 
 ### Khởi chạy API
-Để chạy dịch vụ API, di chuyển vào thư mục `ai-service` và sử dụng `uvicorn`:
+Để chạy dịch vụ API, di chuyển vào thư mục `ai-service` và sử dụng lệnh:
 ```bash
 cd ai-service
 uvicorn app.main:app --reload
