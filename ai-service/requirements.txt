@@ -13,3 +13,7 @@ faiss-cpu>=1.8.0
 # ===== Minimal deps =====
 numpy>=1.26.4
 scikit-learn==1.4.0
+
+# ===== HuggingFace =====
+datasets>=2.16.0
+huggingface-hub>=0.20.0
