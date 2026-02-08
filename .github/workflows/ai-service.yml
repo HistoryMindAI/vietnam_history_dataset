@@ -1,0 +1,94 @@
+name: AI Service CI/CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ai-service/**'
+      - 'data/**'
+      - 'pipeline/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ai-service/**'
+      - 'data/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          cd ai-service
+          pip install -r requirements.txt
+          pip install pytest
+      
+      - name: Run tests
+        run: |
+          cd ai-service
+          python -m pytest ../tests/ -v
+  
+  build-faiss:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          cd ai-service
+          pip install -r requirements.txt
+      
+      - name: Check/Build FAISS index
+        run: |
+          cd ai-service
+          if [ -f "faiss_index/history.index" ] && [ -f "faiss_index/meta.json" ]; then
+            echo "✅ FAISS index exists, skipping rebuild"
+          else
+            echo "🔨 Building FAISS index..."
+            python scripts/build_faiss.py
+          fi
+      
+      - name: Upload FAISS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: faiss-index
+          path: ai-service/faiss_index/
+          retention-days: 30
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-faiss
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download FAISS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: faiss-index
+          path: ai-service/faiss_index/
+      
+      - name: Deploy to Railway
+        uses: bervProject/railway-deploy@main
+        with:
+          railway_token: ${{ secrets.RAILWAY_TOKEN }}
+          service: ai-service
