@@ -37,18 +37,46 @@ else:
     print(f"[WARN] FAISS index not found at {INDEX_PATH}")
 
 # ===============================
-# FALLBACK INDEX
+# AUTO-BUILD INDEX IF MISSING
 # ===============================
 if index is None:
+    print("[STARTUP] FAISS index not found. Attempting to build from documents...")
     try:
-        d = embedder.get_sentence_embedding_dimension()
-        if not isinstance(d, int):
-            d = 384
+        from app.services.vector import build_index
+        
+        if os.path.exists(META_PATH):
+            with open(META_PATH, encoding="utf-8") as f:
+               temp_meta = json.load(f)
+            temp_docs = temp_meta.get("documents", [])
+            
+            if temp_docs:
+                print(f"[STARTUP] Found {len(temp_docs)} documents. Building index...")
+                # Pass embedder to avoid circular import if vector.py needs it, 
+                # but vector.py currently imports it. I will fix vector.py next.
+                index = build_index(temp_docs, embedder)
+                
+                # Save the newly built index
+                faiss.write_index(index, INDEX_PATH)
+                print(f"[STARTUP] Index built and saved to {INDEX_PATH}")
+            else:
+                print("[WARN] No documents found in metadata. Creating empty index.")
+                d = embedder.get_sentence_embedding_dimension()
+                index = faiss.IndexFlatL2(d)
+        else:
+            print("[WARN] Metadata file not found. Creating empty index.")
+            d = embedder.get_sentence_embedding_dimension()
+            index = faiss.IndexFlatL2(d)
+            
+    except Exception as e:
+        print(f"[ERROR] Failed to build index: {e}")
+        # Fallback to empty index to ensure app starts
+        d = 384
+        try:
+            d = embedder.get_sentence_embedding_dimension()
+        except:
+            pass
         index = faiss.IndexFlatL2(d)
-        print(f"[STARTUP] Fallback FAISS index created (dim={d})")
-    except Exception:
-        index = faiss.IndexFlatL2(384)
-        print("[STARTUP] Fallback FAISS index created (dim=384)")
+        print(f"[STARTUP] Fallback empty index created (dim={d})")
 
 # ===============================
 # LOAD METADATA
