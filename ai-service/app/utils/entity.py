@@ -1,4 +1,4 @@
-from app.utils.normalize import normalize_query, normalize
+from app.utils.normalize import normalize
 
 ENTITY_ALIASES = {
     "quang_trung": ["quang trung", "nguyen hue"],
@@ -11,7 +11,7 @@ ENTITY_ALIASES_NORM = {
 }
 
 def extract_entities(query: str):
-    q = normalize_query(query)
+    q = normalize(query)
     found = set()
     for key, aliases in ENTITY_ALIASES.items():
         for a in aliases:
