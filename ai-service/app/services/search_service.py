@@ -1,4 +1,4 @@
-from app.core.startup import embedder, index, DOCUMENTS, DOCUMENTS_BY_YEAR
+import app.core.startup as startup
 import faiss
 import numpy as np
 from app.core.config import TOP_K, SIM_THRESHOLD
@@ -67,7 +67,10 @@ def get_cached_embedding(query: str):
     """
     Encodes and normalizes a query, caching the result to speed up repeated searches.
     """
-    emb = embedder.encode([query], convert_to_numpy=True).astype("float32")
+    if startup.embedder is None:
+        raise RuntimeError("Embedding model is not loaded")
+        
+    emb = startup.embedder.encode([query], convert_to_numpy=True).astype("float32")
     faiss.normalize_L2(emb)
     return emb
 
@@ -76,43 +79,56 @@ def semantic_search(query: str):
     """
     Perform semantic search with improved relevance filtering.
     """
+    if startup.index is None:
+        # If called before ready, return empty or raise error
+        print("[WARN] Search called before index is ready")
+        return []
+
     # Normalize query before searching/caching to increase hit rate
-    norm_q = normalize_query(query)
-    emb = get_cached_embedding(norm_q)
+    try:
+        norm_q = normalize_query(query)
+        emb = get_cached_embedding(norm_q)
 
-    # Increase TOP_K to allow for filtering
-    search_k = min(TOP_K * 2, 30)
-    scores, ids = index.search(emb, search_k)
+        # Increase TOP_K to allow for filtering
+        search_k = min(TOP_K * 2, 30)
+        scores, ids = startup.index.search(emb, search_k)
 
-    # Use a higher threshold for better relevance
-    higher_threshold = max(SIM_THRESHOLD, 0.55)
+        # Use a higher threshold for better relevance
+        higher_threshold = max(SIM_THRESHOLD, 0.55)
 
-    results = []
-    for score, idx in zip(scores[0], ids[0]):
-        if idx == -1:
-            continue
-        
-        # Score must meet higher threshold
-        if score < higher_threshold:
-            continue
-        
-        doc = DOCUMENTS[idx]
-        
-        # Additionally check keyword relevance
-        if not check_query_relevance(query, doc):
-            continue
-        
-        results.append(doc)
-        
-        # Limit results to prevent verbose responses
-        if len(results) >= TOP_K:
-            break
+        results = []
+        for score, idx in zip(scores[0], ids[0]):
+            if idx == -1:
+                continue
+            
+            # Score must meet higher threshold
+            if score < higher_threshold:
+                continue
+            
+            # Use startup.DOCUMENTS
+            if idx < len(startup.DOCUMENTS):
+                doc = startup.DOCUMENTS[idx]
+                
+                # Additionally check keyword relevance
+                if not check_query_relevance(query, doc):
+                    continue
+                
+                results.append(doc)
+            
+            # Limit results to prevent verbose responses
+            if len(results) >= TOP_K:
+                break
 
-    return results
+        return results
+    except Exception as e:
+        print(f"[ERROR] Semantic search failed: {e}")
+        return []
 
 
 def scan_by_year(year: int):
     """
     Returns events for a specific year using an O(1) indexed lookup.
     """
-    return DOCUMENTS_BY_YEAR.get(year, [])
+    if startup.DOCUMENTS_BY_YEAR is None:
+        return []
+    return startup.DOCUMENTS_BY_YEAR.get(year, [])

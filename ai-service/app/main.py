@@ -1,11 +1,24 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+import threading
+import app.core.startup as startup
 
 from app.api.chat import router as chat_router
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Load resources in background to allow fast startup/health check
+    print("[LIFESPAN] Starting resource loading in background...")
+    thread = threading.Thread(target=startup.load_resources)
+    thread.start()
+    yield
+    # Clean up (if needed)
+
 app = FastAPI(
     title="Vietnam History AI",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # ===== CORS =====
@@ -36,35 +49,34 @@ def health_detailed():
     - Year coverage
     - Sample data for verification
     """
-    from app.core.startup import DOCUMENTS, DOCUMENTS_BY_YEAR, index
-    
     try:
         # Get index status
-        index_vectors = index.ntotal if index else 0
+        index_vectors = startup.index.ntotal if startup.index else 0
         
         # Get document stats
-        doc_count = len(DOCUMENTS) if DOCUMENTS else 0
-        year_count = len(DOCUMENTS_BY_YEAR) if DOCUMENTS_BY_YEAR else 0
+        doc_count = len(startup.DOCUMENTS) if startup.DOCUMENTS else 0
+        year_count = len(startup.DOCUMENTS_BY_YEAR) if startup.DOCUMENTS_BY_YEAR else 0
         
         # Get year range
-        years = list(DOCUMENTS_BY_YEAR.keys()) if DOCUMENTS_BY_YEAR else []
+        years = list(startup.DOCUMENTS_BY_YEAR.keys()) if startup.DOCUMENTS_BY_YEAR else []
         min_year = min(years) if years else None
         max_year = max(years) if years else None
         
         # Sample some years to verify data
         sample_years = {}
-        for y in [40, 1284, 1911, 1945, 1975]:
-            if y in DOCUMENTS_BY_YEAR:
-                events = DOCUMENTS_BY_YEAR[y]
-                sample_years[y] = {
-                    "count": len(events),
-                    "first_event": events[0].get("title", "")[:50] if events else None
-                }
+        if startup.DOCUMENTS_BY_YEAR:
+            for y in [40, 1284, 1911, 1945, 1975]:
+                if y in startup.DOCUMENTS_BY_YEAR:
+                    events = startup.DOCUMENTS_BY_YEAR[y]
+                    sample_years[y] = {
+                        "count": len(events),
+                        "first_event": events[0].get("title", "")[:50] if events else None
+                    }
         
         return {
             "status": "ok",
             "faiss": {
-                "loaded": index is not None,
+                "loaded": startup.index is not None,
                 "vectors": index_vectors
             },
             "documents": {
@@ -88,7 +100,8 @@ def health_detailed():
 def root():
     return {
         "service": "Vietnam History AI",
-        "status": "running"
+        "status": "running",
+        "ready": startup.index is not None
     }
 
 # ===== ENTRYPOINT (RAILWAY) =====
