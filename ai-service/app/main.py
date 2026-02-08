@@ -1,23 +1,26 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.chat import router
+from app.api.chat import router as chat_router
 
 app = FastAPI(
     title="Vietnam History AI",
     version="1.0.0"
 )
 
+# ===== CORS =====
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=False,   # ⚠️ bắt buộc False khi "*"
+    allow_credentials=False,   # bắt buộc False khi "*"
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(router, prefix="/api")
+# ===== ROUTER =====
+app.include_router(chat_router, prefix="/api")
 
+# ===== HEALTH CHECK =====
 @app.get("/health")
 def health():
     return {"status": "ok"}
@@ -29,8 +32,7 @@ def root():
         "status": "running"
     }
 
-
-# ===== ENTRYPOINT (CÁCH 2 – CHUẨN RAILWAY) =====
+# ===== ENTRYPOINT (RAILWAY) =====
 if __name__ == "__main__":
     import os
     import uvicorn
@@ -38,7 +40,7 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
 
     uvicorn.run(
-        app,
+        "app.main:app",
         host="0.0.0.0",
         port=port,
         log_level="info",
