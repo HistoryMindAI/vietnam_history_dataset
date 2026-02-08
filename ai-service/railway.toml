@@ -1,0 +1,12 @@
+# Railway Configuration for AI Service
+# This file configures Railway deployment
+
+[build]
+# Use custom build script
+builder = "nixpacks"
+buildCommand = "chmod +x build.sh && ./build.sh"
+
+[deploy]
+startCommand = "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+healthcheckPath = "/health"
+healthcheckTimeout = 30
