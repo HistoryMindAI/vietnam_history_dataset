@@ -56,15 +56,11 @@ jobs:
           cd ai-service
           pip install -r requirements.txt
       
-      - name: Check/Build FAISS index
+      - name: Build FAISS index
         run: |
           cd ai-service
-          if [ -f "faiss_index/history.index" ] && [ -f "faiss_index/meta.json" ]; then
-            echo "✅ FAISS index exists, skipping rebuild"
-          else
-            echo "🔨 Building FAISS index..."
-            python scripts/build_faiss.py
-          fi
+          echo "🔨 Building FAISS index from HuggingFace..."
+          python scripts/build_faiss.py
       
       - name: Upload FAISS artifacts
         uses: actions/upload-artifact@v4
