@@ -84,20 +84,16 @@ if index is None:
                 temp_docs = []
 
         if temp_docs:
-                print(f"[STARTUP] Found {len(temp_docs)} documents. Building index...")
-                # Pass embedder to avoid circular import if vector.py needs it, 
-                # but vector.py currently imports it. I will fix vector.py next.
-                index = build_index(temp_docs, embedder)
-                
-                # Save the newly built index
-                faiss.write_index(index, INDEX_PATH)
-                print(f"[STARTUP] Index built and saved to {INDEX_PATH}")
-            else:
-                print("[WARN] No documents found in metadata. Creating empty index.")
-                d = embedder.get_sentence_embedding_dimension()
-                index = faiss.IndexFlatL2(d)
+            print(f"[STARTUP] Found {len(temp_docs)} documents. Building index...")
+            # Pass embedder to avoid circular import if vector.py needs it, 
+            # but vector.py currently imports it. I will fix vector.py next.
+            index = build_index(temp_docs, embedder)
+            
+            # Save the newly built index
+            faiss.write_index(index, INDEX_PATH)
+            print(f"[STARTUP] Index built and saved to {INDEX_PATH}")
         else:
-            print("[WARN] Metadata file not found. Creating empty index.")
+            print("[WARN] No documents found in metadata. Creating empty index.")
             d = embedder.get_sentence_embedding_dimension()
             index = faiss.IndexFlatL2(d)
             
