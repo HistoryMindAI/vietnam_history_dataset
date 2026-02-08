@@ -19,7 +19,7 @@ sys.modules.setdefault('sentence_transformers', MagicMock())
 
 from app.services.engine import engine_answer
 
-# Mock data
+# Mock data matching the actual structure in engine.py
 MOCK_EVENTS = [
     {
         "year": 1288,
@@ -28,6 +28,9 @@ MOCK_EVENTS = [
         "tone": "heroic",
         "persons": ["Trần Hưng Đạo"],
         "places": ["Bạch Đằng"],
+        "dynasty": "",
+        "keywords": [],
+        "title": ""
     }
 ]
 
