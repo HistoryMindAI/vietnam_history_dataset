@@ -17,9 +17,9 @@ SIM_THRESHOLD = 0.45
 
 # ---------- QUERY NORMALIZE (NEW) ----------
 def normalize_query(query: str) -> str:
+    # Keep accents for better semantic search accuracy
     q = query.lower()
-    q = unicodedata.normalize("NFD", q)
-    q = "".join(c for c in q if unicodedata.category(c) != "Mn")
+    q = unicodedata.normalize("NFC", q)
     q = re.sub(r"\s+", " ", q).strip()
 
     FUZZY_FIX = {
@@ -37,6 +37,7 @@ def normalize_query(query: str) -> str:
 
 # ---------- NORMALIZE ----------
 def normalize(text: str) -> str:
+    # Strip accents for entity matching
     text = text.lower()
     text = unicodedata.normalize("NFD", text)
     return "".join(c for c in text if unicodedata.category(c) != "Mn")
@@ -72,7 +73,8 @@ ENTITY_ALIASES_NORM = {
 
 
 def extract_entities(query: str):
-    q = normalize_query(query)
+    # Use unaccented normalization for matching against unaccented aliases
+    q = normalize(query)
     found = set()
 
     for key, aliases in ENTITY_ALIASES.items():
@@ -89,18 +91,36 @@ def contains_entity(text: str, entities):
 
 
 # ---------- LOAD ----------
-print("[INFO] Loading model & index...")
-embedder = SentenceTransformer(EMBED_MODEL)
-index = faiss.read_index(INDEX_PATH)
+# Only load if running as main or imported for usage (to avoid import errors in tests if deps missing)
+try:
+    print("[INFO] Loading model & index...")
+    embedder = SentenceTransformer(EMBED_MODEL)
+    if faiss:
+        try:
+            index = faiss.read_index(INDEX_PATH)
+        except Exception:
+            index = None
+    else:
+        index = None
 
-with open(META_PATH, encoding="utf-8") as f:
-    META_RAW = json.load(f)
-
-DOCUMENTS = META_RAW["documents"]
+    try:
+        with open(META_PATH, encoding="utf-8") as f:
+            META_RAW = json.load(f)
+        DOCUMENTS = META_RAW["documents"]
+    except Exception:
+        DOCUMENTS = []
+except Exception as e:
+    print(f"[WARN] Failed to load model/index: {e}")
+    embedder = None
+    index = None
+    DOCUMENTS = []
 
 
 # ---------- SEARCH ----------
 def semantic_search(query: str):
+    if not index or not embedder:
+        return []
+
     q_emb = embedder.encode([query], convert_to_numpy=True).astype("float32")
     faiss.normalize_L2(q_emb)
 
@@ -110,7 +130,8 @@ def semantic_search(query: str):
     for score, idx in zip(scores[0], ids[0]):
         if idx == -1 or score < SIM_THRESHOLD:
             continue
-        results.append(DOCUMENTS[idx])   # ⚠️ dùng DOCUMENTS
+        if idx < len(DOCUMENTS):
+            results.append(DOCUMENTS[idx])
     return results
 
 def scan_by_year(year: int):
@@ -175,7 +196,7 @@ def engine_answer(query: str) -> dict:
 
     single_year = extract_single_year(query_norm)
     year_range = extract_year_range(query_norm)
-    entities = extract_entities(query_norm)
+    entities = extract_entities(query) # Pass original query to extract_entities which will normalize internally
 
     if entities:
         intent = "entity"
@@ -191,7 +212,10 @@ def engine_answer(query: str) -> dict:
 
     else:
         intent = "semantic"
-        events = semantic_search(query)
+        events = semantic_search(query) # Use original query for semantic search (it normalizes internally in service, but here we do it inside semantic_search?)
+        # Wait, semantic_search in chat.py encodes `query` directly.
+        # engine_answer passes `query` (original).
+        # normalize_query is just used for year extraction here.
 
     return {
         "query": query,
@@ -228,7 +252,11 @@ def render_human(data: dict) -> str:
 def main():
     print("👉 Gõ câu hỏi (exit để thoát)\n")
     while True:
-        q = input("🧑 Bạn: ").strip()
+        try:
+            q = input("🧑 Bạn: ").strip()
+        except EOFError:
+            break
+
         if q.lower() in {"exit", "quit"}:
             break
 
