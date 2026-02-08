@@ -1,1 +1,52 @@
-{"description": "", "citation": "", "homepage": "", "license": "", "features": {"messages": {"feature": {"role": {"dtype": "string", "_type": "Value"}, "content": {"dtype": "string", "_type": "Value"}, "channel": {"dtype": "string", "_type": "Value"}}, "_type": "List"}}, "builder_name": "json", "dataset_name": "vietnam-history-1_m-vi", "config_name": "default", "version": {"version_str": "0.0.0", "major": 0, "minor": 0, "patch": 0}, "splits": {"train": {"name": "train", "num_bytes": 769080952, "num_examples": 1000000, "shard_lengths": [650091, 349909], "dataset_name": "vietnam-history-1_m-vi"}}, "download_checksums": {"hf://datasets/minhxthanh/Vietnam-History-1M-Vi@3fdbbebc92e755190b4eaeb1522d97a753f0f18a/Vietnam History Complete.jsonl": {"num_bytes": 870954661, "checksum": null}}, "download_size": 870954661, "dataset_size": 769080952, "size_in_bytes": 1640035613}
+{
+    "description": "",
+    "citation": "",
+    "homepage": "",
+    "license": "",
+    "features": {
+        "messages": {
+            "feature": {
+                "role": {
+                    "dtype": "string",
+                    "_type": "Value"
+                },
+                "content": {
+                    "dtype": "string",
+                    "_type": "Value"
+                },
+                "channel": {
+                    "dtype": "string",
+                    "_type": "Value"
+                }
+            },
+            "_type": "List"
+        }
+    },
+    "builder_name": "json",
+    "dataset_name": "vietnam-history-1_m-vi",
+    "config_name": "default",
+    "version": {
+        "version_str": "0.0.0",
+        "major": 0,
+        "minor": 0,
+        "patch": 0
+    },
+    "splits": {
+        "train": {
+            "name": "train",
+            "num_bytes": 769080952,
+            "num_examples": 1000000,
+            "shard_lengths": [650091, 349909],
+            "dataset_name": "vietnam-history-1_m-vi"
+        }
+    },
+    "download_checksums": {
+        "hf://datasets/minhxthanh/Vietnam-History-1M-Vi@3fdbbebc92e755190b4eaeb1522d97a753f0f18a/Vietnam History Complete.jsonl": {
+            "num_bytes": 870954661,
+            "checksum": null
+        }
+    },
+    "download_size": 870954661,
+    "dataset_size": 769080952,
+    "size_in_bytes": 1640035613
+}
