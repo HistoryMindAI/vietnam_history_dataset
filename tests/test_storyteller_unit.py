@@ -1,14 +1,19 @@
 """
-Unit tests for storyteller.py functions.
+test_storyteller_unit.py - Unit tests for storyteller.py functions.
 
-These tests verify:
+Tests:
 1. Year extraction from text
 2. Tone classification (heroic/somber/neutral)
 3. Person validation
 """
 import pytest
 import sys
-sys.path.insert(0, 'd:/HistoryMindAI/vietnam_history_dataset')
+from pathlib import Path
+
+# Add pipeline directory to path (portable)
+PROJECT_DIR = Path(__file__).parent.parent
+if str(PROJECT_DIR) not in sys.path:
+    sys.path.insert(0, str(PROJECT_DIR))
 
 
 class TestExtractYear:
@@ -58,7 +63,6 @@ class TestClassifyTone:
         from pipeline.storyteller import classify_tone
         
         result = classify_tone("Lý Công Uẩn dời đô về Thăng Long")
-        # May or may not be neutral, but should return something
         assert isinstance(result, set)
     
     def test_heroic_by_year(self):
