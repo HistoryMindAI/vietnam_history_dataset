@@ -48,8 +48,42 @@ if index is None:
             with open(META_PATH, encoding="utf-8") as f:
                temp_meta = json.load(f)
             temp_docs = temp_meta.get("documents", [])
-            
-            if temp_docs:
+        else:
+            print("[STARTUP] Metadata file not found locally. Attempting to load from HuggingFace...")
+            try:
+                from datasets import load_dataset
+                # Load dataset from Hub
+                dataset = load_dataset("minhxthanh/Vietnam-History-1M-Vi", split="train")
+                print(f"[STARTUP] Loaded {len(dataset)} items from HuggingFace.")
+                
+                # Convert to document format expected by engine
+                temp_docs = []
+                for item in dataset:
+                    # Adjust fields based on actual dataset structure
+                    # Assuming fields like 'text', 'title', 'year' or similar
+                    # For now, mapping 'text' to 'story'/'event'
+                    doc = {
+                        "year": item.get("year", 0),
+                        "event": item.get("title", "") or item.get("text", "")[:50],
+                        "story": item.get("text", ""),
+                        "title": item.get("title", ""),
+                        "dynasty": item.get("dynasty", ""),
+                        "persons": item.get("persons", []),
+                        "places": item.get("places", [])
+                    }
+                    temp_docs.append(doc)
+                
+                # Save metadata for future use
+                os.makedirs(os.path.dirname(META_PATH), exist_ok=True)
+                with open(META_PATH, "w", encoding="utf-8") as f:
+                    json.dump({"documents": temp_docs}, f, ensure_ascii=False, indent=2)
+                print(f"[STARTUP] Saved metadata to {META_PATH}")
+                
+            except Exception as e:
+                print(f"[ERROR] Failed to load from HuggingFace: {e}")
+                temp_docs = []
+
+        if temp_docs:
                 print(f"[STARTUP] Found {len(temp_docs)} documents. Building index...")
                 # Pass embedder to avoid circular import if vector.py needs it, 
                 # but vector.py currently imports it. I will fix vector.py next.
