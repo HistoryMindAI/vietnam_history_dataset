@@ -27,29 +27,36 @@ import numpy as np
 def test_embedding_cache_efficiency():
     """Verify that the embedding cache prevents redundant calls to the model."""
     from app.services.search_service import get_cached_embedding
+    import app.core.startup as startup
     
-    with patch("app.services.search_service.embedder") as mock_embedder:
-        mock_embedder.encode.return_value = np.array([[0.1, 0.2, 0.3]], dtype="float32")
+    # Mock startup.embedder
+    mock_embedder = MagicMock()
+    startup.embedder = mock_embedder
+    mock_embedder.encode.return_value = np.array([[0.1, 0.2, 0.3]], dtype="float32")
         
-        # Use unique query
-        query = f"performance_test_{time.time()}"
-        
-        # First execution
-        get_cached_embedding(query)
-        first_call_count = mock_embedder.encode.call_count
-        
-        # Second execution (should hit cache)
-        get_cached_embedding(query)
-        assert mock_embedder.encode.call_count == first_call_count, "Cache missed!"
+    # Use unique query
+    query = f"performance_test_{time.time()}"
+    
+    # Clear cache to ensure clean state
+    get_cached_embedding.cache_clear()
+    
+    # First execution
+    get_cached_embedding(query)
+    first_call_count = mock_embedder.encode.call_count
+    
+    # Second execution (should hit cache)
+    get_cached_embedding(query)
+    assert mock_embedder.encode.call_count == first_call_count, "Cache missed!"
 
 
 def test_year_lookup_performance():
     """Ensure year lookup is fast (O(1))."""
     from app.services.search_service import scan_by_year
-    from app.core.startup import DOCUMENTS_BY_YEAR
+    from app.core import startup
     
     test_year = 9999  # Use unique year to avoid conflicts
-    DOCUMENTS_BY_YEAR[test_year] = [{"event": "Test Event", "year": test_year}]
+    startup.DOCUMENTS_BY_YEAR = {}
+    startup.DOCUMENTS_BY_YEAR[test_year] = [{"event": "Test Event", "year": test_year}]
     
     start = time.perf_counter()
     results = scan_by_year(test_year)
@@ -81,23 +88,26 @@ def test_query_normalization_caching():
     """Verify normalized queries hit the same cache."""
     from app.utils.normalize import normalize_query
     from app.services.search_service import get_cached_embedding
+    import app.core.startup as startup
     
-    with patch("app.services.search_service.embedder") as mock_embedder:
-        mock_embedder.encode.return_value = np.array([[0.1, 0.2, 0.3]], dtype="float32")
-        
-        q1 = "Quang   Trung"
-        q2 = "quang trung "
-        
-        # Should normalize to same string
-        assert normalize_query(q1) == normalize_query(q2)
-        
-        # Clear cache
-        get_cached_embedding.cache_clear()
-        
-        # First call
-        get_cached_embedding(normalize_query(q1))
-        count_after_q1 = mock_embedder.encode.call_count
-        
-        # Second call (should hit cache)
-        get_cached_embedding(normalize_query(q2))
-        assert mock_embedder.encode.call_count == count_after_q1
+    # Mock startup.embedder
+    mock_embedder = MagicMock()
+    startup.embedder = mock_embedder
+    mock_embedder.encode.return_value = np.array([[0.1, 0.2, 0.3]], dtype="float32")
+    
+    q1 = "Quang   Trung"
+    q2 = "quang trung "
+    
+    # Should normalize to same string
+    assert normalize_query(q1) == normalize_query(q2)
+    
+    # Clear cache
+    get_cached_embedding.cache_clear()
+    
+    # First call
+    get_cached_embedding(normalize_query(q1))
+    count_after_q1 = mock_embedder.encode.call_count
+    
+    # Second call (should hit cache)
+    get_cached_embedding(normalize_query(q2))
+    assert mock_embedder.encode.call_count == count_after_q1
