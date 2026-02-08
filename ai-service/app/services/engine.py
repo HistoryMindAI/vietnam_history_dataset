@@ -16,7 +16,7 @@ def extract_single_year(text: str):
     return None
 
 # Maximum events per year to prevent verbose responses  
-MAX_EVENTS_PER_YEAR = 2
+MAX_EVENTS_PER_YEAR = 1
 MAX_TOTAL_EVENTS = 5
 
 # Identity patterns - moved from FE
@@ -85,19 +85,16 @@ def extract_core_keywords(text: str) -> set:
     return keywords
 
 
-def compute_similarity(keywords1: set, keywords2: set) -> float:
-    """Compute Jaccard similarity between two keyword sets."""
-    if not keywords1 or not keywords2:
-        return 0.0
-    intersection = len(keywords1 & keywords2)
-    union = len(keywords1 | keywords2)
-    return intersection / union if union > 0 else 0.0
+from difflib import SequenceMatcher
 
+def compute_text_similarity(text1: str, text2: str) -> float:
+    """Compute similarity between two texts using SequenceMatcher."""
+    return SequenceMatcher(None, text1, text2).ratio()
 
 def deduplicate_and_enrich(raw_events: list) -> list:
     """
     Deduplicate events and enrich with complete information.
-    Groups similar events, keeps the most comprehensive one, and adds metadata.
+    Aggressively merges similar events to prevent repetition.
     """
     if not raw_events:
         return []
@@ -114,73 +111,61 @@ def deduplicate_and_enrich(raw_events: list) -> list:
     
     for year in sorted(by_year.keys()):
         year_events = by_year[year]
-        used_indices = set()
-        year_unique = []
+        if not year_events:
+            continue
+
+        # Sort by content length (descending) to prefer longer, detailed stories as base 
+        year_events.sort(key=lambda x: len(x.get("story", "") or x.get("event", "")), reverse=True)
         
-        for i, event in enumerate(year_events):
-            if i in used_indices:
-                continue
+        unique_cluster = []
+        
+        for event in year_events:
+            event_text = clean_story_text(event.get("story", "") or event.get("event", ""))
+            event_lower = event_text.lower()
             
-            # Get event text for comparison
-            event_text = event.get("title", "") or event.get("event", "") or event.get("story", "")
-            event_keywords = extract_core_keywords(event_text)
+            is_duplicate = False
             
-            # Collect all related events and merge their info
-            best_event = dict(event)
-            best_story = event.get("story", "") or event.get("event", "")
-            all_persons = set(event.get("persons", []))
-            all_places = set(event.get("places", []))
-            all_keywords = set(event.get("keywords", []))
-            
-            for j, other in enumerate(year_events):
-                if j <= i or j in used_indices:
-                    continue
+            for cluster_item in unique_cluster:
+                base_event = cluster_item["event"]
+                base_text = clean_story_text(base_event.get("story", "") or base_event.get("event", ""))
+                base_lower = base_text.lower()
                 
-                other_text = other.get("title", "") or other.get("event", "") or other.get("story", "")
-                other_keywords = extract_core_keywords(other_text)
+                # Check for containment or high similarity
+                if (event_lower in base_lower or base_lower in event_lower):
+                    is_duplicate = True
+                else:
+                    sim = compute_text_similarity(event_lower, base_lower)
+                    if sim > 0.5: # Aggressive threshold
+                        is_duplicate = True
                 
-                similarity = compute_similarity(event_keywords, other_keywords)
-                
-                # If similar (>40% overlap), merge information
-                if similarity > 0.4:
-                    used_indices.add(j)
+                if is_duplicate:
+                    # Merge info into base_event (the longer one usually)
+                    # Merge persons/places
+                    current_persons = set(base_event.get("persons", []))
+                    current_persons.update(event.get("persons", []))
+                    base_event["persons"] = list(current_persons)
                     
-                    # Collect persons, places, keywords from all versions
-                    all_persons.update(other.get("persons", []))
-                    all_places.update(other.get("places", []))
-                    all_keywords.update(other.get("keywords", []))
+                    current_places = set(base_event.get("places", []))
+                    current_places.update(event.get("places", []))
+                    base_event["places"] = list(current_places)
                     
-                    # Keep the longest story
-                    other_story = other.get("story", "") or other.get("event", "")
-                    if len(other_story) > len(best_story):
-                        best_story = other_story
-                        best_event = dict(other)
+                    # Keep the absolute longest story text
+                    if len(event_text) > len(base_text):
+                         base_event["story"] = event.get("story", "")
+                         base_event["event"] = event.get("event", "")
+                    
+                    break # Found a match, stop checking other clusters
             
-            used_indices.add(i)
-            
-            # Create enriched event with merged info
-            enriched = {
-                "year": year,
-                "title": best_event.get("title", ""),
-                "event": best_event.get("event", ""),
-                "story": best_story,
-                "persons": list(all_persons),
-                "places": list(all_places),
-                "keywords": list(all_keywords),
-                "tone": best_event.get("tone", ""),
-                "dynasty": best_event.get("dynasty", "")
-            }
-            
-            year_unique.append(enriched)
-            
-            if len(year_unique) >= MAX_EVENTS_PER_YEAR:
-                break
+            if not is_duplicate:
+                unique_cluster.append({"event": event, "text": event_text})
         
-        result_events.extend(year_unique)
-        
+        # Add enriched unique events from this year
+        for item in unique_cluster:
+            result_events.append(item["event"])
+            
         if len(result_events) >= MAX_TOTAL_EVENTS:
             break
-    
+            
     return result_events[:MAX_TOTAL_EVENTS]
 
 
