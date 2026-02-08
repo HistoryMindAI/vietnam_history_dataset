@@ -15,9 +15,44 @@ def extract_single_year(text: str):
             return year
     return None
 
+# Maximum stories to return to prevent verbose responses
+MAX_STORIES = 3
+
+# Identity patterns - moved from FE
+IDENTITY_PATTERNS = [
+    "who are you", "bạn là ai", "giới thiệu", 
+    "what is your name", "tên bạn là gì"
+]
+
+IDENTITY_RESPONSE = (
+    "Xin chào, tôi là History Mind AI. "
+    "Tôi ở đây để giúp bạn tìm hiểu về lịch sử Việt Nam và thế giới. "
+    "Bạn có câu hỏi nào không?"
+)
+
+
+def normalize_event_signature(event: str) -> str:
+    """
+    Create a normalized signature from event text for deduplication.
+    Takes first 50 chars, lowercase, removes extra spaces.
+    """
+    if not event:
+        return ""
+    return re.sub(r'\s+', ' ', event.lower().strip())[:50]
+
 
 def engine_answer(query: str):
     q = query.lower()
+
+    # Handle identity queries (moved from FE)
+    if any(pattern in q for pattern in IDENTITY_PATTERNS):
+        return {
+            "query": query,
+            "intent": "identity",
+            "answer": IDENTITY_RESPONSE,
+            "events": [],
+            "no_data": False
+        }
 
     intent = "semantic"
     events = []
@@ -37,19 +72,27 @@ def engine_answer(query: str):
 
     no_data = not events
 
-    # Sinh câu trả lời từ các sự kiện tìm được
+    # Generate answer from found events
     answer = None
     if not no_data:
-        # Optimization: Use a set for O(1) deduplication and maintain order
-        seen_stories = set()
+        # Deduplicate by normalized event signature (not exact story match)
+        seen_signatures = set()
         unique_stories = []
 
-        # Sort events by year once
+        # Sort events by year
         for e in sorted(events, key=lambda x: x.get("year", 0)):
-            story = e.get("story")
-            if story and story not in seen_stories:
-                seen_stories.add(story)
-                unique_stories.append(story)
+            event_text = e.get("event", "")
+            sig = normalize_event_signature(event_text)
+            
+            if sig and sig not in seen_signatures:
+                seen_signatures.add(sig)
+                # Prefer story if available, fallback to event
+                story = e.get("story") or event_text
+                if story:
+                    unique_stories.append(story)
+                    # Limit output to prevent verbose responses
+                    if len(unique_stories) >= MAX_STORIES:
+                        break
 
         if unique_stories:
             answer = "\n".join(unique_stories)
