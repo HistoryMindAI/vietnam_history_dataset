@@ -10,9 +10,10 @@ from multiprocessing import Pool, cpu_count
 from functools import lru_cache
 from collections import defaultdict
 
-DATASET_DIR = Path(
-    "vietnam_history_dataset/default/0.0.0/3fdbbebc92e755190b4eaeb1522d97a753f0f18a"
-)
+# Get project root (parent of pipeline folder)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+DATASET_DIR = PROJECT_ROOT / "vietnam_history_dataset" / "default" / "0.0.0" / "3fdbbebc92e755190b4eaeb1522d97a753f0f18a"
 
 ARROW_FILES = [
     str(DATASET_DIR / "vietnam-history-1_m-vi-train-00000-of-00002.arrow"),
@@ -21,7 +22,7 @@ ARROW_FILES = [
 
 UNKNOWN_ENTITIES = set()
 
-OUT_PATH = "data/history_timeline.json"
+OUT_PATH = str(PROJECT_ROOT / "data" / "history_timeline.json")
 
 YEAR_ANY = re.compile(r"(?<![\d-])([1-9][0-9]{1,3})(?!\d)", re.UNICODE)
 
