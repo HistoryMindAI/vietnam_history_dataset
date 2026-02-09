@@ -1,3 +1,6 @@
+# AI Service CI/CD
+# NOTE: Railway Native Git Integration handles deployment (no token needed)
+
 name: AI Service CI/CD
 
 on:
@@ -7,11 +10,13 @@ on:
       - 'ai-service/**'
       - 'data/**'
       - 'pipeline/**'
+      - 'tests/**'
   pull_request:
     branches: [main]
     paths:
       - 'ai-service/**'
       - 'data/**'
+      - 'tests/**'
 
 jobs:
   test:
@@ -32,61 +37,24 @@ jobs:
           pip install -r requirements.txt
           pip install pytest
       
-      - name: Run tests
+      - name: Run unit tests
         run: |
           cd ai-service
-          python -m pytest ../tests/ -v
-  
-  build-faiss:
-    runs-on: ubuntu-latest
-    needs: test
-    if: github.ref == 'refs/heads/main'
-    
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-      
-      - name: Install dependencies
-        run: |
-          cd ai-service
-          pip install -r requirements.txt
-      
-      - name: Build FAISS index
-        run: |
-          cd ai-service
-          echo "🔨 Building FAISS index from HuggingFace..."
-          python scripts/build_faiss.py
-      
-      - name: Upload FAISS artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: faiss-index
-          path: ai-service/faiss_index/
-          retention-days: 30
+          python -m pytest ../tests/ -v --tb=short
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build-faiss
-    if: github.ref == 'refs/heads/main'
-    
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Download FAISS artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: faiss-index
-          path: ai-service/faiss_index/
-      
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
-
-      - name: Deploy to Railway
-        run: railway up --service ai-service --detach
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+  # NOTE: Deploy job DISABLED - Railway Native Git Integration auto-deploys on push
+  # deploy:
+  #   runs-on: ubuntu-latest
+  #   needs: test
+  #   if: github.ref == 'refs/heads/main'
+  #   
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     
+  #     - name: Install Railway CLI
+  #       run: npm install -g @railway/cli
+  #
+  #     - name: Deploy to Railway
+  #       run: railway up --service ai-service --detach
+  #       env:
+  #         RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}

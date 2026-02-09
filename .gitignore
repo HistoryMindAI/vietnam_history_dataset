@@ -22,3 +22,6 @@ tempCodeRunnerFile.py
 models/
 
 vietnam_history_dataset/
+
+# FAISS index - always build fresh on deploy
+ai-service/faiss_index/
