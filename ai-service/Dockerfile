@@ -45,6 +45,10 @@ ENV HF_HOME=/app/.cache/huggingface
 ENV PYTHONPATH=/app
 ENV INDEX_VERSION=v3
 
-# CMD for Railway - using shell explicitly
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Copy startup script
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
+# Use the startup script
+CMD ["/app/start.sh"]
 
