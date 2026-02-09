@@ -4,7 +4,7 @@ from typing import List, Optional
 class EventOut(BaseModel):
     year: int
     event: str
-    tone: str
+    tone: str = "neutral"  # Default value for events without tone
     story: str
 
 class ChatRequest(BaseModel):
