@@ -1,5 +1,5 @@
 {
-  "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+  "model": "sentence-transformers/all-MiniLM-L6-v2",
   "dimension": 384,
   "count": 79,
   "source": "minhxthanh/Vietnam-History-1M-Vi",
@@ -12,11 +12,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "ách",
+        "triều",
+        "cai",
+        "chính",
         "1884",
-        "chế",
-        "patenôtre",
-        "đặt"
+        "trên"
       ]
     },
     {
@@ -27,11 +27,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "đây",
-        "quan",
-        "bình",
-        "asean",
-        "trọng"
+        "khu",
+        "nhập",
+        "hoa",
+        "hội",
+        "hóa"
       ]
     },
     {
@@ -42,11 +42,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "bật",
-        "lần",
-        "mông",
+        "triều",
+        "quan",
+        "nhường",
         "hoàng",
-        "mốc"
+        "thời"
       ]
     },
     {
@@ -57,11 +57,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "dài",
-        "lâu",
-        "lần",
-        "phẩm",
-        "tác"
+        "chính",
+        "soạn",
+        "kháng",
+        "trước",
+        "hưng"
       ]
     },
     {
@@ -72,11 +72,11 @@
       "persons": [],
       "places": [],
       "keywords": [
+        "độc",
+        "phòng",
         "vọng",
-        "củng",
-        "lập",
-        "vang",
-        "sông"
+        "quốc",
+        "nghĩa"
       ]
     },
     {
@@ -87,11 +87,11 @@
       "persons": [],
       "places": [],
       "keywords": [
+        "khmer",
+        "1978",
         "căng",
-        "thẳng",
-        "dài",
-        "cứu",
-        "nhân"
+        "đội",
+        "thẳng"
       ]
     },
     {
@@ -102,11 +102,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "dài",
-        "lâu",
-        "đại",
-        "hiệu",
-        "táo"
+        "cải",
+        "nhưng",
+        "quốc",
+        "lập",
+        "dài"
       ]
     },
     {
@@ -117,11 +117,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "chế",
-        "lập",
-        "cách",
-        "nước",
-        "tuyên"
+        "giành",
+        "đọc",
+        "tám",
+        "chính",
+        "chủ"
       ]
     },
     {
@@ -132,11 +132,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "dài",
-        "ban",
-        "một",
-        "nha",
-        "tại"
+        "tại",
+        "liên",
+        "thời",
+        "kéo",
+        "thế"
       ]
     },
     {
@@ -147,11 +147,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "biên",
-        "đánh",
-        "1972",
-        "lâu",
-        "dài"
+        "bại",
+        "định",
+        "trên",
+        "bắc",
+        "1972"
       ]
     },
     {
@@ -162,11 +162,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "ranh",
         "định",
-        "cục",
-        "đối",
-        "cắt"
+        "ngừng",
+        "quan",
+        "đình",
+        "hai"
       ]
     },
     {
@@ -177,11 +177,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "tiền",
-        "suy",
-        "chuẩn",
-        "ngôi",
-        "chống"
+        "nhà",
+        "triều",
+        "định",
+        "tôn",
+        "đinh"
       ]
     },
     {
@@ -192,11 +192,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "trở",
-        "viên",
-        "mại",
+        "đẩy",
+        "nhập",
         "cải",
-        "gia"
+        "thúc",
+        "thương"
       ]
     },
     {
@@ -207,11 +207,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "đánh",
-        "củng",
-        "mốc",
-        "hán",
-        "đây"
+        "tạo",
+        "quan",
+        "chủ",
+        "thời",
+        "đình"
       ]
     },
     {
@@ -222,11 +222,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "bình",
-        "dứt",
-        "này",
+        "định",
         "chiến",
-        "hòa"
+        "này",
+        "dứt",
+        "hiệp"
       ]
     },
     {
@@ -237,11 +237,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "thừa",
-        "bình",
-        "lâu",
-        "dài",
-        "phương"
+        "cai",
+        "chính",
+        "chủ",
+        "thời",
+        "bắc"
       ]
     },
     {
@@ -252,11 +252,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "dài",
-        "sang",
-        "lâu",
-        "bản",
-        "hiệu"
+        "định",
+        "thời",
+        "độc",
+        "thế",
+        "sắc"
       ]
     },
     {
@@ -267,11 +267,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "dài",
+        "phát",
         "lâu",
-        "nêu",
-        "dời",
-        "hoạch"
+        "chiến",
+        "tầm",
+        "dài"
       ]
     },
     {
@@ -282,11 +282,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "hiệu",
-        "quản",
-        "đổi",
-        "nhất",
-        "thống"
+        "triều",
+        "định",
+        "chủ",
+        "thời",
+        "quyền"
       ]
     },
     {
@@ -297,11 +297,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "hiệu",
-        "dẹp",
-        "dựng",
-        "nhất",
-        "hoàng"
+        "cát",
+        "hoàng",
+        "độc",
+        "quyền",
+        "quốc"
       ]
     },
     {
@@ -312,11 +312,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "nhiều",
-        "tông",
-        "nước",
-        "cách",
-        "nhà"
+        "cải",
+        "trên",
+        "nghĩa",
+        "thịnh",
+        "lĩnh"
       ]
     },
     {
@@ -327,11 +327,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "dài",
+        "kéo",
+        "lợi",
         "giải",
-        "chống",
-        "dựng",
-        "khởi"
+        "nghĩa",
+        "dài"
       ]
     },
     {
@@ -342,11 +342,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "thủ",
-        "niệm",
-        "văn",
         "thăng",
-        "khẳng"
+        "1000",
+        "định",
+        "nghìn",
+        "dày"
       ]
     },
     {
@@ -357,11 +357,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "kết",
-        "giải",
-        "chống",
-        "1960",
-        "lập"
+        "tạo",
+        "chính",
+        "gòn",
+        "mặt",
+        "giải"
       ]
     },
     {
@@ -372,11 +372,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "căng",
-        "biên",
-        "1979",
-        "mốc",
-        "bắc"
+        "quan",
+        "chủ",
+        "bắc",
+        "trang",
+        "xung"
       ]
     },
     {
@@ -387,11 +387,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "1976",
+        "định",
+        "quan",
+        "chủ",
         "tất",
-        "nhất",
-        "thống",
-        "định"
+        "hòa"
       ]
     },
     {
@@ -402,11 +402,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "1862",
-        "kiểm",
-        "tỉnh",
-        "mốc",
-        "đây"
+        "triều",
+        "nhâm",
+        "quan",
+        "đất",
+        "soát"
       ]
     },
     {
@@ -417,11 +417,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "kết",
-        "bình",
+        "định",
+        "quan",
+        "thương",
         "chuẩn",
-        "mại",
-        "nâng"
+        "tham"
       ]
     },
     {
@@ -432,11 +432,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "kết",
-        "bạch",
-        "đập",
-        "cọc",
-        "dấu"
+        "tiêu",
+        "trên",
+        "hưng",
+        "1288",
+        "trận"
       ]
     },
     {
@@ -447,11 +447,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "biên",
-        "genève",
-        "1954",
+        "giành",
+        "tại",
         "định",
-        "mốc"
+        "quan",
+        "lợi"
       ]
     },
     {
@@ -462,11 +462,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "trên",
-        "thang",
+        "chiến",
         "vịnh",
-        "ném",
-        "miền"
+        "trên",
+        "leo",
+        "bắc"
       ]
     },
     {
@@ -477,11 +477,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "sâu",
-        "quản",
-        "tác",
-        "đến",
-        "covid"
+        "thách",
+        "kinh",
+        "khủng",
+        "hoảng",
+        "nghĩa"
       ]
     },
     {
@@ -492,11 +492,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "genève",
-        "dứt",
-        "chuẩn",
         "tuyển",
-        "1954"
+        "định",
+        "chiến",
+        "đất",
+        "dứt"
       ]
     },
     {
@@ -507,11 +507,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "căng",
-        "bình",
+        "chính",
+        "tất",
         "giải",
-        "đóng",
-        "tất"
+        "lợi",
+        "1989"
       ]
     },
     {
@@ -522,11 +522,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "thiệt",
-        "tỉnh",
-        "nâng",
-        "trường",
-        "hại"
+        "tại",
+        "biển",
+        "nhận",
+        "nghĩa",
+        "tỉnh"
       ]
     },
     {
@@ -537,11 +537,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "đánh",
         "định",
-        "lập",
-        "thắng",
-        "non"
+        "thời",
+        "độc",
+        "981",
+        "lợi"
       ]
     },
     {
@@ -552,11 +552,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "dài",
-        "lâu",
-        "ranh",
-        "chúa",
-        "cắt"
+        "hơn",
+        "đất",
+        "kéo",
+        "trịnh",
+        "đàng"
       ]
     },
     {
@@ -567,11 +567,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "ngày",
+        "đất",
+        "gòn",
         "giải",
-        "nhất",
-        "thống",
-        "nước"
+        "tiến",
+        "lãnh"
       ]
     },
     {
@@ -582,11 +582,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "phá",
-        "ngăn",
-        "thể",
         "ung",
-        "nhà"
+        "chủ",
+        "thế",
+        "tiến",
+        "kiệt"
       ]
     },
     {
@@ -597,11 +597,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "thủ",
-        "2010",
-        "niệm",
+        "thăng",
+        "1000",
         "này",
-        "văn"
+        "nghìn",
+        "định"
       ]
     },
     {
@@ -612,11 +612,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "gọi",
-        "lần",
-        "chống",
-        "lời",
-        "nhất"
+        "kháng",
+        "kêu",
+        "quốc",
+        "pháp",
+        "nghĩa"
       ]
     },
     {
@@ -627,11 +627,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "danh",
-        "1533",
-        "dựng",
-        "cục",
-        "đối"
+        "quyền",
+        "thế",
+        "trịnh",
+        "hưng",
+        "nghĩa"
       ]
     },
     {
@@ -642,11 +642,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "chống",
-        "tảng",
-        "nhất",
-        "thống",
-        "cách"
+        "cải",
+        "thế",
+        "trịnh",
+        "nghĩa",
+        "anh"
       ]
     },
     {
@@ -657,11 +657,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "lần",
-        "chống",
+        "giành",
         "sức",
-        "củng",
-        "thắng"
+        "lợi",
+        "kháng",
+        "quốc"
       ]
     },
     {
@@ -672,11 +672,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "đánh",
+        "làm",
+        "bại",
+        "tại",
         "vijaya",
-        "thổ",
-        "phương",
-        "tại"
+        "1471"
       ]
     },
     {
@@ -687,11 +687,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "pháp",
-        "mới",
-        "hợp",
-        "phù",
-        "đổi"
+        "phát",
+        "đổi",
+        "hội",
+        "kinh",
+        "khung"
       ]
     },
     {
@@ -702,11 +702,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "châu",
-        "rời",
-        "nhiều",
         "tất",
-        "nước"
+        "sau",
+        "hành",
+        "tìm",
+        "nghĩa"
       ]
     },
     {
@@ -718,10 +718,10 @@
       "places": [],
       "keywords": [
         "hình",
-        "củng",
-        "cộng",
-        "miền",
-        "này"
+        "này",
+        "trạng",
+        "đất",
+        "cộng"
       ]
     },
     {
@@ -732,11 +732,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "đánh",
         "bại",
-        "nhất",
-        "thống",
-        "lập"
+        "triều",
+        "đất",
+        "long",
+        "ngôi"
       ]
     },
     {
@@ -747,11 +747,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "nhất",
-        "lập",
+        "giành",
+        "chức",
+        "độc",
         "sản",
-        "cách",
-        "trào"
+        "lãnh"
       ]
     },
     {
@@ -762,11 +762,11 @@
       "persons": [],
       "places": [],
       "keywords": [
+        "quan",
+        "thời",
         "giải",
-        "ách",
-        "mốc",
-        "đây",
-        "trọng"
+        "giai",
+        "đại"
       ]
     },
     {
@@ -777,11 +777,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "đánh",
         "bại",
         "định",
-        "tốc",
-        "ngọc"
+        "hồi",
+        "bắc",
+        "độc"
       ]
     },
     {
@@ -792,11 +792,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "dài",
-        "lâu",
-        "cắt",
-        "lập",
-        "bắc"
+        "triều",
+        "chính",
+        "thời",
+        "bắc",
+        "kéo"
       ]
     },
     {
@@ -807,11 +807,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "đánh",
-        "phương",
-        "chuỗi",
-        "lần",
-        "chống"
+        "bại",
+        "quan",
+        "bắc",
+        "mông",
+        "độc"
       ]
     },
     {
@@ -822,11 +822,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "nhiều",
-        "tác",
-        "đến",
-        "cục",
-        "thị"
+        "trên",
+        "tết",
+        "tiến",
+        "quốc",
+        "nghĩa"
       ]
     },
     {
@@ -837,11 +837,11 @@
       "persons": [],
       "places": [],
       "keywords": [
+        "đẩy",
         "tăng",
-        "lối",
-        "đường",
+        "đổi",
         "này",
-        "mới"
+        "hội"
       ]
     },
     {
@@ -852,11 +852,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "ban",
-        "một",
-        "mốc",
-        "hoa",
-        "đây"
+        "hơn",
+        "quan",
+        "kinh",
+        "long",
+        "văn"
       ]
     },
     {
@@ -867,10 +867,10 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "đức",
-        "kiến",
-        "luật",
+        "hồng",
         "này",
+        "thiện",
+        "tiêu",
         "biểu"
       ]
     },
@@ -882,11 +882,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "châu",
-        "rời",
-        "1911",
-        "nhiều",
-        "tất"
+        "tất",
+        "sau",
+        "hành",
+        "tìm",
+        "châu"
       ]
     },
     {
@@ -897,11 +897,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "vương",
-        "gọi",
-        "nghi",
-        "chống",
-        "xix"
+        "lan",
+        "thế",
+        "hàm",
+        "kêu",
+        "kháng"
       ]
     },
     {
@@ -912,11 +912,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "phá",
-        "mốc",
-        "ngăn",
-        "thể",
-        "đây"
+        "quan",
+        "ung",
+        "chủ",
+        "thế",
+        "tiến"
       ]
     },
     {
@@ -927,11 +927,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "chống",
-        "biểu",
+        "phát",
+        "tại",
         "bại",
-        "thất",
-        "yên"
+        "tiêu",
+        "quan"
       ]
     },
     {
@@ -942,11 +942,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "tỉnh",
-        "nốt",
-        "mốc",
-        "củng",
-        "đây"
+        "tại",
+        "cai",
+        "quan",
+        "pháp",
+        "tỉnh"
       ]
     },
     {
@@ -957,11 +957,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "buộc",
-        "chống",
+        "giành",
         "định",
-        "mốc",
-        "lập"
+        "quan",
+        "xương",
+        "thời"
       ]
     },
     {
@@ -972,11 +972,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "đánh",
-        "rạch",
-        "mút",
         "bại",
-        "can"
+        "trên",
+        "xoài",
+        "bang",
+        "1785"
       ]
     },
     {
@@ -987,11 +987,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "vương",
-        "bạch",
-        "đóng",
-        "loa",
-        "lập"
+        "làm",
+        "kinh",
+        "độc",
+        "quyền",
+        "ngôi"
       ]
     },
     {
@@ -1002,11 +1002,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "kết",
-        "đĩnh",
-        "nhiều",
+        "làm",
+        "triều",
+        "cải",
         "1009",
-        "lập"
+        "long"
       ]
     },
     {
@@ -1017,11 +1017,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "đánh",
-        "người",
-        "bạch",
         "bại",
-        "một"
+        "hơn",
+        "quan",
+        "trên",
+        "bắc"
       ]
     },
     {
@@ -1032,11 +1032,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "bội",
-        "dài",
-        "sang",
-        "châu",
-        "lâu"
+        "nhật",
+        "xướng",
+        "tưởng",
+        "thu",
+        "thanh"
       ]
     },
     {
@@ -1047,11 +1047,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "kết",
+        "quan",
+        "rãi",
         "chuẩn",
-        "mốc",
-        "lập",
-        "lượng"
+        "mặt",
+        "độc"
       ]
     },
     {
@@ -1062,11 +1062,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "bình",
-        "vương",
-        "ban",
-        "lập",
-        "tuyên"
+        "cáo",
+        "thời",
+        "độc",
+        "lợi",
+        "bình"
       ]
     },
     {
@@ -1077,11 +1077,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "hiệu",
-        "dẹp",
-        "dựng",
-        "nhất",
-        "hoàng"
+        "cát",
+        "hoàng",
+        "độc",
+        "quyền",
+        "quốc"
       ]
     },
     {
@@ -1092,11 +1092,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "đánh",
-        "phương",
-        "chuỗi",
-        "lần",
-        "chống"
+        "bại",
+        "bắc",
+        "mông",
+        "độc",
+        "lợi"
       ]
     },
     {
@@ -1107,11 +1107,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "kết",
-        "đĩnh",
-        "nhiều",
+        "làm",
+        "triều",
+        "cải",
         "1009",
-        "lập"
+        "long"
       ]
     },
     {
@@ -1122,11 +1122,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "buộc",
-        "chống",
+        "giành",
         "định",
-        "lập",
-        "thắng"
+        "xương",
+        "thời",
+        "độc"
       ]
     },
     {
@@ -1137,11 +1137,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "thừa",
-        "bình",
-        "phương",
-        "nhiều",
-        "người"
+        "cai",
+        "chính",
+        "chủ",
+        "thời",
+        "bắc"
       ]
     },
     {
@@ -1152,11 +1152,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "nhiều",
-        "tác",
-        "đến",
-        "cục",
-        "thị"
+        "trên",
+        "tết",
+        "tiến",
+        "quốc",
+        "nổi"
       ]
     },
     {
@@ -1167,11 +1167,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "dài",
-        "ban",
-        "một",
-        "nha",
-        "tại"
+        "tại",
+        "liên",
+        "thời",
+        "kéo",
+        "thế"
       ]
     },
     {
@@ -1182,11 +1182,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "ban",
-        "một",
-        "hoa",
-        "đặt",
-        "chiếu"
+        "hơn",
+        "kinh",
+        "long",
+        "văn",
+        "hoa"
       ]
     }
   ]
