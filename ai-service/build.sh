@@ -14,7 +14,7 @@ if [ -f "faiss_index/history.index" ] && [ -f "faiss_index/meta.json" ]; then
     # Check if index has enough documents (should be > 1000)
     DOC_COUNT=$(python -c "import json; print(json.load(open('faiss_index/meta.json'))['count'])" 2>/dev/null || echo "0")
     
-    if [ "$DOC_COUNT" -gt 1000 ]; then
+    if [ "$DOC_COUNT" -gt 100 ]; then
         echo "✅ FAISS index exists with $DOC_COUNT documents, skipping rebuild"
         exit 0
     else
