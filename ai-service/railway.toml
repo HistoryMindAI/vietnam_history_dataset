@@ -7,7 +7,7 @@ builder = "nixpacks"
 buildCommand = "chmod +x build.sh && ./build.sh"
 
 [deploy]
-startCommand = "/app/start.sh"
+startCommand = "python /app/run.py"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
