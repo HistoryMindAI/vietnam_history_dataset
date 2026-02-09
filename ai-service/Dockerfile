@@ -43,7 +43,7 @@ COPY faiss_index ./faiss_index
 ENV TRANSFORMERS_CACHE=/app/.cache/huggingface
 ENV HF_HOME=/app/.cache/huggingface
 ENV PYTHONPATH=/app
-ENV INDEX_VERSION=v4
+ENV INDEX_VERSION=v5
 
 # Copy startup script
 COPY run.py /app/run.py
