@@ -87,7 +87,7 @@ def compute_text_similarity(text1: str, text2: str) -> float:
     return SequenceMatcher(None, text1.lower(), text2.lower()).ratio()
 
 
-def is_duplicate_of_existing(new_story: str, existing_docs: list, year: int, threshold: float = 0.6) -> tuple:
+def is_duplicate_of_existing(new_story: str, existing_docs: list, year: int, threshold: float = 0.3) -> tuple:
     """
     Check if new_story is a duplicate of any existing doc with same year.
     Returns (is_duplicate, existing_doc_index or None)

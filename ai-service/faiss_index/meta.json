@@ -1,22 +1,22 @@
 {
   "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
   "dimension": 384,
-  "count": 278,
+  "count": 79,
   "source": "minhxthanh/Vietnam-History-1M-Vi",
   "documents": [
     {
       "id": "hf_000000",
       "year": 1884,
-      "event": "Tóm tắt Hòa ước Patenôtre (Giáp Thân) và nêu ý nghĩa lịch sử của sự kiện này.",
+      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 1884.",
       "story": "**Hòa ước Patenôtre (Giáp Thân)** xảy ra năm 1884. Triều Nguyễn ký hiệp ước đặt Việt Nam dưới chế độ bảo hộ của Pháp. Đây là cột mốc quan trọng vì Chính thức hóa ách cai trị của Pháp trên toàn cõi Việt Nam.",
       "persons": [],
       "places": [],
       "keywords": [
-        "đặt",
-        "chính",
-        "cõi",
+        "hòa",
         "nguyễn",
-        "ách"
+        "cõi",
+        "toàn",
+        "thức"
       ]
     },
     {
@@ -27,11 +27,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "1995",
-        "gia",
-        "hội",
-        "khu",
-        "vực"
+        "mốc",
+        "thường",
+        "bình",
+        "quan",
+        "rộng"
       ]
     },
     {
@@ -42,116 +42,116 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "ngôi",
-        "nhà",
-        "bật",
-        "đầu",
-        "mông"
+        "lần",
+        "chiêu",
+        "cột",
+        "trần",
+        "nguyên"
       ]
     },
     {
       "id": "hf_000003",
       "year": 1284,
       "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1284.",
-      "story": "Hịch tướng sĩ. Trần Hưng Đạo soạn Hịch tướng sĩ khích lệ quân dân trước kháng chiến lần 2. Về lâu dài, Tác phẩm quân sự – chính trị cổ vũ mạnh mẽ.",
+      "story": "**Hịch tướng sĩ** xảy ra năm 1284. Trần Hưng Đạo soạn Hịch tướng sĩ khích lệ quân dân trước kháng chiến lần 2. Đây là cột mốc quan trọng vì Tác phẩm quân sự – chính trị cổ vũ mạnh mẽ.",
       "persons": [],
       "places": [],
       "keywords": [
-        "khích",
-        "đạo",
-        "chính",
-        "dài",
-        "lâu"
+        "lần",
+        "soạn",
+        "dân",
+        "trần",
+        "kháng"
       ]
     },
     {
       "id": "hf_000004",
       "year": 1077,
-      "event": "Hãy mô tả ngắn gọn bối cảnh và ý nghĩa của Phòng tuyến Như Nguyệt.",
-      "story": "Phòng tuyến Như Nguyệt (1077): Quân Đại Việt chặn quân Tống ở sông Như Nguyệt; bài 'Nam quốc sơn hà' vang vọng. Sự kiện này có ý nghĩa là Bảo vệ bờ cõi, củng cố ý thức độc lập dân tộc.",
+      "event": "Vì sao Phòng tuyến Như Nguyệt (1077) quan trọng đối với lịch sử Việt Nam?",
+      "story": "**Phòng tuyến Như Nguyệt** xảy ra năm 1077. Quân Đại Việt chặn quân Tống ở sông Như Nguyệt; bài 'Nam quốc sơn hà' vang vọng. Đây là cột mốc quan trọng vì Bảo vệ bờ cõi, củng cố ý thức độc lập dân tộc.",
       "persons": [],
       "places": [],
       "keywords": [
-        "tuyến",
-        "củng",
-        "tộc",
-        "này",
+        "nguyệt",
+        "nghĩa",
+        "vọng",
+        "dân",
         "cõi"
       ]
     },
     {
       "id": "hf_000005",
       "year": 1978,
-      "event": "Tóm tắt Việt Nam đưa quân vào Campuchia và nêu ý nghĩa lịch sử của sự kiện này.",
-      "story": "Việt Nam đưa quân vào Campuchia (1978). Quân đội Việt Nam giúp lật đổ Khmer Đỏ. Giải cứu nhân dân Campuchia, căng thẳng khu vực kéo dài.",
+      "event": "Trong năm 1978, điều gì có ý nghĩa lịch sử ở Việt Nam?",
+      "story": "**Việt Nam đưa quân vào Campuchia** xảy ra năm 1978. Quân đội Việt Nam giúp lật đổ Khmer Đỏ. Đây là cột mốc quan trọng vì Giải cứu nhân dân Campuchia, căng thẳng khu vực kéo dài.",
       "persons": [],
       "places": [],
       "keywords": [
-        "campuchia",
-        "khmer",
-        "dài",
-        "khu",
-        "dân"
+        "đưa",
+        "quân",
+        "kéo",
+        "căng",
+        "khu"
       ]
     },
     {
       "id": "hf_000006",
       "year": 1400,
       "event": "Trong năm 1400, điều gì có ý nghĩa lịch sử ở Việt Nam?",
-      "story": "Hồ Quý Ly lập nhà Hồ. Hồ Quý Ly cải cách mạnh, đổi quốc hiệu Đại Ngu. Về lâu dài, Cải cách táo bạo nhưng không vững bền, dẫn tới họa xâm lăng.",
+      "story": "**Hồ Quý Ly lập nhà Hồ** xảy ra năm 1400. Hồ Quý Ly cải cách mạnh, đổi quốc hiệu Đại Ngu. Đây là cột mốc quan trọng vì Cải cách táo bạo nhưng không vững bền, dẫn tới họa xâm lăng.",
       "persons": [],
       "places": [],
       "keywords": [
-        "cải",
+        "vững",
+        "lăng",
+        "ngu",
         "tới",
-        "nhà",
-        "bạo",
-        "quốc"
+        "dài"
       ]
     },
     {
       "id": "hf_000009",
       "year": 1945,
-      "event": "Hãy mô tả ngắn gọn bối cảnh và ý nghĩa của Cách mạng Tháng Tám và Tuyên ngôn Độc lập.",
+      "event": "Trong năm 1945, điều gì có ý nghĩa lịch sử ở Việt Nam?",
       "story": "**Cách mạng Tháng Tám và Tuyên ngôn Độc lập** xảy ra năm 1945. Tổng khởi nghĩa giành chính quyền; 2/9/1945, Hồ Chí Minh đọc Tuyên ngôn Độc lập. Đây là cột mốc quan trọng vì Khai sinh nước Việt Nam Dân chủ Cộng hòa, chấm dứt chế độ thực dân – phong kiến.",
       "persons": [],
       "places": [],
       "keywords": [
-        "dứt",
-        "chính",
-        "độc",
+        "nước",
+        "chủ",
         "cộng",
-        "đọc"
+        "hòa",
+        "nghĩa"
       ]
     },
     {
       "id": "hf_000011",
       "year": 1858,
-      "event": "Vì sao Liên quân Pháp – Tây Ban Nha tấn công Đà Nẵng (1858) quan trọng đối với lịch sử Việt Nam?",
-      "story": "diễn ra **Liên quân Pháp – Tây Ban Nha tấn công Đà Nẵng**: Mở đầu cuộc chiến xâm lược của Pháp tại Việt Nam. Ý nghĩa: Khởi đầu thời kỳ thực dân xâm lược kéo dài gần một thế kỷ.",
+      "event": "Trong năm 1858, điều gì có ý nghĩa lịch sử ở Việt Nam?",
+      "story": "**Liên quân Pháp – Tây Ban Nha tấn công Đà Nẵng** xảy ra năm 1858. Mở đầu cuộc chiến xâm lược của Pháp tại Việt Nam. Đây là cột mốc quan trọng vì Khởi đầu thời kỳ thực dân xâm lược kéo dài gần một thế kỷ.",
       "persons": [],
       "places": [],
       "keywords": [
-        "một",
-        "dài",
-        "pháp",
-        "xâm",
-        "đầu"
+        "nha",
+        "nghĩa",
+        "dân",
+        "gần",
+        "cuộc"
       ]
     },
     {
       "id": "hf_000013",
       "year": 1972,
-      "event": "Bối cảnh nào tạo điều kiện cho Chiến dịch 'Điện Biên Phủ trên không' xảy ra?",
-      "story": "Chiến dịch 'Điện Biên Phủ trên không'. Quân dân miền Bắc đánh bại chiến dịch ném bom B-52 cuối 1972. Về lâu dài, Buộc Mỹ đàm phán, tiền đề Hiệp định Paris.",
+      "event": "Trình bày ngắn gọn về Chiến dịch 'Điện Biên Phủ trên không' (1972).",
+      "story": "**Chiến dịch 'Điện Biên Phủ trên không'** xảy ra năm 1972. Quân dân miền Bắc đánh bại chiến dịch ném bom B-52 cuối 1972. Đây là cột mốc quan trọng vì Buộc Mỹ đàm phán, tiền đề Hiệp định Paris.",
       "persons": [],
       "places": [],
       "keywords": [
-        "buộc",
-        "dài",
-        "bại",
-        "1972",
-        "lâu"
+        "biên",
+        "bom",
+        "đánh",
+        "định",
+        "dân"
       ]
     },
     {
@@ -162,41 +162,41 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "củng",
-        "hai",
+        "diện",
         "nguyễn",
-        "giới",
-        "ngừng"
+        "chia",
+        "cột",
+        "cắt"
       ]
     },
     {
       "id": "hf_000017",
       "year": 980,
-      "event": "ở Việt Nam diễn ra sự kiện gì quan trọng?",
-      "story": "Lê Hoàn lên ngôi (Nhà Tiền Lê) (980). Lê Hoàn được suy tôn sau biến cố cuối triều Đinh. Ổn định triều chính, chuẩn bị chống Tống.",
+      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 980.",
+      "story": "**Lê Hoàn lên ngôi (Nhà Tiền Lê)** xảy ra năm 980. Lê Hoàn được suy tôn sau biến cố cuối triều Đinh. Đây là cột mốc quan trọng vì Ổn định triều chính, chuẩn bị chống Tống.",
       "persons": [],
       "places": [],
       "keywords": [
-        "tôn",
+        "biến",
         "lên",
-        "chống",
-        "chính",
-        "tiền"
+        "cuối",
+        "triều",
+        "tôn"
       ]
     },
     {
       "id": "hf_000019",
       "year": 2007,
-      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 2007.",
-      "story": "diễn ra **Gia nhập WTO**: Việt Nam trở thành thành viên WTO. Ý nghĩa: Thúc đẩy thương mại và cải cách thể chế.",
+      "event": "Trình bày ngắn gọn về Gia nhập WTO (2007).",
+      "story": "**Gia nhập WTO** xảy ra năm 2007. Việt Nam trở thành thành viên WTO. Đây là cột mốc quan trọng vì Thúc đẩy thương mại và cải cách thể chế.",
       "persons": [],
       "places": [],
       "keywords": [
-        "chế",
-        "gia",
+        "thúc",
         "cải",
-        "đẩy",
-        "nghĩa"
+        "cách",
+        "chế",
+        "đẩy"
       ]
     },
     {
@@ -207,206 +207,161 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "củng",
-        "lãnh",
-        "đạo",
-        "931",
+        "chủ",
+        "hán",
+        "đẩy",
+        "nghĩa",
         "đánh"
       ]
     },
     {
       "id": "hf_000021",
       "year": 1973,
-      "event": "Trình bày ngắn gọn về Hiệp định Paris (1973).",
-      "story": "Hiệp định Paris (1973): Hiệp định chấm dứt chiến tranh, lập lại hòa bình ở Việt Nam. Sự kiện này có ý nghĩa là Mỹ rút quân khỏi Việt Nam.",
+      "event": "Trong năm 1973, điều gì có ý nghĩa lịch sử ở Việt Nam?",
+      "story": "**Hiệp định Paris** xảy ra năm 1973. Hiệp định chấm dứt chiến tranh, lập lại hòa bình ở Việt Nam. Đây là cột mốc quan trọng vì Mỹ rút quân khỏi Việt Nam.",
       "persons": [],
       "places": [],
       "keywords": [
+        "hòa",
+        "lập",
         "dứt",
-        "lại",
-        "rút",
-        "khỏi",
-        "1973"
+        "bình",
+        "rút"
       ]
     },
     {
       "id": "hf_000022",
       "year": 905,
-      "event": "Khúc Thừa Dụ đã làm gì để dẫn đến Khúc Thừa Dụ dựng chính quyền tự chủ (905)?",
-      "story": "Khúc Thừa Dụ dựng chính quyền tự chủ. Khúc Thừa Dụ nắm quyền ở Tống Bình, khôi phục quyền tự chủ sau thời Bắc thuộc muộn. Về lâu dài, Mở đầu thời kỳ tự chủ của người Việt sau nhiều thế kỷ bị phương Bắc cai trị.",
+      "event": "Vì sao Khúc Thừa Dụ dựng chính quyền tự chủ (905) quan trọng đối với lịch sử Việt Nam?",
+      "story": "**Khúc Thừa Dụ dựng chính quyền tự chủ** xảy ra năm 905. Khúc Thừa Dụ nắm quyền ở Tống Bình, khôi phục quyền tự chủ sau thời Bắc thuộc muộn. Đây là cột mốc quan trọng vì Mở đầu thời kỳ tự chủ của người Việt sau nhiều thế kỷ bị phương Bắc cai trị.",
       "persons": [],
       "places": [],
       "keywords": [
+        "chủ",
+        "khôi",
         "phục",
-        "chính",
-        "người",
-        "dài",
-        "lâu"
+        "quyền",
+        "cai"
       ]
     },
     {
       "id": "hf_000025",
-      "year": 1054,
-      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 1054.",
-      "story": "Đổi quốc hiệu thành Đại Việt. Thời Lý Thánh Tông, quốc hiệu đổi từ Đại Cồ Việt sang Đại Việt. Về lâu dài, Khẳng định bản sắc và vị thế quốc gia độc lập.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "sang",
-        "độc",
-        "thánh",
-        "quốc",
-        "dài"
-      ]
-    },
-    {
-      "id": "hf_000026",
-      "year": 1010,
-      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 1010.",
-      "story": "Chiếu dời đô (văn kiện). Văn kiện nêu lý do dời đô và tầm nhìn phát triển ở Đại La. Về lâu dài, Tư tưởng quy hoạch, tầm nhìn chiến lược thời Lý.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "dài",
-        "thời",
-        "lược",
-        "dời",
-        "tầm"
-      ]
-    },
-    {
-      "id": "hf_000030",
-      "year": 1839,
-      "event": "ở Việt Nam diễn ra sự kiện gì quan trọng?",
-      "story": "**Đổi quốc hiệu Đại Nam thời Minh Mạng** xảy ra năm 1839. Triều Nguyễn dùng quốc hiệu Đại Nam dưới thời Minh Mạng. Đây là cột mốc quan trọng vì Khẳng định chủ quyền và cơ cấu quản lý thống nhất.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "thống",
-        "1839",
-        "nguyễn",
-        "quốc",
-        "cấu"
-      ]
-    },
-    {
-      "id": "hf_000036",
-      "year": 1010,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1010.",
-      "story": "Chiếu dời đô (văn kiện) (1010): Văn kiện nêu lý do dời đô và tầm nhìn phát triển ở Đại La. Sự kiện này có ý nghĩa là Tư tưởng quy hoạch, tầm nhìn chiến lược thời Lý.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "thời",
-        "dời",
-        "nghĩa",
-        "này",
-        "văn"
-      ]
-    },
-    {
-      "id": "hf_000038",
-      "year": 968,
-      "event": "Hậu quả hay tác động dài hạn của Đinh Bộ Lĩnh dẹp loạn 12 sứ quân, lập Đại Cồ Việt đối với Việt Nam là gì?",
-      "story": "Đinh Bộ Lĩnh dẹp loạn 12 sứ quân, lập Đại Cồ Việt (968): Đinh Bộ Lĩnh thống nhất cát cứ, lên ngôi Hoàng đế, đặt quốc hiệu Đại Cồ Việt. Sự kiện này có ý nghĩa là Chấm dứt cát cứ, xây dựng nhà nước trung ương tập quyền đầu tiên sau độc lập.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "dứt",
-        "lên",
-        "đặt",
-        "xây",
-        "ngôi"
-      ]
-    },
-    {
-      "id": "hf_000039",
-      "year": 1460,
-      "event": "Trong năm 1460, điều gì có ý nghĩa lịch sử ở Việt Nam?",
-      "story": "Lê Thánh Tông trị vì (1460): Lê Thánh Tông đẩy mạnh cải cách, hoàn thiện bộ máy nhà nước. Sự kiện này có ý nghĩa là Đỉnh cao thịnh trị của Lê sơ trên nhiều lĩnh vực.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "đỉnh",
-        "cải",
-        "nhà",
-        "này",
-        "thánh"
-      ]
-    },
-    {
-      "id": "hf_000040",
-      "year": 1972,
-      "event": "Trình bày ngắn gọn về Chiến dịch 'Điện Biên Phủ trên không' (1972).",
-      "story": "**Chiến dịch 'Điện Biên Phủ trên không'** xảy ra năm 1972. Quân dân miền Bắc đánh bại chiến dịch ném bom B-52 cuối 1972. Đây là cột mốc quan trọng vì Buộc Mỹ đàm phán, tiền đề Hiệp định Paris.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "buộc",
-        "bại",
-        "1972",
-        "biên",
-        "cuối"
-      ]
-    },
-    {
-      "id": "hf_000041",
-      "year": 1418,
-      "event": "Trình bày nhanh những điểm chính về Khởi nghĩa Lam Sơn bùng nổ.",
-      "story": "Khởi nghĩa Lam Sơn bùng nổ (1418): Lê Lợi dựng cờ khởi nghĩa ở Lam Sơn chống quân Minh. Sự kiện này có ý nghĩa là Khởi đầu cuộc giải phóng dân tộc kéo dài gần 10 năm.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "tộc",
-        "1418",
-        "này",
-        "phóng",
-        "dài"
-      ]
-    },
-    {
-      "id": "hf_000042",
-      "year": 2010,
-      "event": "Trong năm 2010, điều gì có ý nghĩa lịch sử ở Việt Nam?",
-      "story": "diễn ra **Đại lễ 1000 năm Thăng Long – Hà Nội**: Kỷ niệm nghìn năm Thăng Long – Hà Nội. Ý nghĩa: Khẳng định bề dày lịch sử – văn hóa Thủ đô.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "1000",
-        "nghĩa",
-        "khẳng",
-        "định",
-        "văn"
-      ]
-    },
-    {
-      "id": "hf_000044",
       "year": 1054,
       "event": "Trình bày nhanh những điểm chính về Đổi quốc hiệu thành Đại Việt.",
       "story": "**Đổi quốc hiệu thành Đại Việt** xảy ra năm 1054. Thời Lý Thánh Tông, quốc hiệu đổi từ Đại Cồ Việt sang Đại Việt. Đây là cột mốc quan trọng vì Khẳng định bản sắc và vị thế quốc gia độc lập.",
       "persons": [],
       "places": [],
       "keywords": [
-        "sang",
-        "độc",
+        "định",
         "thánh",
-        "quốc",
-        "khẳng"
+        "độc",
+        "dài",
+        "quốc"
+      ]
+    },
+    {
+      "id": "hf_000026",
+      "year": 1010,
+      "event": "Trình bày ngắn gọn về Chiếu dời đô (văn kiện) (1010).",
+      "story": "**Chiếu dời đô (văn kiện)** xảy ra năm 1010. Văn kiện nêu lý do dời đô và tầm nhìn phát triển ở Đại La. Đây là cột mốc quan trọng vì Tư tưởng quy hoạch, tầm nhìn chiến lược thời Lý.",
+      "persons": [],
+      "places": [],
+      "keywords": [
+        "văn",
+        "dời",
+        "tưởng",
+        "hoạch",
+        "nêu"
+      ]
+    },
+    {
+      "id": "hf_000030",
+      "year": 1839,
+      "event": "Bối cảnh nào tạo điều kiện cho Đổi quốc hiệu Đại Nam thời Minh Mạng xảy ra?",
+      "story": "**Đổi quốc hiệu Đại Nam thời Minh Mạng** xảy ra năm 1839. Triều Nguyễn dùng quốc hiệu Đại Nam dưới thời Minh Mạng. Đây là cột mốc quan trọng vì Khẳng định chủ quyền và cơ cấu quản lý thống nhất.",
+      "persons": [],
+      "places": [],
+      "keywords": [
+        "chủ",
+        "nguyễn",
+        "định",
+        "quyền",
+        "minh"
+      ]
+    },
+    {
+      "id": "hf_000038",
+      "year": 968,
+      "event": "ở Việt Nam diễn ra sự kiện gì quan trọng?",
+      "story": "**Đinh Bộ Lĩnh dẹp loạn 12 sứ quân, lập Đại Cồ Việt** xảy ra năm 968. Đinh Bộ Lĩnh thống nhất cát cứ, lên ngôi Hoàng đế, đặt quốc hiệu Đại Cồ Việt. Đây là cột mốc quan trọng vì Chấm dứt cát cứ, xây dựng nhà nước trung ương tập quyền đầu tiên sau độc lập.",
+      "persons": [],
+      "places": [],
+      "keywords": [
+        "nước",
+        "dẹp",
+        "nghĩa",
+        "quyền",
+        "này"
+      ]
+    },
+    {
+      "id": "hf_000039",
+      "year": 1460,
+      "event": "Lê Thánh Tông đã làm gì để dẫn đến Lê Thánh Tông trị vì (1460)?",
+      "story": "**Lê Thánh Tông trị vì** xảy ra năm 1460. Lê Thánh Tông đẩy mạnh cải cách, hoàn thiện bộ máy nhà nước. Đây là cột mốc quan trọng vì Đỉnh cao thịnh trị của Lê sơ trên nhiều lĩnh vực.",
+      "persons": [],
+      "places": [],
+      "keywords": [
+        "nước",
+        "đẩy",
+        "nghĩa",
+        "này",
+        "vực"
+      ]
+    },
+    {
+      "id": "hf_000041",
+      "year": 1418,
+      "event": "Hậu quả hay tác động dài hạn của Khởi nghĩa Lam Sơn bùng nổ đối với Việt Nam là gì?",
+      "story": "**Khởi nghĩa Lam Sơn bùng nổ** xảy ra năm 1418. Lê Lợi dựng cờ khởi nghĩa ở Lam Sơn chống quân Minh. Đây là cột mốc quan trọng vì Khởi đầu cuộc giải phóng dân tộc kéo dài gần 10 năm.",
+      "persons": [],
+      "places": [],
+      "keywords": [
+        "lam",
+        "nghĩa",
+        "lợi",
+        "dân",
+        "này"
+      ]
+    },
+    {
+      "id": "hf_000042",
+      "year": 2010,
+      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 2010.",
+      "story": "**Đại lễ 1000 năm Thăng Long – Hà Nội** xảy ra năm 2010. Kỷ niệm nghìn năm Thăng Long – Hà Nội. Đây là cột mốc quan trọng vì Khẳng định bề dày lịch sử – văn hóa Thủ đô.",
+      "persons": [],
+      "places": [],
+      "keywords": [
+        "nội",
+        "văn",
+        "niệm",
+        "đại",
+        "nghĩa"
       ]
     },
     {
       "id": "hf_000045",
       "year": 1960,
-      "event": "Vì sao Thành lập Mặt trận Dân tộc Giải phóng miền Nam (1960) quan trọng đối với lịch sử Việt Nam?",
+      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1960.",
       "story": "**Thành lập Mặt trận Dân tộc Giải phóng miền Nam** xảy ra năm 1960. Mặt trận ra đời nhằm đoàn kết lực lượng yêu nước ở miền Nam. Đây là cột mốc quan trọng vì Tạo mặt trận chính trị – quân sự chống Mỹ và chính quyền Sài Gòn.",
       "persons": [],
       "places": [],
       "keywords": [
-        "tộc",
-        "chính",
-        "mặt",
-        "nhằm",
-        "phóng"
+        "nước",
+        "kết",
+        "sài",
+        "1960",
+        "lượng"
       ]
     },
     {
@@ -417,26 +372,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "hai",
-        "giới",
         "biên",
-        "đột",
-        "chiến"
-      ]
-    },
-    {
-      "id": "hf_000048",
-      "year": 980,
-      "event": "Lê Hoàn đã làm gì để dẫn đến Lê Hoàn lên ngôi (Nhà Tiền Lê) (980)?",
-      "story": "diễn ra **Lê Hoàn lên ngôi (Nhà Tiền Lê)**: Lê Hoàn được suy tôn sau biến cố cuối triều Đinh. Ý nghĩa: Ổn định triều chính, chuẩn bị chống Tống.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "tôn",
-        "lên",
-        "chống",
-        "chính",
-        "tiền"
+        "chủ",
+        "nước",
+        "cột",
+        "thẳng"
       ]
     },
     {
@@ -447,11 +387,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "nhà",
+        "nước",
+        "chủ",
         "cộng",
-        "thủ",
-        "thống",
-        "tất"
+        "hòa",
+        "nghĩa"
       ]
     },
     {
@@ -462,26 +402,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "soát",
+        "hòa",
         "nguyễn",
-        "pháp",
-        "tuất",
-        "tay"
-      ]
-    },
-    {
-      "id": "hf_000054",
-      "year": 1973,
-      "event": "Trình bày ngắn gọn về Hiệp định Paris (1973).",
-      "story": "diễn ra **Hiệp định Paris**: Hiệp định chấm dứt chiến tranh, lập lại hòa bình ở Việt Nam. Ý nghĩa: Mỹ rút quân khỏi Việt Nam.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "dứt",
-        "lại",
-        "rút",
-        "khỏi",
-        "nghĩa"
+        "sài",
+        "cột",
+        "1862"
       ]
     },
     {
@@ -492,41 +417,26 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "tham",
-        "tiến",
-        "trường",
-        "thị",
-        "toàn"
+        "diện",
+        "kết",
+        "cột",
+        "định",
+        "chuẩn"
       ]
     },
     {
       "id": "hf_000057",
       "year": 1288,
-      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 1288.",
+      "event": "Trong năm 1288, điều gì có ý nghĩa lịch sử ở Việt Nam?",
       "story": "**Trận Bạch Đằng (Trần Hưng Đạo)** xảy ra năm 1288. Trần Hưng Đạo nhử địch vào bãi cọc ngầm trên sông Bạch Đằng, tiêu diệt thủy quân Nguyên. Đây là cột mốc quan trọng vì Đập tan ý đồ xâm lược, kết thúc chiến tranh, ghi dấu mốc chói lọi.",
       "persons": [],
       "places": [],
       "keywords": [
-        "ngầm",
-        "đạo",
-        "nhử",
-        "dấu",
-        "xâm"
-      ]
-    },
-    {
-      "id": "hf_000058",
-      "year": 1995,
-      "event": "Vì sao Bình thường hóa Việt–Mỹ; gia nhập ASEAN (1995) quan trọng đối với lịch sử Việt Nam?",
-      "story": "diễn ra **Bình thường hóa Việt–Mỹ; gia nhập ASEAN**: Việt Nam và Hoa Kỳ bình thường hóa; Việt Nam gia nhập ASEAN. Ý nghĩa: Mở rộng hội nhập quốc tế và khu vực.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "gia",
-        "hội",
-        "khu",
-        "nghĩa",
-        "thường"
+        "thúc",
+        "cọc",
+        "kết",
+        "chói",
+        "lọi"
       ]
     },
     {
@@ -537,221 +447,131 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "tới",
-        "bước",
         "biên",
-        "ngoặt",
-        "thắng"
-      ]
-    },
-    {
-      "id": "hf_000060",
-      "year": 1400,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1400.",
-      "story": "**Hồ Quý Ly lập nhà Hồ** xảy ra năm 1400. Hồ Quý Ly cải cách mạnh, đổi quốc hiệu Đại Ngu. Đây là cột mốc quan trọng vì Cải cách táo bạo nhưng không vững bền, dẫn tới họa xâm lăng.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "cải",
-        "tới",
-        "nhà",
-        "bạo",
-        "quốc"
-      ]
-    },
-    {
-      "id": "hf_000061",
-      "year": 1672,
-      "event": "Tạm đình chiến Trịnh–Nguyễn xảy ra khi nào và kết quả ra sao?",
-      "story": "Tạm đình chiến Trịnh–Nguyễn (1672): Hai bên ngừng giao tranh, giữ nguyên cục diện chia cắt. Sự kiện này có ý nghĩa là Củng cố ranh giới, ổn định tương đối.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "củng",
-        "hai",
-        "này",
-        "nguyễn",
-        "giới"
-      ]
-    },
-    {
-      "id": "hf_000062",
-      "year": 1460,
-      "event": "Lê Thánh Tông đã làm gì để dẫn đến Lê Thánh Tông trị vì (1460)?",
-      "story": "diễn ra **Lê Thánh Tông trị vì**: Lê Thánh Tông đẩy mạnh cải cách, hoàn thiện bộ máy nhà nước. Ý nghĩa: Đỉnh cao thịnh trị của Lê sơ trên nhiều lĩnh vực.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "đỉnh",
-        "cải",
-        "nhà",
-        "thánh",
-        "cách"
+        "bước",
+        "cột",
+        "lợi",
+        "định"
       ]
     },
     {
       "id": "hf_000064",
       "year": 1964,
-      "event": "Sự kiện Vịnh Bắc Bộ xảy ra khi nào và kết quả ra sao?",
-      "story": "Sự kiện Vịnh Bắc Bộ. Sự kiện trên Vịnh Bắc Bộ dẫn đến Mỹ leo thang chiến tranh ở Việt Nam. Về lâu dài, Mở rộng chiến tranh, ném bom miền Bắc.",
+      "event": "Tóm tắt Sự kiện Vịnh Bắc Bộ và nêu ý nghĩa lịch sử của sự kiện này.",
+      "story": "**Sự kiện Vịnh Bắc Bộ** xảy ra năm 1964. Sự kiện trên Vịnh Bắc Bộ dẫn đến Mỹ leo thang chiến tranh ở Việt Nam. Đây là cột mốc quan trọng vì Mở rộng chiến tranh, ném bom miền Bắc.",
       "persons": [],
       "places": [],
       "keywords": [
-        "trên",
-        "bắc",
-        "vịnh",
+        "1964",
+        "bom",
+        "rộng",
         "ném",
-        "miền"
+        "đến"
       ]
     },
     {
       "id": "hf_000067",
       "year": 2020,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 2020.",
-      "story": "Đại dịch COVID-19 (2020): COVID-19 tác động sâu rộng đến y tế, kinh tế và xã hội. Sự kiện này có ý nghĩa là Thử thách quản trị khủng hoảng và y tế công.",
+      "event": "Vì sao Đại dịch COVID-19 (2020) quan trọng đối với lịch sử Việt Nam?",
+      "story": "**Đại dịch COVID-19** xảy ra năm 2020. COVID-19 tác động sâu rộng đến y tế, kinh tế và xã hội. Đây là cột mốc quan trọng vì Thử thách quản trị khủng hoảng và y tế công.",
       "persons": [],
       "places": [],
       "keywords": [
         "thách",
-        "này",
-        "hội",
+        "kinh",
+        "covid",
         "nghĩa",
-        "thử"
+        "này"
       ]
     },
     {
       "id": "hf_000068",
       "year": 1954,
-      "event": "Bối cảnh nào tạo điều kiện cho Hiệp định Genève xảy ra?",
-      "story": "Hiệp định Genève. Ký Hiệp định Genève về chấm dứt chiến sự ở Việt Nam. Về lâu dài, Tạm chia cắt đất nước ở vĩ tuyến 17, chuẩn bị tổng tuyển cử.",
+      "event": "Hiệp định Genève xảy ra khi nào và kết quả ra sao?",
+      "story": "**Hiệp định Genève** xảy ra năm 1954. Ký Hiệp định Genève về chấm dứt chiến sự ở Việt Nam. Đây là cột mốc quan trọng vì Tạm chia cắt đất nước ở vĩ tuyến 17, chuẩn bị tổng tuyển cử.",
       "persons": [],
       "places": [],
       "keywords": [
+        "nước",
+        "tuyển",
         "dứt",
-        "tuyến",
-        "cắt",
-        "định",
-        "tạm"
-      ]
-    },
-    {
-      "id": "hf_000069",
-      "year": 2007,
-      "event": "Trình bày ngắn gọn về Gia nhập WTO (2007).",
-      "story": "**Gia nhập WTO** xảy ra năm 2007. Việt Nam trở thành thành viên WTO. Đây là cột mốc quan trọng vì Thúc đẩy thương mại và cải cách thể chế.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "cải",
-        "trở",
-        "wto",
-        "cách",
-        "2007"
+        "1954",
+        "chia"
       ]
     },
     {
       "id": "hf_000070",
       "year": 1989,
-      "event": "Rút quân khỏi Campuchia xảy ra khi nào và kết quả ra sao?",
+      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 1989.",
       "story": "**Rút quân khỏi Campuchia** xảy ra năm 1989. Việt Nam hoàn tất rút quân, đóng góp giải pháp chính trị. Đây là cột mốc quan trọng vì Giảm căng thẳng đối ngoại, thuận lợi bình thường hóa.",
       "persons": [],
       "places": [],
       "keywords": [
+        "lợi",
+        "thẳng",
+        "1989",
         "khỏi",
-        "chính",
-        "thường",
-        "tất",
-        "pháp"
+        "hóa"
       ]
     },
     {
       "id": "hf_000072",
       "year": 2016,
-      "event": "Trình bày ngắn gọn về Sự cố môi trường biển miền Trung (2016).",
-      "story": "Sự cố môi trường biển miền Trung (2016): Ô nhiễm biển gây thiệt hại tại 4 tỉnh miền Trung. Sự kiện này có ý nghĩa là Nâng cao nhận thức bảo vệ môi trường.",
+      "event": "Hậu quả hay tác động dài hạn của Sự cố môi trường biển miền Trung đối với Việt Nam là gì?",
+      "story": "**Sự cố môi trường biển miền Trung** xảy ra năm 2016. Ô nhiễm biển gây thiệt hại tại 4 tỉnh miền Trung. Đây là cột mốc quan trọng vì Nâng cao nhận thức bảo vệ môi trường.",
       "persons": [],
       "places": [],
       "keywords": [
-        "nhận",
+        "nghĩa",
+        "môi",
+        "miền",
         "này",
-        "2016",
-        "thiệt",
-        "cao"
+        "thức"
       ]
     },
     {
       "id": "hf_000074",
       "year": 981,
-      "event": "Bối cảnh nào tạo điều kiện cho Kháng Tống thắng lợi thời Lê Hoàn xảy ra?",
-      "story": "Kháng Tống thắng lợi thời Lê Hoàn (981): Quân Đại Cồ Việt đánh lui quân Tống xâm lược. Sự kiện này có ý nghĩa là Bảo vệ nền độc lập non trẻ, khẳng định vị thế quốc gia.",
+      "event": "Ai là nhân vật trung tâm trong Kháng Tống thắng lợi thời Lê Hoàn (981) và vai trò của họ là gì?",
+      "story": "**Kháng Tống thắng lợi thời Lê Hoàn** xảy ra năm 981. Quân Đại Cồ Việt đánh lui quân Tống xâm lược. Đây là cột mốc quan trọng vì Bảo vệ nền độc lập non trẻ, khẳng định vị thế quốc gia.",
       "persons": [],
       "places": [],
       "keywords": [
-        "này",
-        "độc",
-        "quốc",
-        "xâm",
-        "đánh"
-      ]
-    },
-    {
-      "id": "hf_000075",
-      "year": 2007,
-      "event": "Trình bày ngắn gọn về Gia nhập WTO (2007).",
-      "story": "Gia nhập WTO. Việt Nam trở thành thành viên WTO. Về lâu dài, Thúc đẩy thương mại và cải cách thể chế.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "chế",
-        "gia",
-        "thúc",
-        "cải",
-        "đẩy"
+        "nghĩa",
+        "lợi",
+        "đánh",
+        "định",
+        "này"
       ]
     },
     {
       "id": "hf_000078",
       "year": 1627,
-      "event": "Ai là nhân vật trung tâm trong Khởi đầu Trịnh–Nguyễn phân tranh (1627) và vai trò của họ là gì?",
-      "story": "Khởi đầu Trịnh–Nguyễn phân tranh. Chiến tranh kéo dài giữa Chúa Trịnh (Đàng Ngoài) và Chúa Nguyễn (Đàng Trong). Về lâu dài, Đất nước chia cắt hơn 150 năm, ranh giới sông Gianh.",
+      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 1627.",
+      "story": "**Khởi đầu Trịnh–Nguyễn phân tranh** xảy ra năm 1627. Chiến tranh kéo dài giữa Chúa Trịnh (Đàng Ngoài) và Chúa Nguyễn (Đàng Trong). Đây là cột mốc quan trọng vì Đất nước chia cắt hơn 150 năm, ranh giới sông Gianh.",
       "persons": [],
       "places": [],
       "keywords": [
-        "đàng",
+        "nước",
         "nguyễn",
-        "giới",
-        "dài",
-        "chia"
-      ]
-    },
-    {
-      "id": "hf_000079",
-      "year": 1964,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1964.",
-      "story": "Sự kiện Vịnh Bắc Bộ (1964): Sự kiện trên Vịnh Bắc Bộ dẫn đến Mỹ leo thang chiến tranh ở Việt Nam. Sự kiện này có ý nghĩa là Mở rộng chiến tranh, ném bom miền Bắc.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "trên",
-        "bắc",
-        "vịnh",
-        "nghĩa",
-        "ném"
+        "chia",
+        "chúa",
+        "cắt"
       ]
     },
     {
       "id": "hf_000080",
       "year": 1975,
-      "event": "Trình bày nhanh những điểm chính về Chiến dịch Hồ Chí Minh – Giải phóng miền Nam.",
-      "story": "diễn ra **Chiến dịch Hồ Chí Minh – Giải phóng miền Nam**: Quân giải phóng tiến vào Sài Gòn ngày 30/4/1975. Ý nghĩa: Thống nhất đất nước về lãnh thổ.",
+      "event": "Hậu quả hay tác động dài hạn của Chiến dịch Hồ Chí Minh – Giải phóng miền Nam đối với Việt Nam là gì?",
+      "story": "**Chiến dịch Hồ Chí Minh – Giải phóng miền Nam** xảy ra năm 1975. Quân giải phóng tiến vào Sài Gòn ngày 30/4/1975. Đây là cột mốc quan trọng vì Thống nhất đất nước về lãnh thổ.",
       "persons": [],
       "places": [],
       "keywords": [
-        "lãnh",
-        "1975",
-        "thống",
-        "phóng",
-        "tiến"
+        "nước",
+        "sài",
+        "nghĩa",
+        "miền",
+        "thổ"
       ]
     },
     {
@@ -762,311 +582,176 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "hiện",
-        "thuật",
-        "nhà",
-        "này",
-        "thường"
-      ]
-    },
-    {
-      "id": "hf_000082",
-      "year": 1077,
-      "event": "Lý Thường Kiệt đã làm gì để dẫn đến Phòng tuyến Như Nguyệt (1077)?",
-      "story": "diễn ra **Phòng tuyến Như Nguyệt**: Quân Đại Việt chặn quân Tống ở sông Như Nguyệt; bài 'Nam quốc sơn hà' vang vọng. Ý nghĩa: Bảo vệ bờ cõi, củng cố ý thức độc lập dân tộc.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "tuyến",
-        "củng",
-        "tộc",
-        "cõi",
-        "độc"
+        "ngăn",
+        "chủ",
+        "nghĩa",
+        "kiệt",
+        "phá"
       ]
     },
     {
       "id": "hf_000083",
       "year": 1000,
       "event": "Hậu quả hay tác động dài hạn của Đại lễ 1000 năm Thăng Long – Hà Nội đối với Việt Nam là gì?",
-      "story": "Đại lễ 1000 năm Thăng Long – Hà Nội (2010): Kỷ niệm nghìn năm Thăng Long – Hà Nội. Sự kiện này có ý nghĩa là Khẳng định bề dày lịch sử – văn hóa Thủ đô.",
+      "story": "**Đại lễ 1000 năm Thăng Long – Hà Nội** xảy ra năm 2010. Kỷ niệm nghìn năm Thăng Long – Hà Nội. Đây là cột mốc quan trọng vì Khẳng định bề dày lịch sử – văn hóa Thủ đô.",
       "persons": [],
       "places": [],
       "keywords": [
-        "1000",
-        "nghĩa",
-        "khẳng",
-        "này",
-        "định"
+        "nội",
+        "văn",
+        "niệm",
+        "đại",
+        "2010"
       ]
     },
     {
       "id": "hf_000091",
       "year": 1946,
-      "event": "Trong năm 1946, điều gì có ý nghĩa lịch sử ở Việt Nam?",
-      "story": "diễn ra **Toàn quốc kháng chiến**: Lời kêu gọi Toàn quốc kháng chiến; cả nước bước vào kháng chiến chống Pháp. Ý nghĩa: Mở đầu Chiến tranh Đông Dương lần thứ nhất.",
+      "event": "Hãy mô tả ngắn gọn bối cảnh và ý nghĩa của Toàn quốc kháng chiến.",
+      "story": "**Toàn quốc kháng chiến** xảy ra năm 1946. Lời kêu gọi Toàn quốc kháng chiến; cả nước bước vào kháng chiến chống Pháp. Đây là cột mốc quan trọng vì Mở đầu Chiến tranh Đông Dương lần thứ nhất.",
       "persons": [],
       "places": [],
       "keywords": [
+        "nước",
+        "lần",
         "bước",
-        "gọi",
-        "quốc",
-        "pháp",
-        "đầu"
+        "nghĩa",
+        "toàn"
       ]
     },
     {
       "id": "hf_000092",
       "year": 1533,
-      "event": "Tóm tắt Lê trung hưng khôi phục danh nghĩa nhà Lê và nêu ý nghĩa lịch sử của sự kiện này.",
+      "event": "Lê trung hưng khôi phục danh nghĩa nhà Lê xảy ra khi nào và kết quả ra sao?",
       "story": "**Lê trung hưng khôi phục danh nghĩa nhà Lê** xảy ra năm 1533. Các thế lực trung hưng dựng lại cơ nghiệp nhà Lê, thực quyền thuộc chúa Trịnh. Đây là cột mốc quan trọng vì Hình thành cục diện Lê–Trịnh ở Đàng Ngoài, đối đầu với họ Nguyễn ở Đàng Trong.",
       "persons": [],
       "places": [],
       "keywords": [
-        "phục",
-        "nghiệp",
-        "hình",
-        "đàng",
-        "nhà"
+        "diện",
+        "nguyễn",
+        "khôi",
+        "chúa",
+        "nghĩa"
       ]
     },
     {
       "id": "hf_000093",
       "year": 1771,
-      "event": "Trình bày ngắn gọn về Khởi nghĩa Tây Sơn bùng nổ (1771).",
+      "event": "Những nguyên nhân chính dẫn đến Khởi nghĩa Tây Sơn bùng nổ là gì?",
       "story": "**Khởi nghĩa Tây Sơn bùng nổ** xảy ra năm 1771. Anh em Tây Sơn khởi nghĩa, chống các thế lực Trịnh – Nguyễn. Đây là cột mốc quan trọng vì Đặt nền tảng thống nhất, cải cách mạnh mẽ.",
       "persons": [],
       "places": [],
       "keywords": [
-        "đặt",
-        "cải",
-        "thống",
         "nguyễn",
-        "cách"
+        "nghĩa",
+        "tảng",
+        "trịnh",
+        "chống"
       ]
     },
     {
       "id": "hf_000094",
       "year": 1285,
-      "event": "Trình bày ngắn gọn về Kháng chiến lần 2 chống Nguyên (1285).",
+      "event": "Trong năm 1285, điều gì có ý nghĩa lịch sử ở Việt Nam?",
       "story": "**Kháng chiến lần 2 chống Nguyên** xảy ra năm 1285. Quân dân Đại Việt giành thắng lợi lớn trước quân Nguyên. Đây là cột mốc quan trọng vì Củng cố sức mạnh quốc gia và nghệ thuật chiến tranh nhân dân.",
       "persons": [],
       "places": [],
       "keywords": [
+        "lần",
+        "lợi",
+        "dân",
         "củng",
-        "thuật",
-        "lớn",
-        "1285",
-        "quốc"
+        "nguyên"
       ]
     },
     {
       "id": "hf_000097",
       "year": 1471,
-      "event": "Đại Việt đánh bại Champa tại Vijaya xảy ra khi nào và kết quả ra sao?",
-      "story": "Đại Việt đánh bại Champa tại Vijaya (1471). Quân Đại Việt hạ kinh đô Vijaya của Champa. Làm suy yếu Champa, mở rộng lãnh thổ về phương Nam.",
+      "event": "Trình bày ngắn gọn về Đại Việt đánh bại Champa tại Vijaya (1471).",
+      "story": "**Đại Việt đánh bại Champa tại Vijaya** xảy ra năm 1471. Quân Đại Việt hạ kinh đô Vijaya của Champa. Đây là cột mốc quan trọng vì Làm suy yếu Champa, mở rộng lãnh thổ về phương Nam.",
       "persons": [],
       "places": [],
       "keywords": [
-        "đánh",
-        "phương",
-        "lãnh",
-        "suy",
-        "yếu"
+        "1471",
+        "quân",
+        "yếu",
+        "rộng",
+        "phương"
       ]
     },
     {
       "id": "hf_000098",
       "year": 1992,
       "event": "Tóm tắt Hiến pháp 1992 và nêu ý nghĩa lịch sử của sự kiện này.",
-      "story": "diễn ra **Hiến pháp 1992**: Ban hành Hiến pháp phù hợp Đổi Mới. Ý nghĩa: Khung pháp lý cho phát triển kinh tế – xã hội.",
+      "story": "**Hiến pháp 1992** xảy ra năm 1992. Ban hành Hiến pháp phù hợp Đổi Mới. Đây là cột mốc quan trọng vì Khung pháp lý cho phát triển kinh tế – xã hội.",
       "persons": [],
       "places": [],
       "keywords": [
-        "đổi",
-        "cho",
-        "hội",
+        "phát",
+        "hợp",
         "hành",
+        "hội",
         "nghĩa"
       ]
     },
     {
       "id": "hf_000101",
       "year": 1911,
-      "event": "Trình bày ngắn gọn về Nguyễn Tất Thành ra đi tìm đường cứu nước (1911).",
+      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1911.",
       "story": "**Nguyễn Tất Thành ra đi tìm đường cứu nước** xảy ra năm 1911. Nguyễn Tất Thành rời bến Nhà Rồng, bắt đầu hành trình qua nhiều châu lục. Đây là cột mốc quan trọng vì Đặt nền móng cho con đường cách mạng sau này của Hồ Chí Minh.",
       "persons": [],
       "places": [],
       "keywords": [
-        "đặt",
-        "tìm",
-        "đường",
-        "hành",
-        "nhà"
+        "nước",
+        "nguyễn",
+        "nghĩa",
+        "rồng",
+        "đường"
       ]
     },
     {
       "id": "hf_000102",
       "year": 1955,
-      "event": "Hình thành Việt Nam Cộng hòa ở miền Nam xảy ra khi nào và kết quả ra sao?",
-      "story": "Hình thành Việt Nam Cộng hòa ở miền Nam (1955): Miền Nam thành lập chính thể Việt Nam Cộng hòa. Sự kiện này có ý nghĩa là Củng cố tình trạng chia cắt đất nước.",
+      "event": "Trình bày ngắn gọn về Hình thành Việt Nam Cộng hòa ở miền Nam (1955).",
+      "story": "**Hình thành Việt Nam Cộng hòa ở miền Nam** xảy ra năm 1955. Miền Nam thành lập chính thể Việt Nam Cộng hòa. Đây là cột mốc quan trọng vì Củng cố tình trạng chia cắt đất nước.",
       "persons": [],
       "places": [],
       "keywords": [
-        "củng",
-        "cắt",
-        "chính",
-        "hình",
-        "nghĩa"
-      ]
-    },
-    {
-      "id": "hf_000103",
-      "year": 1884,
-      "event": "Vì sao Hòa ước Patenôtre (Giáp Thân) (1884) quan trọng đối với lịch sử Việt Nam?",
-      "story": "Hòa ước Patenôtre (Giáp Thân). Triều Nguyễn ký hiệp ước đặt Việt Nam dưới chế độ bảo hộ của Pháp. Về lâu dài, Chính thức hóa ách cai trị của Pháp trên toàn cõi Việt Nam.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "đặt",
-        "chính",
-        "cõi",
-        "nguyễn",
-        "dài"
+        "hòa",
+        "nước",
+        "cộng",
+        "lập",
+        "tình"
       ]
     },
     {
       "id": "hf_000105",
       "year": 1802,
-      "event": "Ai là nhân vật trung tâm trong Nguyễn Ánh lên ngôi Gia Long, lập nhà Nguyễn (1802) và vai trò của họ là gì?",
+      "event": "Gia Long (Nguyễn Ánh) đã làm gì để dẫn đến Nguyễn Ánh lên ngôi Gia Long, lập nhà Nguyễn (1802)?",
       "story": "**Nguyễn Ánh lên ngôi Gia Long, lập nhà Nguyễn** xảy ra năm 1802. Gia Long thống nhất đất nước sau khi đánh bại Tây Sơn. Đây là cột mốc quan trọng vì Mở đầu triều Nguyễn – triều đại phong kiến cuối cùng.",
       "persons": [],
       "places": [],
       "keywords": [
-        "lên",
-        "ngôi",
-        "nhà",
-        "khi",
-        "thống"
-      ]
-    },
-    {
-      "id": "hf_000107",
-      "year": 1945,
-      "event": "ở Việt Nam diễn ra sự kiện gì quan trọng?",
-      "story": "Cách mạng Tháng Tám và Tuyên ngôn Độc lập (1945): Tổng khởi nghĩa giành chính quyền; 2/9/1945, Hồ Chí Minh đọc Tuyên ngôn Độc lập. Sự kiện này có ý nghĩa là Khai sinh nước Việt Nam Dân chủ Cộng hòa, chấm dứt chế độ thực dân – phong kiến.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "dứt",
-        "chính",
-        "này",
-        "độc",
-        "cộng"
-      ]
-    },
-    {
-      "id": "hf_000108",
-      "year": 1960,
-      "event": "Bối cảnh nào tạo điều kiện cho Thành lập Mặt trận Dân tộc Giải phóng miền Nam xảy ra?",
-      "story": "Thành lập Mặt trận Dân tộc Giải phóng miền Nam (1960): Mặt trận ra đời nhằm đoàn kết lực lượng yêu nước ở miền Nam. Sự kiện này có ý nghĩa là Tạo mặt trận chính trị – quân sự chống Mỹ và chính quyền Sài Gòn.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "tộc",
-        "chính",
-        "mặt",
-        "này",
-        "nhằm"
-      ]
-    },
-    {
-      "id": "hf_000111",
-      "year": 981,
-      "event": "Trình bày nhanh những điểm chính về Kháng Tống thắng lợi thời Lê Hoàn.",
-      "story": "**Kháng Tống thắng lợi thời Lê Hoàn** xảy ra năm 981. Quân Đại Cồ Việt đánh lui quân Tống xâm lược. Đây là cột mốc quan trọng vì Bảo vệ nền độc lập non trẻ, khẳng định vị thế quốc gia.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "độc",
-        "quốc",
-        "xâm",
-        "đánh",
-        "thắng"
+        "nước",
+        "nguyễn",
+        "cùng",
+        "nghĩa",
+        "đánh"
       ]
     },
     {
       "id": "hf_000115",
       "year": 1930,
-      "event": "Bối cảnh nào tạo điều kiện cho Thành lập Đảng Cộng sản Việt Nam xảy ra?",
-      "story": "Thành lập Đảng Cộng sản Việt Nam (1930): Hợp nhất các tổ chức cộng sản, xác lập đường lối cách mạng. Sự kiện này có ý nghĩa là Lãnh đạo phong trào đấu tranh giành độc lập.",
+      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1930.",
+      "story": "**Thành lập Đảng Cộng sản Việt Nam** xảy ra năm 1930. Hợp nhất các tổ chức cộng sản, xác lập đường lối cách mạng. Đây là cột mốc quan trọng vì Lãnh đạo phong trào đấu tranh giành độc lập.",
       "persons": [],
       "places": [],
       "keywords": [
-        "lối",
-        "lãnh",
-        "đường",
-        "đạo",
-        "đảng"
-      ]
-    },
-    {
-      "id": "hf_000116",
-      "year": 1884,
-      "event": "Trình bày ngắn gọn về Hòa ước Patenôtre (Giáp Thân) (1884).",
-      "story": "diễn ra **Hòa ước Patenôtre (Giáp Thân)**: Triều Nguyễn ký hiệp ước đặt Việt Nam dưới chế độ bảo hộ của Pháp. Ý nghĩa: Chính thức hóa ách cai trị của Pháp trên toàn cõi Việt Nam.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "đặt",
-        "chính",
-        "cõi",
-        "nguyễn",
-        "ách"
-      ]
-    },
-    {
-      "id": "hf_000118",
-      "year": 1075,
-      "event": "Trong năm 1075, điều gì có ý nghĩa lịch sử ở Việt Nam?",
-      "story": "diễn ra **Lý Thường Kiệt chủ động tiến công Ung–Khâm–Liêm**: Quân Đại Việt tấn công trước để phá thế xâm lược của nhà Tống. Ý nghĩa: Ngăn chặn nguy cơ xâm lược, thể hiện nghệ thuật quân sự chủ động.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "hiện",
-        "thuật",
-        "nhà",
-        "thường",
-        "nguy"
-      ]
-    },
-    {
-      "id": "hf_000121",
-      "year": 1979,
-      "event": "Trong năm 1979, điều gì có ý nghĩa lịch sử ở Việt Nam?",
-      "story": "diễn ra **Chiến tranh biên giới phía Bắc**: Xung đột vũ trang nổ ra ở biên giới Việt–Trung. Ý nghĩa: Bảo vệ chủ quyền; quan hệ hai nước căng thẳng.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "hai",
-        "giới",
-        "biên",
+        "sản",
+        "cộng",
+        "1930",
         "nghĩa",
-        "đột"
-      ]
-    },
-    {
-      "id": "hf_000123",
-      "year": 1077,
-      "event": "Vì sao Phòng tuyến Như Nguyệt (1077) quan trọng đối với lịch sử Việt Nam?",
-      "story": "**Phòng tuyến Như Nguyệt** xảy ra năm 1077. Quân Đại Việt chặn quân Tống ở sông Như Nguyệt; bài 'Nam quốc sơn hà' vang vọng. Đây là cột mốc quan trọng vì Bảo vệ bờ cõi, củng cố ý thức độc lập dân tộc.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "tuyến",
-        "củng",
-        "tộc",
-        "cõi",
-        "độc"
+        "đường"
       ]
     },
     {
@@ -1077,86 +762,41 @@
       "persons": [],
       "places": [],
       "keywords": [
+        "cột",
         "1407",
-        "nhà",
-        "phóng",
-        "ách",
-        "xâm"
+        "mốc",
+        "minh",
+        "đấu"
       ]
     },
     {
       "id": "hf_000126",
       "year": 1789,
-      "event": "Nguyễn Huệ (Quang Trung) đã làm gì để dẫn đến Ngọc Hồi – Đống Đa (Quang Trung) (1789)?",
+      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1789.",
       "story": "**Ngọc Hồi – Đống Đa (Quang Trung)** xảy ra năm 1789. Quang Trung thần tốc tiến ra Bắc, đánh bại quân Thanh. Đây là cột mốc quan trọng vì Bảo vệ độc lập, khẳng định tài thao lược quân sự.",
       "persons": [],
       "places": [],
       "keywords": [
-        "độc",
-        "bại",
-        "tiến",
         "đánh",
-        "khẳng"
-      ]
-    },
-    {
-      "id": "hf_000130",
-      "year": 905,
-      "event": "Bối cảnh nào tạo điều kiện cho Khúc Thừa Dụ dựng chính quyền tự chủ xảy ra?",
-      "story": "**Khúc Thừa Dụ dựng chính quyền tự chủ** xảy ra năm 905. Khúc Thừa Dụ nắm quyền ở Tống Bình, khôi phục quyền tự chủ sau thời Bắc thuộc muộn. Đây là cột mốc quan trọng vì Mở đầu thời kỳ tự chủ của người Việt sau nhiều thế kỷ bị phương Bắc cai trị.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "phục",
-        "chính",
-        "người",
-        "đầu",
-        "nhiều"
-      ]
-    },
-    {
-      "id": "hf_000131",
-      "year": 1975,
-      "event": "Vì sao Chiến dịch Hồ Chí Minh – Giải phóng miền Nam (1975) quan trọng đối với lịch sử Việt Nam?",
-      "story": "**Chiến dịch Hồ Chí Minh – Giải phóng miền Nam** xảy ra năm 1975. Quân giải phóng tiến vào Sài Gòn ngày 30/4/1975. Đây là cột mốc quan trọng vì Thống nhất đất nước về lãnh thổ.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "lãnh",
-        "1975",
-        "thống",
-        "phóng",
-        "tiến"
+        "định",
+        "quang",
+        "1789",
+        "độc"
       ]
     },
     {
       "id": "hf_000135",
       "year": 1527,
-      "event": "Ai là nhân vật trung tâm trong Mạc Đăng Dung lập nhà Mạc (1527) và vai trò của họ là gì?",
-      "story": "Mạc Đăng Dung lập nhà Mạc. Mạc Đăng Dung soán ngôi, mở ra thời kỳ Nam–Bắc triều. Về lâu dài, Gây chia cắt chính trị kéo dài, xung đột với Lê trung hưng.",
+      "event": "Trình bày ngắn gọn về Mạc Đăng Dung lập nhà Mạc (1527).",
+      "story": "**Mạc Đăng Dung lập nhà Mạc** xảy ra năm 1527. Mạc Đăng Dung soán ngôi, mở ra thời kỳ Nam–Bắc triều. Đây là cột mốc quan trọng vì Gây chia cắt chính trị kéo dài, xung đột với Lê trung hưng.",
       "persons": [],
       "places": [],
       "keywords": [
-        "chính",
-        "ngôi",
-        "nhà",
-        "dài",
-        "chia"
-      ]
-    },
-    {
-      "id": "hf_000136",
-      "year": 1225,
-      "event": "Trình bày ngắn gọn về Nhà Trần thành lập (1225).",
-      "story": "diễn ra **Nhà Trần thành lập**: Lý Chiêu Hoàng nhường ngôi cho Trần Cảnh, mở đầu triều Trần. Ý nghĩa: Mở ra thời kỳ hưng thịnh, nổi bật với ba lần kháng Mông-Nguyên.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "ngôi",
-        "nhà",
-        "bật",
-        "đầu",
-        "mông"
+        "mạc",
+        "chia",
+        "cắt",
+        "đột",
+        "xung"
       ]
     },
     {
@@ -1167,101 +807,41 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "độc",
-        "bại",
-        "xâm",
+        "lần",
+        "cột",
         "đánh",
-        "mông"
-      ]
-    },
-    {
-      "id": "hf_000140",
-      "year": 1946,
-      "event": "Trong năm 1946, điều gì có ý nghĩa lịch sử ở Việt Nam?",
-      "story": "Toàn quốc kháng chiến (1946): Lời kêu gọi Toàn quốc kháng chiến; cả nước bước vào kháng chiến chống Pháp. Sự kiện này có ý nghĩa là Mở đầu Chiến tranh Đông Dương lần thứ nhất.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "này",
-        "bước",
-        "gọi",
-        "quốc",
-        "1946"
+        "lợi",
+        "lăng"
       ]
     },
     {
       "id": "hf_000148",
       "year": 1968,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1968.",
-      "story": "Tổng tiến công và nổi dậy Tết Mậu Thân (1968): Lực lượng cách mạng đồng loạt tiến công trên nhiều đô thị miền Nam. Sự kiện này có ý nghĩa là Tác động mạnh đến cục diện chiến tranh và dư luận quốc tế.",
+      "event": "Tóm tắt Tổng tiến công và nổi dậy Tết Mậu Thân và nêu ý nghĩa lịch sử của sự kiện này.",
+      "story": "**Tổng tiến công và nổi dậy Tết Mậu Thân** xảy ra năm 1968. Lực lượng cách mạng đồng loạt tiến công trên nhiều đô thị miền Nam. Đây là cột mốc quan trọng vì Tác động mạnh đến cục diện chiến tranh và dư luận quốc tế.",
       "persons": [],
       "places": [],
       "keywords": [
-        "này",
-        "luận",
-        "tết",
-        "quốc",
-        "cách"
+        "diện",
+        "đồng",
+        "nghĩa",
+        "lượng",
+        "1968"
       ]
     },
     {
       "id": "hf_000149",
       "year": 1986,
-      "event": "Trong năm 1986, điều gì có ý nghĩa lịch sử ở Việt Nam?",
-      "story": "Đổi Mới (1986): Đại hội VI đề ra đường lối Đổi Mới về kinh tế và quản lý. Sự kiện này có ý nghĩa là Chuyển đổi cơ chế, thúc đẩy tăng trưởng và hội nhập.",
+      "event": "Những nguyên nhân chính dẫn đến Đổi Mới là gì?",
+      "story": "**Đổi Mới** xảy ra năm 1986. Đại hội VI đề ra đường lối Đổi Mới về kinh tế và quản lý. Đây là cột mốc quan trọng vì Chuyển đổi cơ chế, thúc đẩy tăng trưởng và hội nhập.",
       "persons": [],
       "places": [],
       "keywords": [
-        "đổi",
-        "1986",
-        "lối",
+        "thúc",
+        "tăng",
         "chế",
-        "đường"
-      ]
-    },
-    {
-      "id": "hf_000151",
-      "year": 1010,
-      "event": "Trình bày ngắn gọn về Chiếu dời đô (văn kiện) (1010).",
-      "story": "**Chiếu dời đô (văn kiện)** xảy ra năm 1010. Văn kiện nêu lý do dời đô và tầm nhìn phát triển ở Đại La. Đây là cột mốc quan trọng vì Tư tưởng quy hoạch, tầm nhìn chiến lược thời Lý.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "dời",
-        "phát",
-        "tầm",
-        "1010",
-        "chiến"
-      ]
-    },
-    {
-      "id": "hf_000153",
-      "year": 1527,
-      "event": "Trình bày ngắn gọn về Mạc Đăng Dung lập nhà Mạc (1527).",
-      "story": "Mạc Đăng Dung lập nhà Mạc (1527): Mạc Đăng Dung soán ngôi, mở ra thời kỳ Nam–Bắc triều. Sự kiện này có ý nghĩa là Gây chia cắt chính trị kéo dài, xung đột với Lê trung hưng.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "chính",
-        "ngôi",
-        "nhà",
-        "này",
-        "dài"
-      ]
-    },
-    {
-      "id": "hf_000154",
-      "year": 1789,
-      "event": "Nguyễn Huệ (Quang Trung) đã làm gì để dẫn đến Ngọc Hồi – Đống Đa (Quang Trung) (1789)?",
-      "story": "diễn ra **Ngọc Hồi – Đống Đa (Quang Trung)**: Quang Trung thần tốc tiến ra Bắc, đánh bại quân Thanh. Ý nghĩa: Bảo vệ độc lập, khẳng định tài thao lược quân sự.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "độc",
-        "bại",
-        "tiến",
-        "đánh",
-        "nghĩa"
+        "hội",
+        "đẩy"
       ]
     },
     {
@@ -1272,251 +852,56 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "một",
-        "đặt",
         "dời",
-        "hiến",
+        "chiếu",
+        "kinh",
+        "cột",
         "long"
       ]
     },
     {
       "id": "hf_000157",
       "year": 1483,
-      "event": "Hãy mô tả ngắn gọn bối cảnh và ý nghĩa của Bộ luật Hồng Đức.",
-      "story": "Bộ luật Hồng Đức (1483): Bộ luật Hồng Đức hoàn thiện dưới thời Lê Thánh Tông. Sự kiện này có ý nghĩa là Bộ luật tiêu biểu của Việt Nam thời phong kiến.",
+      "event": "ở Việt Nam diễn ra sự kiện gì quan trọng?",
+      "story": "**Bộ luật Hồng Đức** xảy ra năm 1483. Bộ luật Hồng Đức hoàn thiện dưới thời Lê Thánh Tông. Đây là cột mốc quan trọng vì Bộ luật tiêu biểu của Việt Nam thời phong kiến.",
       "persons": [],
       "places": [],
       "keywords": [
+        "thánh",
+        "hồng",
         "tiêu",
-        "biểu",
-        "1483",
-        "thiện",
-        "luật"
+        "thời",
+        "1483"
       ]
     },
     {
-      "id": "hf_000160",
-      "year": 1975,
-      "event": "Vì sao Chiến dịch Hồ Chí Minh – Giải phóng miền Nam (1975) quan trọng đối với lịch sử Việt Nam?",
-      "story": "Chiến dịch Hồ Chí Minh – Giải phóng miền Nam. Quân giải phóng tiến vào Sài Gòn ngày 30/4/1975. Về lâu dài, Thống nhất đất nước về lãnh thổ.",
+      "id": "hf_000163",
+      "year": 1911,
+      "event": "Nguyễn Tất Thành ra đi tìm đường cứu nước xảy ra khi nào và kết quả ra sao?",
+      "story": "1911: Nguyễn Tất Thành ra đi tìm đường cứu nước. Nguyễn Tất Thành rời bến Nhà Rồng, bắt đầu hành trình qua nhiều châu lục. Đặt nền móng cho con đường cách mạng sau này của Hồ Chí Minh.",
       "persons": [],
       "places": [],
       "keywords": [
-        "lãnh",
-        "1975",
-        "thống",
-        "phóng",
-        "dài"
-      ]
-    },
-    {
-      "id": "hf_000166",
-      "year": 980,
-      "event": "Ai là nhân vật trung tâm trong Lê Hoàn lên ngôi (Nhà Tiền Lê) (980) và vai trò của họ là gì?",
-      "story": "Lê Hoàn lên ngôi (Nhà Tiền Lê) (980): Lê Hoàn được suy tôn sau biến cố cuối triều Đinh. Sự kiện này có ý nghĩa là Ổn định triều chính, chuẩn bị chống Tống.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "tôn",
-        "lên",
-        "chính",
-        "ngôi",
-        "nhà"
-      ]
-    },
-    {
-      "id": "hf_000167",
-      "year": 1968,
-      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 1968.",
-      "story": "diễn ra **Tổng tiến công và nổi dậy Tết Mậu Thân**: Lực lượng cách mạng đồng loạt tiến công trên nhiều đô thị miền Nam. Ý nghĩa: Tác động mạnh đến cục diện chiến tranh và dư luận quốc tế.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "luận",
-        "tết",
-        "quốc",
-        "cách",
-        "tiến"
-      ]
-    },
-    {
-      "id": "hf_000171",
-      "year": 1077,
-      "event": "Lý Thường Kiệt đã làm gì để dẫn đến Phòng tuyến Như Nguyệt (1077)?",
-      "story": "Phòng tuyến Như Nguyệt. Quân Đại Việt chặn quân Tống ở sông Như Nguyệt; bài 'Nam quốc sơn hà' vang vọng. Về lâu dài, Bảo vệ bờ cõi, củng cố ý thức độc lập dân tộc.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "tuyến",
-        "củng",
-        "tộc",
-        "cõi",
-        "độc"
-      ]
-    },
-    {
-      "id": "hf_000172",
-      "year": 1284,
-      "event": "Ai là nhân vật trung tâm trong Hịch tướng sĩ (1284) và vai trò của họ là gì?",
-      "story": "Hịch tướng sĩ (1284): Trần Hưng Đạo soạn Hịch tướng sĩ khích lệ quân dân trước kháng chiến lần 2. Sự kiện này có ý nghĩa là Tác phẩm quân sự – chính trị cổ vũ mạnh mẽ.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "khích",
-        "đạo",
-        "chính",
-        "này",
-        "lần"
+        "nước",
+        "nguyễn",
+        "rồng",
+        "đường",
+        "này"
       ]
     },
     {
       "id": "hf_000173",
       "year": 1885,
-      "event": "Vì sao Phong trào Cần Vương (1885) quan trọng đối với lịch sử Việt Nam?",
-      "story": "Phong trào Cần Vương (1885): Vua Hàm Nghi hạ Chiếu Cần Vương, kêu gọi chống Pháp. Sự kiện này có ý nghĩa là Lan rộng kháng chiến chống Pháp cuối thế kỷ XIX.",
+      "event": "Trình bày nhanh những điểm chính về Phong trào Cần Vương.",
+      "story": "**Phong trào Cần Vương** xảy ra năm 1885. Vua Hàm Nghi hạ Chiếu Cần Vương, kêu gọi chống Pháp. Đây là cột mốc quan trọng vì Lan rộng kháng chiến chống Pháp cuối thế kỷ XIX.",
       "persons": [],
       "places": [],
       "keywords": [
-        "vương",
-        "trào",
-        "này",
-        "gọi",
-        "pháp"
-      ]
-    },
-    {
-      "id": "hf_000177",
-      "year": 1418,
-      "event": "Khởi nghĩa Lam Sơn bùng nổ xảy ra khi nào và kết quả ra sao?",
-      "story": "**Khởi nghĩa Lam Sơn bùng nổ** xảy ra năm 1418. Lê Lợi dựng cờ khởi nghĩa ở Lam Sơn chống quân Minh. Đây là cột mốc quan trọng vì Khởi đầu cuộc giải phóng dân tộc kéo dài gần 10 năm.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "tộc",
-        "1418",
-        "phóng",
-        "dài",
-        "đầu"
-      ]
-    },
-    {
-      "id": "hf_000178",
-      "year": 1225,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1225.",
-      "story": "Nhà Trần thành lập. Lý Chiêu Hoàng nhường ngôi cho Trần Cảnh, mở đầu triều Trần. Về lâu dài, Mở ra thời kỳ hưng thịnh, nổi bật với ba lần kháng Mông-Nguyên.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "ngôi",
-        "nhà",
-        "bật",
-        "dài",
-        "lâu"
-      ]
-    },
-    {
-      "id": "hf_000179",
-      "year": 1471,
-      "event": "Ai là nhân vật trung tâm trong Đại Việt đánh bại Champa tại Vijaya (1471) và vai trò của họ là gì?",
-      "story": "Đại Việt đánh bại Champa tại Vijaya (1471): Quân Đại Việt hạ kinh đô Vijaya của Champa. Sự kiện này có ý nghĩa là Làm suy yếu Champa, mở rộng lãnh thổ về phương Nam.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "đánh",
-        "phương",
-        "lãnh",
-        "nghĩa",
-        "suy"
-      ]
-    },
-    {
-      "id": "hf_000180",
-      "year": 1258,
-      "event": "Trần Hưng Đạo đã làm gì để dẫn đến Kháng chiến lần 1 chống Mông Cổ (1258)?",
-      "story": "Kháng chiến lần 1 chống Mông Cổ (1258): Đại Việt đánh bại cuộc xâm lược đầu tiên của quân Mông Cổ. Sự kiện này có ý nghĩa là Bảo vệ độc lập, mở ra chuỗi thắng lợi chống xâm lăng phương Bắc.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "này",
-        "độc",
-        "bại",
-        "xâm",
-        "đánh"
-      ]
-    },
-    {
-      "id": "hf_000184",
-      "year": 1978,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1978.",
-      "story": "diễn ra **Việt Nam đưa quân vào Campuchia**: Quân đội Việt Nam giúp lật đổ Khmer Đỏ. Ý nghĩa: Giải cứu nhân dân Campuchia, căng thẳng khu vực kéo dài.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "campuchia",
-        "khmer",
-        "dài",
-        "khu",
-        "dân"
-      ]
-    },
-    {
-      "id": "hf_000186",
-      "year": 1000,
-      "event": "ở Việt Nam diễn ra sự kiện gì quan trọng?",
-      "story": "Đại lễ 1000 năm Thăng Long – Hà Nội. Kỷ niệm nghìn năm Thăng Long – Hà Nội. Về lâu dài, Khẳng định bề dày lịch sử – văn hóa Thủ đô.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "dài",
-        "1000",
-        "khẳng",
-        "định",
-        "văn"
-      ]
-    },
-    {
-      "id": "hf_000187",
-      "year": 1284,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1284.",
-      "story": "**Hịch tướng sĩ** xảy ra năm 1284. Trần Hưng Đạo soạn Hịch tướng sĩ khích lệ quân dân trước kháng chiến lần 2. Đây là cột mốc quan trọng vì Tác phẩm quân sự – chính trị cổ vũ mạnh mẽ.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "khích",
-        "đạo",
-        "chính",
-        "lần",
-        "trước"
-      ]
-    },
-    {
-      "id": "hf_000190",
-      "year": 1995,
-      "event": "Trong năm 1995, điều gì có ý nghĩa lịch sử ở Việt Nam?",
-      "story": "Bình thường hóa Việt–Mỹ; gia nhập ASEAN (1995): Việt Nam và Hoa Kỳ bình thường hóa; Việt Nam gia nhập ASEAN. Sự kiện này có ý nghĩa là Mở rộng hội nhập quốc tế và khu vực.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "1995",
-        "gia",
-        "hội",
-        "khu",
+        "chiếu",
+        "1885",
+        "xix",
+        "hàm",
         "nghĩa"
-      ]
-    },
-    {
-      "id": "hf_000191",
-      "year": 1973,
-      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 1973.",
-      "story": "Hiệp định Paris (1973). Hiệp định chấm dứt chiến tranh, lập lại hòa bình ở Việt Nam. Mỹ rút quân khỏi Việt Nam.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "dứt",
-        "lại",
-        "rút",
-        "khỏi",
-        "1973"
       ]
     },
     {
@@ -1527,101 +912,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "hiện",
-        "thuật",
-        "nhà",
-        "thường",
-        "nguy"
-      ]
-    },
-    {
-      "id": "hf_000193",
-      "year": 931,
-      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 931.",
-      "story": "Dương Đình Nghệ đánh tan quân Nam Hán (931): Dương Đình Nghệ lãnh đạo nghĩa quân, đẩy lui quân Nam Hán. Sự kiện này có ý nghĩa là Củng cố nền tự chủ, tạo tiền đề cho thời Ngô.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "củng",
-        "lãnh",
-        "đạo",
-        "này",
-        "931"
-      ]
-    },
-    {
-      "id": "hf_000198",
-      "year": 1973,
-      "event": "Trong năm 1973, điều gì có ý nghĩa lịch sử ở Việt Nam?",
-      "story": "**Hiệp định Paris** xảy ra năm 1973. Hiệp định chấm dứt chiến tranh, lập lại hòa bình ở Việt Nam. Đây là cột mốc quan trọng vì Mỹ rút quân khỏi Việt Nam.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "dứt",
-        "khỏi",
-        "rút",
-        "bình",
-        "lập"
-      ]
-    },
-    {
-      "id": "hf_000200",
-      "year": 1527,
-      "event": "Trình bày ngắn gọn về Mạc Đăng Dung lập nhà Mạc (1527).",
-      "story": "**Mạc Đăng Dung lập nhà Mạc** xảy ra năm 1527. Mạc Đăng Dung soán ngôi, mở ra thời kỳ Nam–Bắc triều. Đây là cột mốc quan trọng vì Gây chia cắt chính trị kéo dài, xung đột với Lê trung hưng.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "chính",
-        "ngôi",
-        "nhà",
-        "dài",
-        "chia"
-      ]
-    },
-    {
-      "id": "hf_000202",
-      "year": 1960,
-      "event": "Vì sao Thành lập Mặt trận Dân tộc Giải phóng miền Nam (1960) quan trọng đối với lịch sử Việt Nam?",
-      "story": "diễn ra **Thành lập Mặt trận Dân tộc Giải phóng miền Nam**: Mặt trận ra đời nhằm đoàn kết lực lượng yêu nước ở miền Nam. Ý nghĩa: Tạo mặt trận chính trị – quân sự chống Mỹ và chính quyền Sài Gòn.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "tộc",
-        "chính",
-        "mặt",
-        "nhằm",
-        "phóng"
-      ]
-    },
-    {
-      "id": "hf_000204",
-      "year": 1054,
-      "event": "Hãy mô tả ngắn gọn bối cảnh và ý nghĩa của Đổi quốc hiệu thành Đại Việt.",
-      "story": "Đổi quốc hiệu thành Đại Việt (1054): Thời Lý Thánh Tông, quốc hiệu đổi từ Đại Cồ Việt sang Đại Việt. Sự kiện này có ý nghĩa là Khẳng định bản sắc và vị thế quốc gia độc lập.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "sang",
-        "này",
-        "độc",
-        "thánh",
-        "quốc"
-      ]
-    },
-    {
-      "id": "hf_000206",
-      "year": 1839,
-      "event": "Bối cảnh nào tạo điều kiện cho Đổi quốc hiệu Đại Nam thời Minh Mạng xảy ra?",
-      "story": "Đổi quốc hiệu Đại Nam thời Minh Mạng (1839): Triều Nguyễn dùng quốc hiệu Đại Nam dưới thời Minh Mạng. Sự kiện này có ý nghĩa là Khẳng định chủ quyền và cơ cấu quản lý thống nhất.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "này",
-        "1839",
-        "thống",
-        "nguyễn",
-        "quốc"
+        "ngăn",
+        "chủ",
+        "cột",
+        "kiệt",
+        "phá"
       ]
     },
     {
@@ -1632,116 +927,11 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "đảng",
-        "phát",
-        "quốc",
-        "bại",
-        "pháp"
-      ]
-    },
-    {
-      "id": "hf_000208",
-      "year": 1972,
-      "event": "Bối cảnh nào tạo điều kiện cho Chiến dịch 'Điện Biên Phủ trên không' xảy ra?",
-      "story": "Chiến dịch 'Điện Biên Phủ trên không' (1972): Quân dân miền Bắc đánh bại chiến dịch ném bom B-52 cuối 1972. Sự kiện này có ý nghĩa là Buộc Mỹ đàm phán, tiền đề Hiệp định Paris.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "buộc",
-        "này",
-        "bại",
-        "1972",
-        "biên"
-      ]
-    },
-    {
-      "id": "hf_000210",
-      "year": 1884,
-      "event": "Bối cảnh nào tạo điều kiện cho Hòa ước Patenôtre (Giáp Thân) xảy ra?",
-      "story": "Hòa ước Patenôtre (Giáp Thân) (1884): Triều Nguyễn ký hiệp ước đặt Việt Nam dưới chế độ bảo hộ của Pháp. Sự kiện này có ý nghĩa là Chính thức hóa ách cai trị của Pháp trên toàn cõi Việt Nam.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "đặt",
-        "chính",
-        "này",
-        "cõi",
-        "nguyễn"
-      ]
-    },
-    {
-      "id": "hf_000211",
-      "year": 1946,
-      "event": "Tóm tắt Toàn quốc kháng chiến và nêu ý nghĩa lịch sử của sự kiện này.",
-      "story": "**Toàn quốc kháng chiến** xảy ra năm 1946. Lời kêu gọi Toàn quốc kháng chiến; cả nước bước vào kháng chiến chống Pháp. Đây là cột mốc quan trọng vì Mở đầu Chiến tranh Đông Dương lần thứ nhất.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "bước",
-        "gọi",
-        "quốc",
-        "1946",
-        "pháp"
-      ]
-    },
-    {
-      "id": "hf_000212",
-      "year": 1460,
-      "event": "Lê Thánh Tông đã làm gì để dẫn đến Lê Thánh Tông trị vì (1460)?",
-      "story": "**Lê Thánh Tông trị vì** xảy ra năm 1460. Lê Thánh Tông đẩy mạnh cải cách, hoàn thiện bộ máy nhà nước. Đây là cột mốc quan trọng vì Đỉnh cao thịnh trị của Lê sơ trên nhiều lĩnh vực.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "đỉnh",
-        "cải",
-        "nhà",
-        "thánh",
-        "cách"
-      ]
-    },
-    {
-      "id": "hf_000215",
-      "year": 1862,
-      "event": "Trong năm 1862, điều gì có ý nghĩa lịch sử ở Việt Nam?",
-      "story": "Hòa ước Nhâm Tuất (Sài Gòn). Triều Nguyễn nhượng cho Pháp ba tỉnh miền Đông Nam Kỳ. Về lâu dài, Mất đất, mất quyền kiểm soát Nam Kỳ vào tay Pháp.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "soát",
-        "nguyễn",
-        "dài",
-        "pháp",
-        "lâu"
-      ]
-    },
-    {
-      "id": "hf_000218",
-      "year": 1978,
-      "event": "Trong năm 1978, điều gì có ý nghĩa lịch sử ở Việt Nam?",
-      "story": "**Việt Nam đưa quân vào Campuchia** xảy ra năm 1978. Quân đội Việt Nam giúp lật đổ Khmer Đỏ. Đây là cột mốc quan trọng vì Giải cứu nhân dân Campuchia, căng thẳng khu vực kéo dài.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "1978",
-        "giúp",
-        "lật",
-        "dài",
-        "khmer"
-      ]
-    },
-    {
-      "id": "hf_000224",
-      "year": 1885,
-      "event": "Ai là nhân vật trung tâm trong Phong trào Cần Vương (1885) và vai trò của họ là gì?",
-      "story": "**Phong trào Cần Vương** xảy ra năm 1885. Vua Hàm Nghi hạ Chiếu Cần Vương, kêu gọi chống Pháp. Đây là cột mốc quan trọng vì Lan rộng kháng chiến chống Pháp cuối thế kỷ XIX.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "vương",
-        "trào",
-        "gọi",
-        "pháp",
-        "cuối"
+        "nước",
+        "1930",
+        "tinh",
+        "yên",
+        "nghĩa"
       ]
     },
     {
@@ -1752,86 +942,11 @@
       "persons": [],
       "places": [],
       "keywords": [
+        "1867",
+        "nốt",
+        "cột",
         "củng",
-        "pháp",
-        "tay",
-        "toàn",
-        "tây"
-      ]
-    },
-    {
-      "id": "hf_000227",
-      "year": 2018,
-      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 2018.",
-      "story": "diễn ra **Ký kết CPTPP**: Tham gia Hiệp định Đối tác Toàn diện và Tiến bộ xuyên Thái Bình Dương. Ý nghĩa: Mở rộng thị trường, nâng chuẩn thương mại.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "tham",
-        "tiến",
-        "trường",
-        "nghĩa",
-        "thị"
-      ]
-    },
-    {
-      "id": "hf_000228",
-      "year": 1858,
-      "event": "ở Việt Nam diễn ra sự kiện gì quan trọng?",
-      "story": "**Liên quân Pháp – Tây Ban Nha tấn công Đà Nẵng** xảy ra năm 1858. Mở đầu cuộc chiến xâm lược của Pháp tại Việt Nam. Đây là cột mốc quan trọng vì Khởi đầu thời kỳ thực dân xâm lược kéo dài gần một thế kỷ.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "một",
-        "dài",
-        "pháp",
-        "xâm",
-        "1858"
-      ]
-    },
-    {
-      "id": "hf_000229",
-      "year": 1911,
-      "event": "Nguyễn Tất Thành (Hồ Chí Minh) đã làm gì để dẫn đến Nguyễn Tất Thành ra đi tìm đường cứu nước (1911)?",
-      "story": "Nguyễn Tất Thành ra đi tìm đường cứu nước. Nguyễn Tất Thành rời bến Nhà Rồng, bắt đầu hành trình qua nhiều châu lục. Về lâu dài, Đặt nền móng cho con đường cách mạng sau này của Hồ Chí Minh.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "đặt",
-        "tìm",
-        "đường",
-        "hành",
-        "nhà"
-      ]
-    },
-    {
-      "id": "hf_000235",
-      "year": 1968,
-      "event": "Những nguyên nhân chính dẫn đến Tổng tiến công và nổi dậy Tết Mậu Thân là gì?",
-      "story": "**Tổng tiến công và nổi dậy Tết Mậu Thân** xảy ra năm 1968. Lực lượng cách mạng đồng loạt tiến công trên nhiều đô thị miền Nam. Đây là cột mốc quan trọng vì Tác động mạnh đến cục diện chiến tranh và dư luận quốc tế.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "luận",
-        "tết",
-        "quốc",
-        "cách",
-        "tiến"
-      ]
-    },
-    {
-      "id": "hf_000244",
-      "year": 1930,
-      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 1930.",
-      "story": "diễn ra **Thành lập Đảng Cộng sản Việt Nam**: Hợp nhất các tổ chức cộng sản, xác lập đường lối cách mạng. Ý nghĩa: Lãnh đạo phong trào đấu tranh giành độc lập.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "lối",
-        "lãnh",
-        "đường",
-        "đạo",
-        "đảng"
+        "miền"
       ]
     },
     {
@@ -1842,191 +957,56 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "dứt",
-        "phục",
-        "buộc",
-        "độc",
-        "chi"
-      ]
-    },
-    {
-      "id": "hf_000250",
-      "year": 1054,
-      "event": "Ai là nhân vật trung tâm trong Đổi quốc hiệu thành Đại Việt (1054) và vai trò của họ là gì?",
-      "story": "diễn ra **Đổi quốc hiệu thành Đại Việt**: Thời Lý Thánh Tông, quốc hiệu đổi từ Đại Cồ Việt sang Đại Việt. Ý nghĩa: Khẳng định bản sắc và vị thế quốc gia độc lập.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "đổi",
-        "tông",
-        "thời",
-        "bản",
-        "sắc"
-      ]
-    },
-    {
-      "id": "hf_000251",
-      "year": 1986,
-      "event": "Những nguyên nhân chính dẫn đến Đổi Mới là gì?",
-      "story": "**Đổi Mới** xảy ra năm 1986. Đại hội VI đề ra đường lối Đổi Mới về kinh tế và quản lý. Đây là cột mốc quan trọng vì Chuyển đổi cơ chế, thúc đẩy tăng trưởng và hội nhập.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "lối",
-        "đường",
-        "tăng",
-        "trưởng",
-        "hội"
-      ]
-    },
-    {
-      "id": "hf_000252",
-      "year": 1010,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1010.",
-      "story": "diễn ra **Chiếu dời đô – dời đô ra Thăng Long**: Vua Lý Thái Tổ ban Chiếu dời đô, dời kinh đô từ Hoa Lư ra Đại La (Thăng Long). Ý nghĩa: Đặt nền móng cho Thăng Long – Hà Nội hơn một nghìn năm văn hiến.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "một",
-        "đặt",
-        "dời",
-        "hiến",
-        "long"
-      ]
-    },
-    {
-      "id": "hf_000254",
-      "year": 1258,
-      "event": "Trình bày ngắn gọn về Kháng chiến lần 1 chống Mông Cổ (1258).",
-      "story": "diễn ra **Kháng chiến lần 1 chống Mông Cổ**: Đại Việt đánh bại cuộc xâm lược đầu tiên của quân Mông Cổ. Ý nghĩa: Bảo vệ độc lập, mở ra chuỗi thắng lợi chống xâm lăng phương Bắc.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "độc",
-        "bại",
-        "xâm",
-        "đánh",
-        "mông"
-      ]
-    },
-    {
-      "id": "hf_000256",
-      "year": 2020,
-      "event": "Vì sao Đại dịch COVID-19 (2020) quan trọng đối với lịch sử Việt Nam?",
-      "story": "**Đại dịch COVID-19** xảy ra năm 2020. COVID-19 tác động sâu rộng đến y tế, kinh tế và xã hội. Đây là cột mốc quan trọng vì Thử thách quản trị khủng hoảng và y tế công.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "thách",
-        "hội",
-        "thử",
-        "đến",
-        "đại"
+        "chi",
+        "lam",
+        "khôi",
+        "nghĩa",
+        "lăng"
       ]
     },
     {
       "id": "hf_000259",
       "year": 1785,
-      "event": "Trong năm 1785, điều gì có ý nghĩa lịch sử ở Việt Nam?",
+      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1785.",
       "story": "**Rạch Gầm – Xoài Mút** xảy ra năm 1785. Nguyễn Huệ đánh bại quân Xiêm trên sông Tiền. Đây là cột mốc quan trọng vì Ngăn chặn can thiệp ngoại bang, củng cố Tây Sơn ở Nam Bộ.",
       "persons": [],
       "places": [],
       "keywords": [
-        "củng",
-        "mút",
+        "ngăn",
+        "bang",
         "nguyễn",
-        "bại",
-        "rạch"
-      ]
-    },
-    {
-      "id": "hf_000263",
-      "year": 2016,
-      "event": "Hậu quả hay tác động dài hạn của Sự cố môi trường biển miền Trung đối với Việt Nam là gì?",
-      "story": "Sự cố môi trường biển miền Trung. Ô nhiễm biển gây thiệt hại tại 4 tỉnh miền Trung. Về lâu dài, Nâng cao nhận thức bảo vệ môi trường.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "thiệt",
-        "biển",
-        "nhiễm",
-        "nhận",
-        "cao"
-      ]
-    },
-    {
-      "id": "hf_000264",
-      "year": 1483,
-      "event": "Vì sao Bộ luật Hồng Đức (1483) quan trọng đối với lịch sử Việt Nam?",
-      "story": "diễn ra **Bộ luật Hồng Đức**: Bộ luật Hồng Đức hoàn thiện dưới thời Lê Thánh Tông. Ý nghĩa: Bộ luật tiêu biểu của Việt Nam thời phong kiến.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "tiêu",
-        "biểu",
-        "tông",
-        "thiện",
-        "luật"
-      ]
-    },
-    {
-      "id": "hf_000268",
-      "year": 1771,
-      "event": "Ai là nhân vật trung tâm trong Khởi nghĩa Tây Sơn bùng nổ (1771) và vai trò của họ là gì?",
-      "story": "Khởi nghĩa Tây Sơn bùng nổ (1771): Anh em Tây Sơn khởi nghĩa, chống các thế lực Trịnh – Nguyễn. Sự kiện này có ý nghĩa là Đặt nền tảng thống nhất, cải cách mạnh mẽ.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "đặt",
-        "cải",
-        "này",
-        "thống",
-        "nguyễn"
+        "thiệp",
+        "mút"
       ]
     },
     {
       "id": "hf_000272",
       "year": 939,
       "event": "Vì sao Ngô Quyền xưng vương, đóng đô Cổ Loa (939) quan trọng đối với lịch sử Việt Nam?",
-      "story": "Ngô Quyền xưng vương, đóng đô Cổ Loa (939): Sau chiến thắng Bạch Đằng, Ngô Quyền lên ngôi, chọn Cổ Loa làm kinh đô. Sự kiện này có ý nghĩa là Xác lập quốc gia độc lập, khởi đầu nhà Ngô.",
+      "story": "**Ngô Quyền xưng vương, đóng đô Cổ Loa** xảy ra năm 939. Sau chiến thắng Bạch Đằng, Ngô Quyền lên ngôi, chọn Cổ Loa làm kinh đô. Đây là cột mốc quan trọng vì Xác lập quốc gia độc lập, khởi đầu nhà Ngô.",
       "persons": [],
       "places": [],
       "keywords": [
-        "lên",
+        "chọn",
+        "kinh",
+        "nghĩa",
         "vương",
-        "loa",
-        "ngôi",
-        "nhà"
+        "quyền"
       ]
     },
     {
       "id": "hf_000274",
       "year": 1009,
-      "event": "ở Việt Nam diễn ra sự kiện gì quan trọng?",
+      "event": "Trình bày ngắn gọn về Lý Công Uẩn được tôn lập (kết thúc Tiền Lê) (1009).",
       "story": "**Lý Công Uẩn được tôn lập (kết thúc Tiền Lê)** xảy ra năm 1009. Sau khi Lê Long Đĩnh qua đời, Lý Công Uẩn được tôn làm vua. Đây là cột mốc quan trọng vì Mở ra triều Lý với nhiều cải cách và thịnh trị.",
       "persons": [],
       "places": [],
       "keywords": [
-        "tôn",
-        "cải",
-        "đĩnh",
-        "khi",
-        "cách"
-      ]
-    },
-    {
-      "id": "hf_000277",
-      "year": 1955,
-      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 1955.",
-      "story": "diễn ra **Hình thành Việt Nam Cộng hòa ở miền Nam**: Miền Nam thành lập chính thể Việt Nam Cộng hòa. Ý nghĩa: Củng cố tình trạng chia cắt đất nước.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "củng",
-        "cắt",
-        "chính",
-        "hình",
-        "nghĩa"
+        "thúc",
+        "kết",
+        "uẩn",
+        "long",
+        "tiền"
       ]
     },
     {
@@ -2037,161 +1017,26 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "dứt",
-        "một",
-        "đặt",
-        "ngầm",
-        "độc"
-      ]
-    },
-    {
-      "id": "hf_000285",
-      "year": 2018,
-      "event": "Hãy mô tả ngắn gọn bối cảnh và ý nghĩa của Ký kết CPTPP.",
-      "story": "Ký kết CPTPP (2018): Tham gia Hiệp định Đối tác Toàn diện và Tiến bộ xuyên Thái Bình Dương. Sự kiện này có ý nghĩa là Mở rộng thị trường, nâng chuẩn thương mại.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "này",
-        "tham",
-        "tiến",
-        "trường",
-        "nghĩa"
-      ]
-    },
-    {
-      "id": "hf_000286",
-      "year": 1789,
-      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 1789.",
-      "story": "Ngọc Hồi – Đống Đa (Quang Trung) (1789): Quang Trung thần tốc tiến ra Bắc, đánh bại quân Thanh. Sự kiện này có ý nghĩa là Bảo vệ độc lập, khẳng định tài thao lược quân sự.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "này",
-        "độc",
-        "bại",
-        "tiến",
-        "đánh"
+        "cọc",
+        "hán",
+        "cột",
+        "đánh",
+        "quyền"
       ]
     },
     {
       "id": "hf_000290",
       "year": 1905,
-      "event": "Ai là nhân vật trung tâm trong Phong trào Đông Du (1905) và vai trò của họ là gì?",
-      "story": "Phong trào Đông Du. Phan Bội Châu khởi xướng phong trào đưa thanh niên sang Nhật du học. Về lâu dài, Tìm đường cứu nước theo con đường mới, tiếp thu tư tưởng và kỹ thuật hiện đại.",
+      "event": "Phan Bội Châu đã làm gì để dẫn đến Phong trào Đông Du (1905)?",
+      "story": "**Phong trào Đông Du** xảy ra năm 1905. Phan Bội Châu khởi xướng phong trào đưa thanh niên sang Nhật du học. Đây là cột mốc quan trọng vì Tìm đường cứu nước theo con đường mới, tiếp thu tư tưởng và kỹ thuật hiện đại.",
       "persons": [],
       "places": [],
       "keywords": [
-        "tìm",
-        "đường",
-        "thuật",
-        "hiện",
-        "trào"
-      ]
-    },
-    {
-      "id": "hf_000291",
-      "year": 1979,
-      "event": "Trình bày ngắn gọn về Chiến tranh biên giới phía Bắc (1979).",
-      "story": "Chiến tranh biên giới phía Bắc (1979): Xung đột vũ trang nổ ra ở biên giới Việt–Trung. Sự kiện này có ý nghĩa là Bảo vệ chủ quyền; quan hệ hai nước căng thẳng.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "hai",
-        "này",
-        "giới",
-        "biên",
-        "nghĩa"
-      ]
-    },
-    {
-      "id": "hf_000294",
-      "year": 939,
-      "event": "Ai là nhân vật trung tâm trong Ngô Quyền xưng vương, đóng đô Cổ Loa (939) và vai trò của họ là gì?",
-      "story": "Ngô Quyền xưng vương, đóng đô Cổ Loa. Sau chiến thắng Bạch Đằng, Ngô Quyền lên ngôi, chọn Cổ Loa làm kinh đô. Về lâu dài, Xác lập quốc gia độc lập, khởi đầu nhà Ngô.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "lên",
-        "vương",
-        "loa",
-        "ngôi",
-        "nhà"
-      ]
-    },
-    {
-      "id": "hf_000296",
-      "year": 1992,
-      "event": "Tóm tắt Hiến pháp 1992 và nêu ý nghĩa lịch sử của sự kiện này.",
-      "story": "**Hiến pháp 1992** xảy ra năm 1992. Ban hành Hiến pháp phù hợp Đổi Mới. Đây là cột mốc quan trọng vì Khung pháp lý cho phát triển kinh tế – xã hội.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "hành",
-        "phát",
-        "hiến",
-        "pháp",
-        "hội"
-      ]
-    },
-    {
-      "id": "hf_000298",
-      "year": 1992,
-      "event": "Hãy mô tả ngắn gọn bối cảnh và ý nghĩa của Hiến pháp 1992.",
-      "story": "Hiến pháp 1992. Ban hành Hiến pháp phù hợp Đổi Mới. Về lâu dài, Khung pháp lý cho phát triển kinh tế – xã hội.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "đổi",
-        "cho",
-        "dài",
-        "hội",
-        "hành"
-      ]
-    },
-    {
-      "id": "hf_000299",
-      "year": 1867,
-      "event": "ở Việt Nam diễn ra sự kiện gì quan trọng?",
-      "story": "Pháp chiếm nốt ba tỉnh miền Tây Nam Kỳ (1867): Toàn bộ Nam Kỳ rơi vào tay Pháp. Sự kiện này có ý nghĩa là Củng cố nền cai trị của Pháp tại Nam Kỳ.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "củng",
-        "tay",
-        "nghĩa",
-        "miền",
-        "toàn"
-      ]
-    },
-    {
-      "id": "hf_000305",
-      "year": 1930,
-      "event": "Trong năm 1930, điều gì có ý nghĩa lịch sử ở Việt Nam?",
-      "story": "Khởi nghĩa Yên Bái. Việt Nam Quốc dân Đảng phát động khởi nghĩa chống Pháp tại Yên Bái. Về lâu dài, Tiêu biểu cho tinh thần yêu nước đầu thế kỷ XX, dù thất bại.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "đảng",
-        "phát",
-        "quốc",
-        "dài",
-        "bại"
-      ]
-    },
-    {
-      "id": "hf_000307",
-      "year": 1986,
-      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 1986.",
-      "story": "Đổi Mới (1986). Đại hội VI đề ra đường lối Đổi Mới về kinh tế và quản lý. Chuyển đổi cơ chế, thúc đẩy tăng trưởng và hội nhập.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "1986",
-        "đổi",
-        "lối",
-        "chế",
-        "đường"
+        "nước",
+        "đưa",
+        "tưởng",
+        "bội",
+        "nhật"
       ]
     },
     {
@@ -2202,1976 +1047,146 @@
       "persons": [],
       "places": [],
       "keywords": [
-        "mặt",
-        "độc",
-        "quốc",
+        "kết",
+        "đồng",
+        "cột",
         "nghĩa",
-        "khởi"
-      ]
-    },
-    {
-      "id": "hf_000324",
-      "year": 1930,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1930.",
-      "story": "**Thành lập Đảng Cộng sản Việt Nam** xảy ra năm 1930. Hợp nhất các tổ chức cộng sản, xác lập đường lối cách mạng. Đây là cột mốc quan trọng vì Lãnh đạo phong trào đấu tranh giành độc lập.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "lối",
-        "lãnh",
-        "đường",
-        "đạo",
-        "đảng"
-      ]
-    },
-    {
-      "id": "hf_000327",
-      "year": 931,
-      "event": "Vì sao Dương Đình Nghệ đánh tan quân Nam Hán (931) quan trọng đối với lịch sử Việt Nam?",
-      "story": "diễn ra **Dương Đình Nghệ đánh tan quân Nam Hán**: Dương Đình Nghệ lãnh đạo nghĩa quân, đẩy lui quân Nam Hán. Ý nghĩa: Củng cố nền tự chủ, tạo tiền đề cho thời Ngô.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "củng",
-        "lãnh",
-        "đạo",
-        "đánh",
-        "tạo"
-      ]
-    },
-    {
-      "id": "hf_000330",
-      "year": 1930,
-      "event": "Tóm tắt Khởi nghĩa Yên Bái và nêu ý nghĩa lịch sử của sự kiện này.",
-      "story": "Khởi nghĩa Yên Bái (1930): Việt Nam Quốc dân Đảng phát động khởi nghĩa chống Pháp tại Yên Bái. Sự kiện này có ý nghĩa là Tiêu biểu cho tinh thần yêu nước đầu thế kỷ XX, dù thất bại.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "đảng",
-        "này",
-        "phát",
-        "quốc",
-        "bại"
-      ]
-    },
-    {
-      "id": "hf_000334",
-      "year": 1802,
-      "event": "Tóm tắt Nguyễn Ánh lên ngôi Gia Long, lập nhà Nguyễn và nêu ý nghĩa lịch sử của sự kiện này.",
-      "story": "Nguyễn Ánh lên ngôi Gia Long, lập nhà Nguyễn (1802): Gia Long thống nhất đất nước sau khi đánh bại Tây Sơn. Sự kiện này có ý nghĩa là Mở đầu triều Nguyễn – triều đại phong kiến cuối cùng.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "lên",
-        "ngôi",
-        "nhà",
-        "này",
-        "khi"
-      ]
-    },
-    {
-      "id": "hf_000349",
-      "year": 1288,
-      "event": "Trận Bạch Đằng (Trần Hưng Đạo) xảy ra khi nào và kết quả ra sao?",
-      "story": "Trận Bạch Đằng (Trần Hưng Đạo) (1288): Trần Hưng Đạo nhử địch vào bãi cọc ngầm trên sông Bạch Đằng, tiêu diệt thủy quân Nguyên. Sự kiện này có ý nghĩa là Đập tan ý đồ xâm lược, kết thúc chiến tranh, ghi dấu mốc chói lọi.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "ngầm",
-        "đạo",
-        "nhử",
-        "này",
-        "dấu"
-      ]
-    },
-    {
-      "id": "hf_000350",
-      "year": 1976,
-      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 1976.",
-      "story": "Nước Cộng hòa Xã hội Chủ nghĩa Việt Nam (1976). Quốc hội quyết định tên nước, thủ đô, quốc kỳ, quốc ca. Hoàn tất thống nhất về nhà nước.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "1976",
-        "hội",
-        "nghĩa",
-        "định",
-        "nhất"
-      ]
-    },
-    {
-      "id": "hf_000357",
-      "year": 905,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 905.",
-      "story": "diễn ra **Khúc Thừa Dụ dựng chính quyền tự chủ**: Khúc Thừa Dụ nắm quyền ở Tống Bình, khôi phục quyền tự chủ sau thời Bắc thuộc muộn. Ý nghĩa: Mở đầu thời kỳ tự chủ của người Việt sau nhiều thế kỷ bị phương Bắc cai trị.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "phục",
-        "chính",
-        "người",
-        "đầu",
-        "nhiều"
-      ]
-    },
-    {
-      "id": "hf_000358",
-      "year": 1407,
-      "event": "ở Việt Nam diễn ra sự kiện gì quan trọng?",
-      "story": "Nhà Minh xâm lược, bắt đầu thời kỳ Minh thuộc (1407): Đại Việt rơi vào ách đô hộ của nhà Minh. Sự kiện này có ý nghĩa là Mở ra giai đoạn đấu tranh giải phóng khốc liệt.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "1407",
-        "nhà",
-        "này",
-        "phóng",
-        "ách"
-      ]
-    },
-    {
-      "id": "hf_000364",
-      "year": 1964,
-      "event": "Tóm tắt Sự kiện Vịnh Bắc Bộ và nêu ý nghĩa lịch sử của sự kiện này.",
-      "story": "**Sự kiện Vịnh Bắc Bộ** xảy ra năm 1964. Sự kiện trên Vịnh Bắc Bộ dẫn đến Mỹ leo thang chiến tranh ở Việt Nam. Đây là cột mốc quan trọng vì Mở rộng chiến tranh, ném bom miền Bắc.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "vịnh",
-        "thang",
-        "bom",
-        "chiến",
-        "đến"
-      ]
-    },
-    {
-      "id": "hf_000366",
-      "year": 1862,
-      "event": "Trình bày ngắn gọn về Hòa ước Nhâm Tuất (Sài Gòn) (1862).",
-      "story": "diễn ra **Hòa ước Nhâm Tuất (Sài Gòn)**: Triều Nguyễn nhượng cho Pháp ba tỉnh miền Đông Nam Kỳ. Ý nghĩa: Mất đất, mất quyền kiểm soát Nam Kỳ vào tay Pháp.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "soát",
-        "nguyễn",
-        "pháp",
-        "tuất",
-        "tay"
-      ]
-    },
-    {
-      "id": "hf_000374",
-      "year": 1802,
-      "event": "Trong năm 1802, điều gì có ý nghĩa lịch sử ở Việt Nam?",
-      "story": "Nguyễn Ánh lên ngôi Gia Long, lập nhà Nguyễn. Gia Long thống nhất đất nước sau khi đánh bại Tây Sơn. Về lâu dài, Mở đầu triều Nguyễn – triều đại phong kiến cuối cùng.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "lên",
-        "ngôi",
-        "nhà",
-        "khi",
-        "thống"
-      ]
-    },
-    {
-      "id": "hf_000375",
-      "year": 1483,
-      "event": "Tóm tắt Bộ luật Hồng Đức và nêu ý nghĩa lịch sử của sự kiện này.",
-      "story": "Bộ luật Hồng Đức (1483). Bộ luật Hồng Đức hoàn thiện dưới thời Lê Thánh Tông. Bộ luật tiêu biểu của Việt Nam thời phong kiến.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "tiêu",
-        "biểu",
-        "1483",
-        "thiện",
-        "luật"
-      ]
-    },
-    {
-      "id": "hf_000382",
-      "year": 1785,
-      "event": "Bối cảnh nào tạo điều kiện cho Rạch Gầm – Xoài Mút xảy ra?",
-      "story": "Rạch Gầm – Xoài Mút (1785): Nguyễn Huệ đánh bại quân Xiêm trên sông Tiền. Sự kiện này có ý nghĩa là Ngăn chặn can thiệp ngoại bang, củng cố Tây Sơn ở Nam Bộ.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "củng",
-        "mút",
-        "này",
-        "nguyễn",
-        "bại"
-      ]
-    },
-    {
-      "id": "hf_000384",
-      "year": 1954,
-      "event": "Tóm tắt Chiến thắng Điện Biên Phủ và nêu ý nghĩa lịch sử của sự kiện này.",
-      "story": "Chiến thắng Điện Biên Phủ (1954): Quân đội Việt Nam giành thắng lợi quyết định tại Điện Biên Phủ. Sự kiện này có ý nghĩa là Bước ngoặt lịch sử, dẫn tới Hiệp định Genève.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "tới",
-        "này",
-        "bước",
-        "biên",
-        "ngoặt"
-      ]
-    },
-    {
-      "id": "hf_000392",
-      "year": 2007,
-      "event": "Trình bày ngắn gọn về Gia nhập WTO (2007).",
-      "story": "Gia nhập WTO (2007): Việt Nam trở thành thành viên WTO. Sự kiện này có ý nghĩa là Thúc đẩy thương mại và cải cách thể chế.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "chế",
-        "2007",
-        "gia",
-        "cải",
-        "đẩy"
-      ]
-    },
-    {
-      "id": "hf_000398",
-      "year": 1627,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1627.",
-      "story": "diễn ra **Khởi đầu Trịnh–Nguyễn phân tranh**: Chiến tranh kéo dài giữa Chúa Trịnh (Đàng Ngoài) và Chúa Nguyễn (Đàng Trong). Ý nghĩa: Đất nước chia cắt hơn 150 năm, ranh giới sông Gianh.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "đàng",
-        "nguyễn",
-        "giới",
-        "dài",
-        "chia"
-      ]
-    },
-    {
-      "id": "hf_000406",
-      "year": 1975,
-      "event": "Tóm tắt Chiến dịch Hồ Chí Minh – Giải phóng miền Nam và nêu ý nghĩa lịch sử của sự kiện này.",
-      "story": "Chiến dịch Hồ Chí Minh – Giải phóng miền Nam (1975): Quân giải phóng tiến vào Sài Gòn ngày 30/4/1975. Sự kiện này có ý nghĩa là Thống nhất đất nước về lãnh thổ.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "lãnh",
-        "1975",
-        "này",
-        "thống",
-        "phóng"
-      ]
-    },
-    {
-      "id": "hf_000416",
-      "year": 1992,
-      "event": "Hiến pháp 1992 xảy ra khi nào và kết quả ra sao?",
-      "story": "Hiến pháp 1992 (1992): Ban hành Hiến pháp phù hợp Đổi Mới. Sự kiện này có ý nghĩa là Khung pháp lý cho phát triển kinh tế – xã hội.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "đổi",
-        "cho",
-        "hội",
-        "hành",
-        "nghĩa"
-      ]
-    },
-    {
-      "id": "hf_000423",
-      "year": 1905,
-      "event": "Phan Bội Châu đã làm gì để dẫn đến Phong trào Đông Du (1905)?",
-      "story": "**Phong trào Đông Du** xảy ra năm 1905. Phan Bội Châu khởi xướng phong trào đưa thanh niên sang Nhật du học. Đây là cột mốc quan trọng vì Tìm đường cứu nước theo con đường mới, tiếp thu tư tưởng và kỹ thuật hiện đại.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "tìm",
-        "đường",
-        "thuật",
-        "hiện",
-        "trào"
-      ]
-    },
-    {
-      "id": "hf_000431",
-      "year": 1839,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1839.",
-      "story": "Đổi quốc hiệu Đại Nam thời Minh Mạng. Triều Nguyễn dùng quốc hiệu Đại Nam dưới thời Minh Mạng. Về lâu dài, Khẳng định chủ quyền và cơ cấu quản lý thống nhất.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "thống",
-        "nguyễn",
-        "quốc",
-        "dài",
-        "cấu"
-      ]
-    },
-    {
-      "id": "hf_000434",
-      "year": 939,
-      "event": "Trong năm 939, điều gì có ý nghĩa lịch sử ở Việt Nam?",
-      "story": "**Ngô Quyền xưng vương, đóng đô Cổ Loa** xảy ra năm 939. Sau chiến thắng Bạch Đằng, Ngô Quyền lên ngôi, chọn Cổ Loa làm kinh đô. Đây là cột mốc quan trọng vì Xác lập quốc gia độc lập, khởi đầu nhà Ngô.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "lên",
-        "vương",
-        "loa",
-        "ngôi",
-        "nhà"
-      ]
-    },
-    {
-      "id": "hf_000440",
-      "year": 1483,
-      "event": "ở Việt Nam diễn ra sự kiện gì quan trọng?",
-      "story": "**Bộ luật Hồng Đức** xảy ra năm 1483. Bộ luật Hồng Đức hoàn thiện dưới thời Lê Thánh Tông. Đây là cột mốc quan trọng vì Bộ luật tiêu biểu của Việt Nam thời phong kiến.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "thánh",
-        "tiêu",
-        "1483",
-        "luật",
-        "đức"
+        "lượng"
       ]
     },
     {
       "id": "hf_000442",
       "year": 1428,
-      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 1428.",
+      "event": "Tóm tắt Lê Lợi lên ngôi, lập nhà Hậu Lê và nêu ý nghĩa lịch sử của sự kiện này.",
       "story": "**Lê Lợi lên ngôi, lập nhà Hậu Lê** xảy ra năm 1428. Lê Lợi xưng vương, ban Bình Ngô đại cáo tuyên cáo độc lập. Đây là cột mốc quan trọng vì Mở ra thời kỳ Lê sơ thịnh trị.",
       "persons": [],
       "places": [],
       "keywords": [
-        "lên",
+        "lợi",
         "vương",
-        "ngôi",
-        "nhà",
-        "độc"
-      ]
-    },
-    {
-      "id": "hf_000450",
-      "year": 1407,
-      "event": "Trình bày ngắn gọn về Nhà Minh xâm lược, bắt đầu thời kỳ Minh thuộc (1407).",
-      "story": "diễn ra **Nhà Minh xâm lược, bắt đầu thời kỳ Minh thuộc**: Đại Việt rơi vào ách đô hộ của nhà Minh. Ý nghĩa: Mở ra giai đoạn đấu tranh giải phóng khốc liệt.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "nhà",
-        "phóng",
-        "ách",
-        "xâm",
-        "đầu"
-      ]
-    },
-    {
-      "id": "hf_000463",
-      "year": 1009,
-      "event": "Trình bày nhanh những điểm chính về Lý Công Uẩn được tôn lập (kết thúc Tiền Lê).",
-      "story": "Lý Công Uẩn được tôn lập (kết thúc Tiền Lê) (1009): Sau khi Lê Long Đĩnh qua đời, Lý Công Uẩn được tôn làm vua. Sự kiện này có ý nghĩa là Mở ra triều Lý với nhiều cải cách và thịnh trị.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "tôn",
-        "cải",
-        "đĩnh",
-        "này",
-        "khi"
-      ]
-    },
-    {
-      "id": "hf_000469",
-      "year": 1428,
-      "event": "Trình bày ngắn gọn về Lê Lợi lên ngôi, lập nhà Hậu Lê (1428).",
-      "story": "Lê Lợi lên ngôi, lập nhà Hậu Lê (1428): Lê Lợi xưng vương, ban Bình Ngô đại cáo tuyên cáo độc lập. Sự kiện này có ý nghĩa là Mở ra thời kỳ Lê sơ thịnh trị.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "lên",
-        "vương",
-        "ngôi",
-        "nhà",
-        "này"
-      ]
-    },
-    {
-      "id": "hf_000471",
-      "year": 905,
-      "event": "Ai là nhân vật trung tâm trong Khúc Thừa Dụ dựng chính quyền tự chủ (905) và vai trò của họ là gì?",
-      "story": "Khúc Thừa Dụ dựng chính quyền tự chủ (905): Khúc Thừa Dụ nắm quyền ở Tống Bình, khôi phục quyền tự chủ sau thời Bắc thuộc muộn. Sự kiện này có ý nghĩa là Mở đầu thời kỳ tự chủ của người Việt sau nhiều thế kỷ bị phương Bắc cai trị.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "phục",
-        "chính",
-        "này",
-        "người",
-        "đầu"
-      ]
-    },
-    {
-      "id": "hf_000472",
-      "year": 1930,
-      "event": "Trong năm 1930, điều gì có ý nghĩa lịch sử ở Việt Nam?",
-      "story": "Thành lập Đảng Cộng sản Việt Nam. Hợp nhất các tổ chức cộng sản, xác lập đường lối cách mạng. Về lâu dài, Lãnh đạo phong trào đấu tranh giành độc lập.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "lối",
-        "lãnh",
-        "đường",
-        "đạo",
-        "đảng"
-      ]
-    },
-    {
-      "id": "hf_000487",
-      "year": 1941,
-      "event": "Hồ Chí Minh đã làm gì để dẫn đến Việt Minh ra đời (1941)?",
-      "story": "Việt Minh ra đời. Mặt trận Việt Nam Độc lập Đồng minh được thành lập, đoàn kết lực lượng cứu quốc. Về lâu dài, Tập hợp rộng rãi lực lượng chuẩn bị cho tổng khởi nghĩa.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "mặt",
-        "độc",
-        "quốc",
-        "dài",
-        "lâu"
-      ]
-    },
-    {
-      "id": "hf_000488",
-      "year": 1905,
-      "event": "Trong năm 1905, điều gì có ý nghĩa lịch sử ở Việt Nam?",
-      "story": "diễn ra **Phong trào Đông Du**: Phan Bội Châu khởi xướng phong trào đưa thanh niên sang Nhật du học. Ý nghĩa: Tìm đường cứu nước theo con đường mới, tiếp thu tư tưởng và kỹ thuật hiện đại.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "tìm",
-        "đường",
-        "thuật",
-        "hiện",
-        "trào"
-      ]
-    },
-    {
-      "id": "hf_000489",
-      "year": 1976,
-      "event": "Trong năm 1976, điều gì có ý nghĩa lịch sử ở Việt Nam?",
-      "story": "Nước Cộng hòa Xã hội Chủ nghĩa Việt Nam. Quốc hội quyết định tên nước, thủ đô, quốc kỳ, quốc ca. Về lâu dài, Hoàn tất thống nhất về nhà nước.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "dài",
-        "hội",
-        "nghĩa",
-        "định",
-        "nhất"
-      ]
-    },
-    {
-      "id": "hf_000492",
-      "year": 1471,
-      "event": "Trình bày ngắn gọn về Đại Việt đánh bại Champa tại Vijaya (1471).",
-      "story": "**Đại Việt đánh bại Champa tại Vijaya** xảy ra năm 1471. Quân Đại Việt hạ kinh đô Vijaya của Champa. Đây là cột mốc quan trọng vì Làm suy yếu Champa, mở rộng lãnh thổ về phương Nam.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "lãnh",
-        "yếu",
-        "1471",
-        "bại",
-        "đánh"
-      ]
-    },
-    {
-      "id": "hf_000497",
-      "year": 1527,
-      "event": "Ai là nhân vật trung tâm trong Mạc Đăng Dung lập nhà Mạc (1527) và vai trò của họ là gì?",
-      "story": "diễn ra **Mạc Đăng Dung lập nhà Mạc**: Mạc Đăng Dung soán ngôi, mở ra thời kỳ Nam–Bắc triều. Ý nghĩa: Gây chia cắt chính trị kéo dài, xung đột với Lê trung hưng.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "chính",
-        "ngôi",
-        "nhà",
-        "dài",
-        "chia"
+        "cáo",
+        "xưng",
+        "tuyên"
       ]
     },
     {
       "id": "hf_000504",
       "year": 968,
       "event": "Ai là nhân vật trung tâm trong Đinh Bộ Lĩnh dẹp loạn 12 sứ quân, lập Đại Cồ Việt (968) và vai trò của họ là gì?",
-      "story": "**Đinh Bộ Lĩnh dẹp loạn 12 sứ quân, lập Đại Cồ Việt** xảy ra năm 968. Đinh Bộ Lĩnh thống nhất cát cứ, lên ngôi Hoàng đế, đặt quốc hiệu Đại Cồ Việt. Đây là cột mốc quan trọng vì Chấm dứt cát cứ, xây dựng nhà nước trung ương tập quyền đầu tiên sau độc lập.",
+      "story": "968: Đinh Bộ Lĩnh dẹp loạn 12 sứ quân, lập Đại Cồ Việt. Đinh Bộ Lĩnh thống nhất cát cứ, lên ngôi Hoàng đế, đặt quốc hiệu Đại Cồ Việt. Chấm dứt cát cứ, xây dựng nhà nước trung ương tập quyền đầu tiên sau độc lập.",
       "persons": [],
       "places": [],
       "keywords": [
+        "nước",
+        "dẹp",
+        "quyền",
         "dứt",
-        "lên",
-        "đặt",
-        "xây",
-        "ngôi"
-      ]
-    },
-    {
-      "id": "hf_000506",
-      "year": 1471,
-      "event": "Trình bày ngắn gọn về Đại Việt đánh bại Champa tại Vijaya (1471).",
-      "story": "Đại Việt đánh bại Champa tại Vijaya. Quân Đại Việt hạ kinh đô Vijaya của Champa. Về lâu dài, Làm suy yếu Champa, mở rộng lãnh thổ về phương Nam.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "đánh",
-        "phương",
-        "lãnh",
-        "dài",
-        "suy"
-      ]
-    },
-    {
-      "id": "hf_000509",
-      "year": 1954,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1954.",
-      "story": "Hiệp định Genève (1954): Ký Hiệp định Genève về chấm dứt chiến sự ở Việt Nam. Sự kiện này có ý nghĩa là Tạm chia cắt đất nước ở vĩ tuyến 17, chuẩn bị tổng tuyển cử.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "dứt",
-        "tuyến",
-        "cắt",
-        "nghĩa",
-        "định"
-      ]
-    },
-    {
-      "id": "hf_000516",
-      "year": 1483,
-      "event": "Trình bày ngắn gọn về Bộ luật Hồng Đức (1483).",
-      "story": "Bộ luật Hồng Đức. Bộ luật Hồng Đức hoàn thiện dưới thời Lê Thánh Tông. Về lâu dài, Bộ luật tiêu biểu của Việt Nam thời phong kiến.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "tiêu",
-        "biểu",
-        "tông",
-        "thiện",
-        "luật"
-      ]
-    },
-    {
-      "id": "hf_000522",
-      "year": 2016,
-      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 2016.",
-      "story": "diễn ra **Sự cố môi trường biển miền Trung**: Ô nhiễm biển gây thiệt hại tại 4 tỉnh miền Trung. Ý nghĩa: Nâng cao nhận thức bảo vệ môi trường.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "thiệt",
-        "biển",
-        "nhiễm",
-        "nhận",
-        "cao"
-      ]
-    },
-    {
-      "id": "hf_000525",
-      "year": 1955,
-      "event": "Những nguyên nhân chính dẫn đến Hình thành Việt Nam Cộng hòa ở miền Nam là gì?",
-      "story": "Hình thành Việt Nam Cộng hòa ở miền Nam (1955). Miền Nam thành lập chính thể Việt Nam Cộng hòa. Củng cố tình trạng chia cắt đất nước.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "củng",
-        "cắt",
-        "chính",
-        "hình",
-        "miền"
-      ]
-    },
-    {
-      "id": "hf_000531",
-      "year": 2016,
-      "event": "Hậu quả hay tác động dài hạn của Sự cố môi trường biển miền Trung đối với Việt Nam là gì?",
-      "story": "**Sự cố môi trường biển miền Trung** xảy ra năm 2016. Ô nhiễm biển gây thiệt hại tại 4 tỉnh miền Trung. Đây là cột mốc quan trọng vì Nâng cao nhận thức bảo vệ môi trường.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "nhận",
-        "2016",
-        "thiệt",
-        "cao",
-        "trường"
-      ]
-    },
-    {
-      "id": "hf_000536",
-      "year": 1427,
-      "event": "Nguyễn Trãi đã làm gì để dẫn đến Toàn thắng chống Minh (Tốt Động–Chúc Động, Chi Lăng–Xương Giang) (1427)?",
-      "story": "Toàn thắng chống Minh (Tốt Động–Chúc Động, Chi Lăng–Xương Giang) (1427): Nghĩa quân Lam Sơn giành thắng lợi quyết định, buộc quân Minh rút. Sự kiện này có ý nghĩa là Chấm dứt thời Minh thuộc, khôi phục độc lập.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "dứt",
-        "phục",
-        "buộc",
-        "này",
         "độc"
       ]
     },
     {
-      "id": "hf_000542",
-      "year": 1989,
-      "event": "ở Việt Nam diễn ra sự kiện gì quan trọng?",
-      "story": "Rút quân khỏi Campuchia (1989): Việt Nam hoàn tất rút quân, đóng góp giải pháp chính trị. Sự kiện này có ý nghĩa là Giảm căng thẳng đối ngoại, thuận lợi bình thường hóa.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "khỏi",
-        "chính",
-        "này",
-        "thường",
-        "tất"
-      ]
-    },
-    {
-      "id": "hf_000552",
-      "year": 1986,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1986.",
-      "story": "diễn ra **Đổi Mới**: Đại hội VI đề ra đường lối Đổi Mới về kinh tế và quản lý. Ý nghĩa: Chuyển đổi cơ chế, thúc đẩy tăng trưởng và hội nhập.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "đổi",
-        "lối",
-        "chế",
-        "đường",
-        "hội"
-      ]
-    },
-    {
-      "id": "hf_000559",
-      "year": 1400,
-      "event": "Trình bày ngắn gọn về Hồ Quý Ly lập nhà Hồ (1400).",
-      "story": "diễn ra **Hồ Quý Ly lập nhà Hồ**: Hồ Quý Ly cải cách mạnh, đổi quốc hiệu Đại Ngu. Ý nghĩa: Cải cách táo bạo nhưng không vững bền, dẫn tới họa xâm lăng.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "cải",
-        "tới",
-        "nhà",
-        "bạo",
-        "quốc"
-      ]
-    },
-    {
-      "id": "hf_000564",
-      "year": 980,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 980.",
-      "story": "**Lê Hoàn lên ngôi (Nhà Tiền Lê)** xảy ra năm 980. Lê Hoàn được suy tôn sau biến cố cuối triều Đinh. Đây là cột mốc quan trọng vì Ổn định triều chính, chuẩn bị chống Tống.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "tôn",
-        "lên",
-        "chính",
-        "ngôi",
-        "nhà"
-      ]
-    },
-    {
-      "id": "hf_000565",
-      "year": 1976,
-      "event": "Tóm tắt Nước Cộng hòa Xã hội Chủ nghĩa Việt Nam và nêu ý nghĩa lịch sử của sự kiện này.",
-      "story": "Nước Cộng hòa Xã hội Chủ nghĩa Việt Nam (1976): Quốc hội quyết định tên nước, thủ đô, quốc kỳ, quốc ca. Sự kiện này có ý nghĩa là Hoàn tất thống nhất về nhà nước.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "1976",
-        "hội",
-        "nghĩa",
-        "định",
-        "này"
-      ]
-    },
-    {
-      "id": "hf_000576",
-      "year": 1978,
-      "event": "Vì sao Việt Nam đưa quân vào Campuchia (1978) quan trọng đối với lịch sử Việt Nam?",
-      "story": "Việt Nam đưa quân vào Campuchia (1978): Quân đội Việt Nam giúp lật đổ Khmer Đỏ. Sự kiện này có ý nghĩa là Giải cứu nhân dân Campuchia, căng thẳng khu vực kéo dài.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "này",
-        "1978",
-        "giúp",
-        "lật",
-        "dài"
-      ]
-    },
-    {
-      "id": "hf_000578",
-      "year": 1945,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1945.",
-      "story": "Cách mạng Tháng Tám và Tuyên ngôn Độc lập. Tổng khởi nghĩa giành chính quyền; 2/9/1945, Hồ Chí Minh đọc Tuyên ngôn Độc lập. Về lâu dài, Khai sinh nước Việt Nam Dân chủ Cộng hòa, chấm dứt chế độ thực dân – phong kiến.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "dứt",
-        "chính",
-        "độc",
-        "cộng",
-        "dài"
-      ]
-    },
-    {
-      "id": "hf_000579",
-      "year": 1978,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1978.",
-      "story": "Việt Nam đưa quân vào Campuchia. Quân đội Việt Nam giúp lật đổ Khmer Đỏ. Về lâu dài, Giải cứu nhân dân Campuchia, căng thẳng khu vực kéo dài.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "campuchia",
-        "khmer",
-        "dài",
-        "khu",
-        "dân"
-      ]
-    },
-    {
-      "id": "hf_000580",
-      "year": 1010,
-      "event": "Vì sao Chiếu dời đô (văn kiện) (1010) quan trọng đối với lịch sử Việt Nam?",
-      "story": "diễn ra **Chiếu dời đô (văn kiện)**: Văn kiện nêu lý do dời đô và tầm nhìn phát triển ở Đại La. Ý nghĩa: Tư tưởng quy hoạch, tầm nhìn chiến lược thời Lý.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "thời",
-        "dời",
-        "nghĩa",
-        "tầm",
-        "văn"
-      ]
-    },
-    {
-      "id": "hf_000582",
-      "year": 1979,
-      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 1979.",
-      "story": "Chiến tranh biên giới phía Bắc (1979). Xung đột vũ trang nổ ra ở biên giới Việt–Trung. Bảo vệ chủ quyền; quan hệ hai nước căng thẳng.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "hai",
-        "giới",
-        "biên",
-        "đột",
-        "chiến"
-      ]
-    },
-    {
-      "id": "hf_000586",
-      "year": 1972,
-      "event": "Chiến dịch 'Điện Biên Phủ trên không' xảy ra khi nào và kết quả ra sao?",
-      "story": "diễn ra **Chiến dịch 'Điện Biên Phủ trên không'**: Quân dân miền Bắc đánh bại chiến dịch ném bom B-52 cuối 1972. Ý nghĩa: Buộc Mỹ đàm phán, tiền đề Hiệp định Paris.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "buộc",
-        "bại",
-        "1972",
-        "biên",
-        "cuối"
-      ]
-    },
-    {
-      "id": "hf_000590",
-      "year": 1418,
-      "event": "Trình bày ngắn gọn về Khởi nghĩa Lam Sơn bùng nổ (1418).",
-      "story": "Khởi nghĩa Lam Sơn bùng nổ. Lê Lợi dựng cờ khởi nghĩa ở Lam Sơn chống quân Minh. Về lâu dài, Khởi đầu cuộc giải phóng dân tộc kéo dài gần 10 năm.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "tộc",
-        "phóng",
-        "dài",
-        "lâu",
-        "đầu"
-      ]
-    },
-    {
-      "id": "hf_000591",
-      "year": 1400,
-      "event": "Trình bày nhanh những điểm chính về Hồ Quý Ly lập nhà Hồ.",
-      "story": "Hồ Quý Ly lập nhà Hồ (1400): Hồ Quý Ly cải cách mạnh, đổi quốc hiệu Đại Ngu. Sự kiện này có ý nghĩa là Cải cách táo bạo nhưng không vững bền, dẫn tới họa xâm lăng.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "cải",
-        "tới",
-        "nhà",
-        "này",
-        "bạo"
-      ]
-    },
-    {
-      "id": "hf_000609",
-      "year": 1930,
-      "event": "Trình bày ngắn gọn về Khởi nghĩa Yên Bái (1930).",
-      "story": "diễn ra **Khởi nghĩa Yên Bái**: Việt Nam Quốc dân Đảng phát động khởi nghĩa chống Pháp tại Yên Bái. Ý nghĩa: Tiêu biểu cho tinh thần yêu nước đầu thế kỷ XX, dù thất bại.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "đảng",
-        "phát",
-        "quốc",
-        "bại",
-        "pháp"
-      ]
-    },
-    {
-      "id": "hf_000620",
-      "year": 1285,
-      "event": "Trần Hưng Đạo đã làm gì để dẫn đến Kháng chiến lần 2 chống Nguyên (1285)?",
-      "story": "Kháng chiến lần 2 chống Nguyên (1285): Quân dân Đại Việt giành thắng lợi lớn trước quân Nguyên. Sự kiện này có ý nghĩa là Củng cố sức mạnh quốc gia và nghệ thuật chiến tranh nhân dân.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "củng",
-        "thuật",
-        "lớn",
-        "này",
-        "1285"
-      ]
-    },
-    {
-      "id": "hf_000623",
-      "year": 1867,
-      "event": "Trong năm 1867, điều gì có ý nghĩa lịch sử ở Việt Nam?",
-      "story": "diễn ra **Pháp chiếm nốt ba tỉnh miền Tây Nam Kỳ**: Toàn bộ Nam Kỳ rơi vào tay Pháp. Ý nghĩa: Củng cố nền cai trị của Pháp tại Nam Kỳ.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "củng",
-        "tay",
-        "nghĩa",
-        "miền",
-        "toàn"
-      ]
-    },
-    {
-      "id": "hf_000626",
-      "year": 981,
-      "event": "Trình bày ngắn gọn về Kháng Tống thắng lợi thời Lê Hoàn (981).",
-      "story": "diễn ra **Kháng Tống thắng lợi thời Lê Hoàn**: Quân Đại Cồ Việt đánh lui quân Tống xâm lược. Ý nghĩa: Bảo vệ nền độc lập non trẻ, khẳng định vị thế quốc gia.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "độc",
-        "quốc",
-        "xâm",
-        "đánh",
-        "thắng"
-      ]
-    },
-    {
-      "id": "hf_000640",
-      "year": 1858,
-      "event": "Trình bày ngắn gọn về Liên quân Pháp – Tây Ban Nha tấn công Đà Nẵng (1858).",
-      "story": "Liên quân Pháp – Tây Ban Nha tấn công Đà Nẵng (1858): Mở đầu cuộc chiến xâm lược của Pháp tại Việt Nam. Sự kiện này có ý nghĩa là Khởi đầu thời kỳ thực dân xâm lược kéo dài gần một thế kỷ.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "một",
-        "này",
-        "dài",
-        "pháp",
-        "xâm"
-      ]
-    },
-    {
-      "id": "hf_000641",
-      "year": 1225,
-      "event": "Hậu quả hay tác động dài hạn của Nhà Trần thành lập đối với Việt Nam là gì?",
-      "story": "Nhà Trần thành lập (1225): Lý Chiêu Hoàng nhường ngôi cho Trần Cảnh, mở đầu triều Trần. Sự kiện này có ý nghĩa là Mở ra thời kỳ hưng thịnh, nổi bật với ba lần kháng Mông-Nguyên.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "ngôi",
-        "nhà",
-        "này",
-        "bật",
-        "đầu"
-      ]
-    },
-    {
-      "id": "hf_000670",
-      "year": 1955,
-      "event": "Vì sao Hình thành Việt Nam Cộng hòa ở miền Nam (1955) quan trọng đối với lịch sử Việt Nam?",
-      "story": "Hình thành Việt Nam Cộng hòa ở miền Nam. Miền Nam thành lập chính thể Việt Nam Cộng hòa. Về lâu dài, Củng cố tình trạng chia cắt đất nước.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "củng",
-        "cắt",
-        "chính",
-        "hình",
-        "miền"
-      ]
-    },
-    {
-      "id": "hf_000677",
-      "year": 1418,
-      "event": "Lê Lợi đã làm gì để dẫn đến Khởi nghĩa Lam Sơn bùng nổ (1418)?",
-      "story": "diễn ra **Khởi nghĩa Lam Sơn bùng nổ**: Lê Lợi dựng cờ khởi nghĩa ở Lam Sơn chống quân Minh. Ý nghĩa: Khởi đầu cuộc giải phóng dân tộc kéo dài gần 10 năm.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "tộc",
-        "phóng",
-        "dài",
-        "đầu",
-        "sơn"
-      ]
-    },
-    {
-      "id": "hf_000681",
-      "year": 1672,
-      "event": "Trình bày ngắn gọn về Tạm đình chiến Trịnh–Nguyễn (1672).",
-      "story": "Tạm đình chiến Trịnh–Nguyễn. Hai bên ngừng giao tranh, giữ nguyên cục diện chia cắt. Về lâu dài, Củng cố ranh giới, ổn định tương đối.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "củng",
-        "hai",
-        "nguyễn",
-        "giới",
-        "ngừng"
-      ]
-    },
-    {
-      "id": "hf_000687",
-      "year": 1954,
-      "event": "Hiệp định Genève xảy ra khi nào và kết quả ra sao?",
-      "story": "**Hiệp định Genève** xảy ra năm 1954. Ký Hiệp định Genève về chấm dứt chiến sự ở Việt Nam. Đây là cột mốc quan trọng vì Tạm chia cắt đất nước ở vĩ tuyến 17, chuẩn bị tổng tuyển cử.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "dứt",
-        "tuyến",
-        "chia",
-        "tạm",
-        "tuyển"
-      ]
-    },
-    {
-      "id": "hf_000702",
-      "year": 1000,
-      "event": "Những nguyên nhân chính dẫn đến Đại lễ 1000 năm Thăng Long – Hà Nội là gì?",
-      "story": "Đại lễ 1000 năm Thăng Long – Hà Nội (2010). Kỷ niệm nghìn năm Thăng Long – Hà Nội. Khẳng định bề dày lịch sử – văn hóa Thủ đô.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "1000",
-        "khẳng",
-        "định",
-        "văn",
-        "dày"
-      ]
-    },
-    {
-      "id": "hf_000706",
-      "year": 1954,
-      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 1954.",
-      "story": "Chiến thắng Điện Biên Phủ. Quân đội Việt Nam giành thắng lợi quyết định tại Điện Biên Phủ. Về lâu dài, Bước ngoặt lịch sử, dẫn tới Hiệp định Genève.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "tới",
-        "bước",
-        "dài",
-        "biên",
-        "lâu"
-      ]
-    },
-    {
-      "id": "hf_000710",
-      "year": 1986,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1986.",
-      "story": "Đổi Mới. Đại hội VI đề ra đường lối Đổi Mới về kinh tế và quản lý. Về lâu dài, Chuyển đổi cơ chế, thúc đẩy tăng trưởng và hội nhập.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "đổi",
-        "lối",
-        "chế",
-        "thúc",
-        "đường"
-      ]
-    },
-    {
-      "id": "hf_000725",
-      "year": 1941,
-      "event": "Bối cảnh nào tạo điều kiện cho Việt Minh ra đời xảy ra?",
-      "story": "Việt Minh ra đời (1941): Mặt trận Việt Nam Độc lập Đồng minh được thành lập, đoàn kết lực lượng cứu quốc. Sự kiện này có ý nghĩa là Tập hợp rộng rãi lực lượng chuẩn bị cho tổng khởi nghĩa.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "mặt",
-        "này",
-        "độc",
-        "quốc",
-        "nghĩa"
-      ]
-    },
-    {
-      "id": "hf_000742",
-      "year": 1867,
-      "event": "Hậu quả hay tác động dài hạn của Pháp chiếm nốt ba tỉnh miền Tây Nam Kỳ đối với Việt Nam là gì?",
-      "story": "Pháp chiếm nốt ba tỉnh miền Tây Nam Kỳ (1867). Toàn bộ Nam Kỳ rơi vào tay Pháp. Củng cố nền cai trị của Pháp tại Nam Kỳ.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "củng",
-        "tay",
-        "miền",
-        "toàn",
-        "tây"
-      ]
-    },
-    {
-      "id": "hf_000759",
-      "year": 1075,
-      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 1075.",
-      "story": "Lý Thường Kiệt chủ động tiến công Ung–Khâm–Liêm. Quân Đại Việt tấn công trước để phá thế xâm lược của nhà Tống. Về lâu dài, Ngăn chặn nguy cơ xâm lược, thể hiện nghệ thuật quân sự chủ động.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "hiện",
-        "thuật",
-        "nhà",
-        "thường",
-        "nguy"
-      ]
-    },
-    {
-      "id": "hf_000778",
-      "year": 1627,
-      "event": "Vì sao Khởi đầu Trịnh–Nguyễn phân tranh (1627) quan trọng đối với lịch sử Việt Nam?",
-      "story": "Khởi đầu Trịnh–Nguyễn phân tranh (1627): Chiến tranh kéo dài giữa Chúa Trịnh (Đàng Ngoài) và Chúa Nguyễn (Đàng Trong). Sự kiện này có ý nghĩa là Đất nước chia cắt hơn 150 năm, ranh giới sông Gianh.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "đàng",
-        "này",
-        "nguyễn",
-        "giới",
-        "dài"
-      ]
-    },
-    {
-      "id": "hf_000795",
-      "year": 1428,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1428.",
-      "story": "diễn ra **Lê Lợi lên ngôi, lập nhà Hậu Lê**: Lê Lợi xưng vương, ban Bình Ngô đại cáo tuyên cáo độc lập. Ý nghĩa: Mở ra thời kỳ Lê sơ thịnh trị.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "lên",
-        "vương",
-        "ngôi",
-        "nhà",
-        "độc"
-      ]
-    },
-    {
-      "id": "hf_000797",
-      "year": 931,
-      "event": "Ai là nhân vật trung tâm trong Dương Đình Nghệ đánh tan quân Nam Hán (931) và vai trò của họ là gì?",
-      "story": "Dương Đình Nghệ đánh tan quân Nam Hán. Dương Đình Nghệ lãnh đạo nghĩa quân, đẩy lui quân Nam Hán. Về lâu dài, Củng cố nền tự chủ, tạo tiền đề cho thời Ngô.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "củng",
-        "lãnh",
-        "đạo",
-        "dài",
-        "lâu"
-      ]
-    },
-    {
-      "id": "hf_000798",
-      "year": 1000,
-      "event": "Hậu quả hay tác động dài hạn của Đại lễ 1000 năm Thăng Long – Hà Nội đối với Việt Nam là gì?",
-      "story": "**Đại lễ 1000 năm Thăng Long – Hà Nội** xảy ra năm 2010. Kỷ niệm nghìn năm Thăng Long – Hà Nội. Đây là cột mốc quan trọng vì Khẳng định bề dày lịch sử – văn hóa Thủ đô.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "1000",
-        "thủ",
-        "long",
-        "dày",
-        "khẳng"
-      ]
-    },
-    {
-      "id": "hf_000810",
-      "year": 2007,
-      "event": "Trình bày ngắn gọn về Gia nhập WTO (2007).",
-      "story": "Gia nhập WTO (2007). Việt Nam trở thành thành viên WTO. Thúc đẩy thương mại và cải cách thể chế.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "chế",
-        "2007",
-        "gia",
-        "cải",
-        "đẩy"
-      ]
-    },
-    {
-      "id": "hf_000814",
-      "year": 1905,
-      "event": "Bối cảnh nào tạo điều kiện cho Phong trào Đông Du xảy ra?",
-      "story": "Phong trào Đông Du (1905): Phan Bội Châu khởi xướng phong trào đưa thanh niên sang Nhật du học. Sự kiện này có ý nghĩa là Tìm đường cứu nước theo con đường mới, tiếp thu tư tưởng và kỹ thuật hiện đại.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "tìm",
-        "đường",
-        "thuật",
-        "hiện",
-        "trào"
-      ]
-    },
-    {
-      "id": "hf_000826",
-      "year": 1427,
-      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 1427.",
-      "story": "Toàn thắng chống Minh (Tốt Động–Chúc Động, Chi Lăng–Xương Giang). Nghĩa quân Lam Sơn giành thắng lợi quyết định, buộc quân Minh rút. Về lâu dài, Chấm dứt thời Minh thuộc, khôi phục độc lập.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "dứt",
-        "phục",
-        "buộc",
-        "độc",
-        "chi"
-      ]
-    },
-    {
-      "id": "hf_000829",
-      "year": 1627,
-      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 1627.",
-      "story": "**Khởi đầu Trịnh–Nguyễn phân tranh** xảy ra năm 1627. Chiến tranh kéo dài giữa Chúa Trịnh (Đàng Ngoài) và Chúa Nguyễn (Đàng Trong). Đây là cột mốc quan trọng vì Đất nước chia cắt hơn 150 năm, ranh giới sông Gianh.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "đàng",
-        "nguyễn",
-        "giới",
-        "dài",
-        "chia"
-      ]
-    },
-    {
-      "id": "hf_000835",
-      "year": 1976,
-      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 1976.",
-      "story": "diễn ra **Nước Cộng hòa Xã hội Chủ nghĩa Việt Nam**: Quốc hội quyết định tên nước, thủ đô, quốc kỳ, quốc ca. Ý nghĩa: Hoàn tất thống nhất về nhà nước.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "hội",
-        "nghĩa",
-        "định",
-        "nhất",
-        "nhà"
-      ]
-    },
-    {
-      "id": "hf_000850",
-      "year": 980,
-      "event": "Vì sao Lê Hoàn lên ngôi (Nhà Tiền Lê) (980) quan trọng đối với lịch sử Việt Nam?",
-      "story": "Lê Hoàn lên ngôi (Nhà Tiền Lê). Lê Hoàn được suy tôn sau biến cố cuối triều Đinh. Về lâu dài, Ổn định triều chính, chuẩn bị chống Tống.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "tôn",
-        "lên",
-        "chính",
-        "ngôi",
-        "nhà"
-      ]
-    },
-    {
-      "id": "hf_000862",
-      "year": 981,
-      "event": "Ai là nhân vật trung tâm trong Kháng Tống thắng lợi thời Lê Hoàn (981) và vai trò của họ là gì?",
-      "story": "Kháng Tống thắng lợi thời Lê Hoàn. Quân Đại Cồ Việt đánh lui quân Tống xâm lược. Về lâu dài, Bảo vệ nền độc lập non trẻ, khẳng định vị thế quốc gia.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "độc",
-        "quốc",
-        "dài",
-        "lâu",
-        "xâm"
-      ]
-    },
-    {
-      "id": "hf_000867",
-      "year": 1010,
-      "event": "Vì sao Chiếu dời đô (văn kiện) (1010) quan trọng đối với lịch sử Việt Nam?",
-      "story": "Chiếu dời đô (văn kiện) (1010). Văn kiện nêu lý do dời đô và tầm nhìn phát triển ở Đại La. Tư tưởng quy hoạch, tầm nhìn chiến lược thời Lý.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "thời",
-        "dời",
-        "văn",
-        "tầm",
-        "nhìn"
-      ]
-    },
-    {
-      "id": "hf_000891",
-      "year": 1284,
-      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 1284.",
-      "story": "diễn ra **Hịch tướng sĩ**: Trần Hưng Đạo soạn Hịch tướng sĩ khích lệ quân dân trước kháng chiến lần 2. Ý nghĩa: Tác phẩm quân sự – chính trị cổ vũ mạnh mẽ.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "khích",
-        "đạo",
-        "chính",
-        "lần",
-        "trước"
-      ]
-    },
-    {
-      "id": "hf_000907",
-      "year": 1460,
-      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 1460.",
-      "story": "Lê Thánh Tông trị vì. Lê Thánh Tông đẩy mạnh cải cách, hoàn thiện bộ máy nhà nước. Về lâu dài, Đỉnh cao thịnh trị của Lê sơ trên nhiều lĩnh vực.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "đỉnh",
-        "cải",
-        "nhà",
-        "thánh",
-        "dài"
-      ]
-    },
-    {
-      "id": "hf_000908",
-      "year": 2020,
-      "event": "Hãy mô tả ngắn gọn bối cảnh và ý nghĩa của Đại dịch COVID-19.",
-      "story": "Đại dịch COVID-19 (2020). COVID-19 tác động sâu rộng đến y tế, kinh tế và xã hội. Thử thách quản trị khủng hoảng và y tế công.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "covid",
-        "hoảng",
-        "thách",
-        "hội",
-        "công"
-      ]
-    },
-    {
-      "id": "hf_000959",
-      "year": 1785,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1785.",
-      "story": "Rạch Gầm – Xoài Mút. Nguyễn Huệ đánh bại quân Xiêm trên sông Tiền. Về lâu dài, Ngăn chặn can thiệp ngoại bang, củng cố Tây Sơn ở Nam Bộ.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "củng",
-        "mút",
-        "nguyễn",
-        "dài",
-        "bại"
-      ]
-    },
-    {
-      "id": "hf_000970",
-      "year": 1533,
-      "event": "Vì sao Lê trung hưng khôi phục danh nghĩa nhà Lê (1533) quan trọng đối với lịch sử Việt Nam?",
-      "story": "Lê trung hưng khôi phục danh nghĩa nhà Lê (1533): Các thế lực trung hưng dựng lại cơ nghiệp nhà Lê, thực quyền thuộc chúa Trịnh. Sự kiện này có ý nghĩa là Hình thành cục diện Lê–Trịnh ở Đàng Ngoài, đối đầu với họ Nguyễn ở Đàng Trong.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "phục",
-        "nghiệp",
-        "hình",
-        "đàng",
-        "nhà"
-      ]
-    },
-    {
-      "id": "hf_001000",
-      "year": 1954,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1954.",
-      "story": "diễn ra **Hiệp định Genève**: Ký Hiệp định Genève về chấm dứt chiến sự ở Việt Nam. Ý nghĩa: Tạm chia cắt đất nước ở vĩ tuyến 17, chuẩn bị tổng tuyển cử.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "dứt",
-        "tuyến",
-        "cắt",
-        "nghĩa",
-        "định"
-      ]
-    },
-    {
-      "id": "hf_001006",
-      "year": 1407,
-      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 1407.",
-      "story": "Nhà Minh xâm lược, bắt đầu thời kỳ Minh thuộc. Đại Việt rơi vào ách đô hộ của nhà Minh. Về lâu dài, Mở ra giai đoạn đấu tranh giải phóng khốc liệt.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "nhà",
-        "phóng",
-        "dài",
-        "ách",
-        "lâu"
-      ]
-    },
-    {
-      "id": "hf_001009",
-      "year": 1471,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1471.",
-      "story": "diễn ra **Đại Việt đánh bại Champa tại Vijaya**: Quân Đại Việt hạ kinh đô Vijaya của Champa. Ý nghĩa: Làm suy yếu Champa, mở rộng lãnh thổ về phương Nam.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "đánh",
-        "phương",
-        "lãnh",
-        "nghĩa",
-        "suy"
-      ]
-    },
-    {
-      "id": "hf_001016",
-      "year": 1285,
-      "event": "Ai là nhân vật trung tâm trong Kháng chiến lần 2 chống Nguyên (1285) và vai trò của họ là gì?",
-      "story": "diễn ra **Kháng chiến lần 2 chống Nguyên**: Quân dân Đại Việt giành thắng lợi lớn trước quân Nguyên. Ý nghĩa: Củng cố sức mạnh quốc gia và nghệ thuật chiến tranh nhân dân.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "củng",
-        "thuật",
-        "lớn",
-        "quốc",
-        "chống"
-      ]
-    },
-    {
-      "id": "hf_001050",
-      "year": 938,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 938.",
-      "story": "Trận Bạch Đằng (Ngô Quyền) (938): Ngô Quyền dùng cọc gỗ đặt ngầm trên sông Bạch Đằng, đánh bại thủy quân Nam Hán. Sự kiện này có ý nghĩa là Chấm dứt hơn một thiên niên kỷ Bắc thuộc, mở ra kỷ nguyên độc lập của người Việt.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "dứt",
-        "một",
-        "đặt",
-        "ngầm",
-        "này"
-      ]
-    },
-    {
-      "id": "hf_001062",
-      "year": 1858,
-      "event": "Trong năm 1858, điều gì có ý nghĩa lịch sử ở Việt Nam?",
-      "story": "Liên quân Pháp – Tây Ban Nha tấn công Đà Nẵng. Mở đầu cuộc chiến xâm lược của Pháp tại Việt Nam. Về lâu dài, Khởi đầu thời kỳ thực dân xâm lược kéo dài gần một thế kỷ.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "một",
-        "dài",
-        "pháp",
-        "lâu",
-        "xâm"
-      ]
-    },
-    {
-      "id": "hf_001097",
-      "year": 1995,
-      "event": "Vì sao Bình thường hóa Việt–Mỹ; gia nhập ASEAN (1995) quan trọng đối với lịch sử Việt Nam?",
-      "story": "Bình thường hóa Việt–Mỹ; gia nhập ASEAN (1995). Việt Nam và Hoa Kỳ bình thường hóa; Việt Nam gia nhập ASEAN. Mở rộng hội nhập quốc tế và khu vực.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "1995",
-        "gia",
-        "hội",
-        "khu",
-        "thường"
-      ]
-    },
-    {
-      "id": "hf_001120",
-      "year": 1862,
-      "event": "Trình bày nhanh những điểm chính về Hòa ước Nhâm Tuất (Sài Gòn).",
-      "story": "Hòa ước Nhâm Tuất (Sài Gòn) (1862): Triều Nguyễn nhượng cho Pháp ba tỉnh miền Đông Nam Kỳ. Sự kiện này có ý nghĩa là Mất đất, mất quyền kiểm soát Nam Kỳ vào tay Pháp.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "soát",
-        "này",
-        "nguyễn",
-        "pháp",
-        "tuất"
-      ]
-    },
-    {
-      "id": "hf_001147",
-      "year": 1789,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1789.",
-      "story": "Ngọc Hồi – Đống Đa (Quang Trung). Quang Trung thần tốc tiến ra Bắc, đánh bại quân Thanh. Về lâu dài, Bảo vệ độc lập, khẳng định tài thao lược quân sự.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "độc",
-        "dài",
-        "bại",
-        "tiến",
-        "lâu"
-      ]
-    },
-    {
-      "id": "hf_001217",
-      "year": 1955,
-      "event": "Trình bày ngắn gọn về Hình thành Việt Nam Cộng hòa ở miền Nam (1955).",
-      "story": "**Hình thành Việt Nam Cộng hòa ở miền Nam** xảy ra năm 1955. Miền Nam thành lập chính thể Việt Nam Cộng hòa. Đây là cột mốc quan trọng vì Củng cố tình trạng chia cắt đất nước.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "củng",
-        "chính",
-        "hình",
-        "cộng",
-        "chia"
-      ]
-    },
-    {
-      "id": "hf_001222",
-      "year": 1867,
-      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 1867.",
-      "story": "Pháp chiếm nốt ba tỉnh miền Tây Nam Kỳ. Toàn bộ Nam Kỳ rơi vào tay Pháp. Về lâu dài, Củng cố nền cai trị của Pháp tại Nam Kỳ.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "củng",
-        "tay",
-        "miền",
-        "toàn",
-        "tây"
-      ]
-    },
-    {
-      "id": "hf_001250",
-      "year": 1960,
-      "event": "Trong năm 1960, điều gì có ý nghĩa lịch sử ở Việt Nam?",
-      "story": "Thành lập Mặt trận Dân tộc Giải phóng miền Nam. Mặt trận ra đời nhằm đoàn kết lực lượng yêu nước ở miền Nam. Về lâu dài, Tạo mặt trận chính trị – quân sự chống Mỹ và chính quyền Sài Gòn.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "tộc",
-        "chính",
-        "mặt",
-        "nhằm",
-        "phóng"
-      ]
-    },
-    {
-      "id": "hf_001301",
-      "year": 1992,
-      "event": "Trong năm 1992, điều gì có ý nghĩa lịch sử ở Việt Nam?",
-      "story": "Hiến pháp 1992 (1992). Ban hành Hiến pháp phù hợp Đổi Mới. Khung pháp lý cho phát triển kinh tế – xã hội.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "đổi",
-        "cho",
-        "hội",
-        "hành",
-        "mới"
-      ]
-    },
-    {
-      "id": "hf_001356",
-      "year": 1010,
-      "event": "Lý Công Uẩn đã làm gì để dẫn đến Chiếu dời đô – dời đô ra Thăng Long (1010)?",
-      "story": "Chiếu dời đô – dời đô ra Thăng Long. Vua Lý Thái Tổ ban Chiếu dời đô, dời kinh đô từ Hoa Lư ra Đại La (Thăng Long). Về lâu dài, Đặt nền móng cho Thăng Long – Hà Nội hơn một nghìn năm văn hiến.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "một",
-        "đặt",
-        "dời",
-        "dài",
-        "hiến"
-      ]
-    },
-    {
-      "id": "hf_001442",
+      "id": "hf_000537",
       "year": 1258,
       "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 1258.",
       "story": "Kháng chiến lần 1 chống Mông Cổ. Đại Việt đánh bại cuộc xâm lược đầu tiên của quân Mông Cổ. Về lâu dài, Bảo vệ độc lập, mở ra chuỗi thắng lợi chống xâm lăng phương Bắc.",
       "persons": [],
       "places": [],
       "keywords": [
-        "độc",
-        "dài",
-        "bại",
-        "lâu",
-        "xâm"
+        "lần",
+        "đánh",
+        "lợi",
+        "lăng",
+        "kháng"
       ]
     },
     {
-      "id": "hf_001454",
-      "year": 1288,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1288.",
-      "story": "diễn ra **Trận Bạch Đằng (Trần Hưng Đạo)**: Trần Hưng Đạo nhử địch vào bãi cọc ngầm trên sông Bạch Đằng, tiêu diệt thủy quân Nguyên. Ý nghĩa: Đập tan ý đồ xâm lược, kết thúc chiến tranh, ghi dấu mốc chói lọi.",
+      "id": "hf_000605",
+      "year": 1009,
+      "event": "Tóm tắt Lý Công Uẩn được tôn lập (kết thúc Tiền Lê) và nêu ý nghĩa lịch sử của sự kiện này.",
+      "story": "1009: Lý Công Uẩn được tôn lập (kết thúc Tiền Lê). Sau khi Lê Long Đĩnh qua đời, Lý Công Uẩn được tôn làm vua. Mở ra triều Lý với nhiều cải cách và thịnh trị.",
       "persons": [],
       "places": [],
       "keywords": [
-        "ngầm",
-        "đạo",
-        "nhử",
-        "dấu",
-        "xâm"
+        "thúc",
+        "kết",
+        "uẩn",
+        "long",
+        "tiền"
       ]
     },
     {
-      "id": "hf_001466",
-      "year": 1964,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1964.",
-      "story": "diễn ra **Sự kiện Vịnh Bắc Bộ**: Sự kiện trên Vịnh Bắc Bộ dẫn đến Mỹ leo thang chiến tranh ở Việt Nam. Ý nghĩa: Mở rộng chiến tranh, ném bom miền Bắc.",
+      "id": "hf_000629",
+      "year": 1427,
+      "event": "Hậu quả hay tác động dài hạn của Toàn thắng chống Minh (Tốt Động–Chúc Động, Chi Lăng–Xương Giang) đối với Việt Nam là gì?",
+      "story": "1427: Toàn thắng chống Minh (Tốt Động–Chúc Động, Chi Lăng–Xương Giang). Nghĩa quân Lam Sơn giành thắng lợi quyết định, buộc quân Minh rút. Chấm dứt thời Minh thuộc, khôi phục độc lập.",
       "persons": [],
       "places": [],
       "keywords": [
-        "trên",
-        "bắc",
-        "vịnh",
+        "chi",
+        "lam",
+        "khôi",
         "nghĩa",
-        "ném"
+        "lăng"
       ]
     },
     {
-      "id": "hf_001478",
-      "year": 1839,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1839.",
-      "story": "diễn ra **Đổi quốc hiệu Đại Nam thời Minh Mạng**: Triều Nguyễn dùng quốc hiệu Đại Nam dưới thời Minh Mạng. Ý nghĩa: Khẳng định chủ quyền và cơ cấu quản lý thống nhất.",
+      "id": "hf_000792",
+      "year": 905,
+      "event": "Khúc Thừa Dụ đã làm gì để dẫn đến Khúc Thừa Dụ dựng chính quyền tự chủ (905)?",
+      "story": "905: Khúc Thừa Dụ dựng chính quyền tự chủ. Khúc Thừa Dụ nắm quyền ở Tống Bình, khôi phục quyền tự chủ sau thời Bắc thuộc muộn. Mở đầu thời kỳ tự chủ của người Việt sau nhiều thế kỷ bị phương Bắc cai trị.",
       "persons": [],
       "places": [],
       "keywords": [
-        "thống",
-        "nguyễn",
-        "quốc",
-        "cấu",
-        "dùng"
-      ]
-    },
-    {
-      "id": "hf_001480",
-      "year": 1885,
-      "event": "Trong năm 1885, điều gì có ý nghĩa lịch sử ở Việt Nam?",
-      "story": "Phong trào Cần Vương. Vua Hàm Nghi hạ Chiếu Cần Vương, kêu gọi chống Pháp. Về lâu dài, Lan rộng kháng chiến chống Pháp cuối thế kỷ XIX.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "vương",
-        "trào",
-        "gọi",
-        "dài",
-        "pháp"
-      ]
-    },
-    {
-      "id": "hf_001558",
-      "year": 1771,
-      "event": "Nguyễn Huệ đã làm gì để dẫn đến Khởi nghĩa Tây Sơn bùng nổ (1771)?",
-      "story": "Khởi nghĩa Tây Sơn bùng nổ. Anh em Tây Sơn khởi nghĩa, chống các thế lực Trịnh – Nguyễn. Về lâu dài, Đặt nền tảng thống nhất, cải cách mạnh mẽ.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "đặt",
-        "cải",
-        "thống",
-        "nguyễn",
-        "dài"
-      ]
-    },
-    {
-      "id": "hf_001591",
-      "year": 1989,
-      "event": "Trình bày ngắn gọn về Rút quân khỏi Campuchia (1989).",
-      "story": "diễn ra **Rút quân khỏi Campuchia**: Việt Nam hoàn tất rút quân, đóng góp giải pháp chính trị. Ý nghĩa: Giảm căng thẳng đối ngoại, thuận lợi bình thường hóa.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "khỏi",
-        "chính",
-        "thường",
-        "tất",
-        "pháp"
-      ]
-    },
-    {
-      "id": "hf_001608",
-      "year": 1010,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1010.",
-      "story": "Chiếu dời đô – dời đô ra Thăng Long (1010): Vua Lý Thái Tổ ban Chiếu dời đô, dời kinh đô từ Hoa Lư ra Đại La (Thăng Long). Sự kiện này có ý nghĩa là Đặt nền móng cho Thăng Long – Hà Nội hơn một nghìn năm văn hiến.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "một",
-        "đặt",
-        "dời",
-        "này",
-        "hiến"
-      ]
-    },
-    {
-      "id": "hf_001616",
-      "year": 1954,
-      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 1954.",
-      "story": "diễn ra **Chiến thắng Điện Biên Phủ**: Quân đội Việt Nam giành thắng lợi quyết định tại Điện Biên Phủ. Ý nghĩa: Bước ngoặt lịch sử, dẫn tới Hiệp định Genève.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "tới",
-        "bước",
-        "biên",
-        "ngoặt",
-        "thắng"
-      ]
-    },
-    {
-      "id": "hf_001624",
-      "year": 1009,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1009.",
-      "story": "Lý Công Uẩn được tôn lập (kết thúc Tiền Lê). Sau khi Lê Long Đĩnh qua đời, Lý Công Uẩn được tôn làm vua. Về lâu dài, Mở ra triều Lý với nhiều cải cách và thịnh trị.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "tôn",
-        "cải",
-        "đĩnh",
-        "khi",
-        "dài"
-      ]
-    },
-    {
-      "id": "hf_001648",
-      "year": 1009,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1009.",
-      "story": "diễn ra **Lý Công Uẩn được tôn lập (kết thúc Tiền Lê)**: Sau khi Lê Long Đĩnh qua đời, Lý Công Uẩn được tôn làm vua. Ý nghĩa: Mở ra triều Lý với nhiều cải cách và thịnh trị.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "tôn",
-        "cải",
-        "đĩnh",
-        "khi",
-        "cách"
-      ]
-    },
-    {
-      "id": "hf_001701",
-      "year": 1785,
-      "event": "Nguyễn Huệ đã làm gì để dẫn đến Rạch Gầm – Xoài Mút (1785)?",
-      "story": "diễn ra **Rạch Gầm – Xoài Mút**: Nguyễn Huệ đánh bại quân Xiêm trên sông Tiền. Ý nghĩa: Ngăn chặn can thiệp ngoại bang, củng cố Tây Sơn ở Nam Bộ.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "củng",
-        "mút",
-        "nguyễn",
-        "bại",
-        "rạch"
-      ]
-    },
-    {
-      "id": "hf_001841",
-      "year": 2018,
-      "event": "Trình bày ngắn gọn về Ký kết CPTPP (2018).",
-      "story": "Ký kết CPTPP. Tham gia Hiệp định Đối tác Toàn diện và Tiến bộ xuyên Thái Bình Dương. Về lâu dài, Mở rộng thị trường, nâng chuẩn thương mại.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "tham",
-        "dài",
-        "tiến",
-        "lâu",
-        "trường"
-      ]
-    },
-    {
-      "id": "hf_001852",
-      "year": 1995,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1995.",
-      "story": "Bình thường hóa Việt–Mỹ; gia nhập ASEAN. Việt Nam và Hoa Kỳ bình thường hóa; Việt Nam gia nhập ASEAN. Về lâu dài, Mở rộng hội nhập quốc tế và khu vực.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "gia",
-        "hội",
-        "khu",
-        "thường",
-        "hoa"
-      ]
-    },
-    {
-      "id": "hf_001866",
-      "year": 1533,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1533.",
-      "story": "Lê trung hưng khôi phục danh nghĩa nhà Lê. Các thế lực trung hưng dựng lại cơ nghiệp nhà Lê, thực quyền thuộc chúa Trịnh. Về lâu dài, Hình thành cục diện Lê–Trịnh ở Đàng Ngoài, đối đầu với họ Nguyễn ở Đàng Trong.",
-      "persons": [],
-      "places": [],
-      "keywords": [
+        "chủ",
+        "khôi",
         "phục",
-        "nghiệp",
-        "hình",
-        "đàng",
-        "nhà"
+        "quyền",
+        "cai"
       ]
     },
     {
-      "id": "hf_001913",
-      "year": 1054,
-      "event": "Trình bày ngắn gọn về Đổi quốc hiệu thành Đại Việt (1054).",
-      "story": "1054: Đổi quốc hiệu thành Đại Việt. Thời Lý Thánh Tông, quốc hiệu đổi từ Đại Cồ Việt sang Đại Việt. Khẳng định bản sắc và vị thế quốc gia độc lập.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "đổi",
-        "đại",
-        "tông",
-        "thời",
-        "bản"
-      ]
-    },
-    {
-      "id": "hf_001923",
+      "id": "hf_001909",
       "year": 1968,
-      "event": "Trong năm 1968, điều gì có ý nghĩa lịch sử ở Việt Nam?",
-      "story": "Tổng tiến công và nổi dậy Tết Mậu Thân. Lực lượng cách mạng đồng loạt tiến công trên nhiều đô thị miền Nam. Về lâu dài, Tác động mạnh đến cục diện chiến tranh và dư luận quốc tế.",
+      "event": "Tóm tắt Tổng tiến công và nổi dậy Tết Mậu Thân và nêu ý nghĩa lịch sử của sự kiện này.",
+      "story": "1968: Tổng tiến công và nổi dậy Tết Mậu Thân. Lực lượng cách mạng đồng loạt tiến công trên nhiều đô thị miền Nam. Tác động mạnh đến cục diện chiến tranh và dư luận quốc tế.",
       "persons": [],
       "places": [],
       "keywords": [
-        "luận",
-        "tết",
-        "quốc",
-        "dài",
-        "cách"
+        "diện",
+        "đồng",
+        "lượng",
+        "1968",
+        "miền"
       ]
     },
     {
-      "id": "hf_002116",
-      "year": 1428,
-      "event": "Ai là nhân vật trung tâm trong Lê Lợi lên ngôi, lập nhà Hậu Lê (1428) và vai trò của họ là gì?",
-      "story": "Lê Lợi lên ngôi, lập nhà Hậu Lê. Lê Lợi xưng vương, ban Bình Ngô đại cáo tuyên cáo độc lập. Về lâu dài, Mở ra thời kỳ Lê sơ thịnh trị.",
+      "id": "hf_002204",
+      "year": 1858,
+      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1858.",
+      "story": "diễn ra **Liên quân Pháp – Tây Ban Nha tấn công Đà Nẵng**: Mở đầu cuộc chiến xâm lược của Pháp tại Việt Nam. Ý nghĩa: Khởi đầu thời kỳ thực dân xâm lược kéo dài gần một thế kỷ.",
       "persons": [],
       "places": [],
       "keywords": [
-        "lên",
-        "vương",
-        "ngôi",
-        "nhà",
-        "độc"
+        "nha",
+        "nghĩa",
+        "dân",
+        "gần",
+        "cuộc"
       ]
     },
     {
-      "id": "hf_002126",
-      "year": 1285,
-      "event": "Trong năm 1285, điều gì có ý nghĩa lịch sử ở Việt Nam?",
-      "story": "Kháng chiến lần 2 chống Nguyên. Quân dân Đại Việt giành thắng lợi lớn trước quân Nguyên. Về lâu dài, Củng cố sức mạnh quốc gia và nghệ thuật chiến tranh nhân dân.",
+      "id": "hf_002259",
+      "year": 1010,
+      "event": "Tóm tắt Chiếu dời đô – dời đô ra Thăng Long và nêu ý nghĩa lịch sử của sự kiện này.",
+      "story": "Chiếu dời đô – dời đô ra Thăng Long (1010). Vua Lý Thái Tổ ban Chiếu dời đô, dời kinh đô từ Hoa Lư ra Đại La (Thăng Long). Đặt nền móng cho Thăng Long – Hà Nội hơn một nghìn năm văn hiến.",
       "persons": [],
       "places": [],
       "keywords": [
-        "củng",
-        "thuật",
-        "lớn",
-        "quốc",
-        "dài"
-      ]
-    },
-    {
-      "id": "hf_002154",
-      "year": 1946,
-      "event": "Trong năm 1946, điều gì có ý nghĩa lịch sử ở Việt Nam?",
-      "story": "Toàn quốc kháng chiến. Lời kêu gọi Toàn quốc kháng chiến; cả nước bước vào kháng chiến chống Pháp. Về lâu dài, Mở đầu Chiến tranh Đông Dương lần thứ nhất.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "bước",
-        "gọi",
-        "quốc",
-        "dài",
-        "pháp"
-      ]
-    },
-    {
-      "id": "hf_002180",
-      "year": 1979,
-      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 1979.",
-      "story": "Chiến tranh biên giới phía Bắc. Xung đột vũ trang nổ ra ở biên giới Việt–Trung. Về lâu dài, Bảo vệ chủ quyền; quan hệ hai nước căng thẳng.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "hai",
-        "giới",
-        "dài",
-        "biên",
-        "lâu"
-      ]
-    },
-    {
-      "id": "hf_002194",
-      "year": 1885,
-      "event": "Ai là nhân vật trung tâm trong Phong trào Cần Vương (1885) và vai trò của họ là gì?",
-      "story": "diễn ra **Phong trào Cần Vương**: Vua Hàm Nghi hạ Chiếu Cần Vương, kêu gọi chống Pháp. Ý nghĩa: Lan rộng kháng chiến chống Pháp cuối thế kỷ XIX.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "vương",
-        "trào",
-        "gọi",
-        "pháp",
-        "cuối"
-      ]
-    },
-    {
-      "id": "hf_002276",
-      "year": 1989,
-      "event": "Vì sao Rút quân khỏi Campuchia (1989) quan trọng đối với lịch sử Việt Nam?",
-      "story": "Rút quân khỏi Campuchia. Việt Nam hoàn tất rút quân, đóng góp giải pháp chính trị. Về lâu dài, Giảm căng thẳng đối ngoại, thuận lợi bình thường hóa.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "khỏi",
-        "chính",
-        "thường",
-        "tất",
-        "dài"
-      ]
-    },
-    {
-      "id": "hf_002287",
-      "year": 1054,
-      "event": "Tóm tắt Đổi quốc hiệu thành Đại Việt và nêu ý nghĩa lịch sử của sự kiện này.",
-      "story": "Đổi quốc hiệu thành Đại Việt (1054). Thời Lý Thánh Tông, quốc hiệu đổi từ Đại Cồ Việt sang Đại Việt. Khẳng định bản sắc và vị thế quốc gia độc lập.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "đổi",
-        "tông",
-        "thời",
-        "bản",
-        "1054"
-      ]
-    },
-    {
-      "id": "hf_002412",
-      "year": 968,
-      "event": "Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 968.",
-      "story": "Đinh Bộ Lĩnh dẹp loạn 12 sứ quân, lập Đại Cồ Việt. Đinh Bộ Lĩnh thống nhất cát cứ, lên ngôi Hoàng đế, đặt quốc hiệu Đại Cồ Việt. Về lâu dài, Chấm dứt cát cứ, xây dựng nhà nước trung ương tập quyền đầu tiên sau độc lập.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "dứt",
-        "lên",
-        "đặt",
-        "xây",
-        "ngôi"
-      ]
-    },
-    {
-      "id": "hf_002453",
-      "year": 1288,
-      "event": "Trần Hưng Đạo đã làm gì để dẫn đến Trận Bạch Đằng (Trần Hưng Đạo) (1288)?",
-      "story": "Trận Bạch Đằng (Trần Hưng Đạo). Trần Hưng Đạo nhử địch vào bãi cọc ngầm trên sông Bạch Đằng, tiêu diệt thủy quân Nguyên. Về lâu dài, Đập tan ý đồ xâm lược, kết thúc chiến tranh, ghi dấu mốc chói lọi.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "ngầm",
-        "đạo",
-        "nhử",
-        "dài",
-        "dấu"
-      ]
-    },
-    {
-      "id": "hf_002573",
-      "year": 1973,
-      "event": "Vì sao Hiệp định Paris (1973) quan trọng đối với lịch sử Việt Nam?",
-      "story": "Hiệp định Paris. Hiệp định chấm dứt chiến tranh, lập lại hòa bình ở Việt Nam. Về lâu dài, Mỹ rút quân khỏi Việt Nam.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "dứt",
-        "lại",
-        "rút",
-        "khỏi",
-        "định"
-      ]
-    },
-    {
-      "id": "hf_003210",
-      "year": 2020,
-      "event": "Hãy cho biết sự kiện tiêu biểu của Việt Nam vào năm 2020.",
-      "story": "diễn ra **Đại dịch COVID-19**: COVID-19 tác động sâu rộng đến y tế, kinh tế và xã hội. Ý nghĩa: Thử thách quản trị khủng hoảng và y tế công.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "covid",
-        "hoảng",
-        "thách",
-        "hội",
-        "công"
-      ]
-    },
-    {
-      "id": "hf_003654",
-      "year": 938,
-      "event": "Ai là nhân vật trung tâm trong Trận Bạch Đằng (Ngô Quyền) (938) và vai trò của họ là gì?",
-      "story": "Trận Bạch Đằng (Ngô Quyền). Ngô Quyền dùng cọc gỗ đặt ngầm trên sông Bạch Đằng, đánh bại thủy quân Nam Hán. Về lâu dài, Chấm dứt hơn một thiên niên kỷ Bắc thuộc, mở ra kỷ nguyên độc lập của người Việt.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "dứt",
-        "một",
-        "đặt",
-        "ngầm",
-        "độc"
-      ]
-    },
-    {
-      "id": "hf_005738",
-      "year": 2020,
-      "event": "Trình bày ngắn gọn về Đại dịch COVID-19 (2020).",
-      "story": "Đại dịch COVID-19. COVID-19 tác động sâu rộng đến y tế, kinh tế và xã hội. Về lâu dài, Thử thách quản trị khủng hoảng và y tế công.",
-      "persons": [],
-      "places": [],
-      "keywords": [
-        "thách",
-        "dài",
-        "lâu",
-        "hội",
-        "thử"
+        "dời",
+        "chiếu",
+        "kinh",
+        "long",
+        "móng"
       ]
     }
   ]
