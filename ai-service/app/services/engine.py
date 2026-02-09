@@ -135,7 +135,7 @@ def deduplicate_and_enrich(raw_events: list) -> list:
                     is_duplicate = True
                 else:
                     sim = compute_text_similarity(event_lower, base_lower)
-                    if sim > 0.3:  # Lower threshold to catch more duplicates (matching build script)
+                    if sim > 0.5:  # Tuned threshold: 0.3 too aggressive, 0.6 too loose
                         is_duplicate = True
                 
                 if is_duplicate:
