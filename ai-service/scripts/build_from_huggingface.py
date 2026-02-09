@@ -78,6 +78,37 @@ def extract_year(text: str) -> int:
     return 0
 
 
+from difflib import SequenceMatcher
+
+def compute_text_similarity(text1: str, text2: str) -> float:
+    """Compute similarity between two texts using SequenceMatcher."""
+    if not text1 or not text2:
+        return 0.0
+    return SequenceMatcher(None, text1.lower(), text2.lower()).ratio()
+
+
+def is_duplicate_of_existing(new_story: str, existing_docs: list, year: int, threshold: float = 0.6) -> tuple:
+    """
+    Check if new_story is a duplicate of any existing doc with same year.
+    Returns (is_duplicate, existing_doc_index or None)
+    """
+    for idx, doc in enumerate(existing_docs):
+        if doc.get("year") != year:
+            continue
+        
+        existing_story = doc.get("story", "")
+        sim = compute_text_similarity(new_story, existing_story)
+        
+        # Also check if one contains the other
+        new_lower = new_story.lower()
+        existing_lower = existing_story.lower()
+        
+        if sim > threshold or new_lower in existing_lower or existing_lower in new_lower:
+            return True, idx
+    
+    return False, None
+
+
 def extract_keywords(text: str) -> set:
     """Extract keywords for deduplication."""
     if not text:
@@ -146,16 +177,17 @@ def load_from_huggingface():
         if not year:
             continue
         
-        # Deduplicate by keywords
-        keywords = extract_keywords(clean_a)
-        keyword_key = tuple(sorted(list(keywords)[:10]))  # Use first 10 keywords
+        # Deduplicate using text similarity (grouped by year)
+        is_dup, existing_idx = is_duplicate_of_existing(clean_a, documents, year, threshold=0.6)
         
-        if keyword_key in seen_keywords:
+        if is_dup:
             # Keep longer answer
-            existing_idx = seen_keywords[keyword_key]
             if len(clean_a) > len(documents[existing_idx].get("story", "")):
                 documents[existing_idx]["story"] = clean_a
+                documents[existing_idx]["event"] = clean_q[:200]
             continue
+        
+        keywords = extract_keywords(clean_a)
         
         doc = {
             "id": f"hf_{i:06d}",
@@ -167,7 +199,6 @@ def load_from_huggingface():
             "keywords": list(keywords)[:5],
         }
         
-        seen_keywords[keyword_key] = len(documents)
         documents.append(doc)
     
     print(f"✅ Loaded {len(documents)} unique documents")

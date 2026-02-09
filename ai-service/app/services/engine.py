@@ -135,7 +135,7 @@ def deduplicate_and_enrich(raw_events: list) -> list:
                     is_duplicate = True
                 else:
                     sim = compute_text_similarity(event_lower, base_lower)
-                    if sim > 0.5: # Aggressive threshold
+                    if sim > 0.6:  # Stricter threshold for better deduplication
                         is_duplicate = True
                 
                 if is_duplicate:
