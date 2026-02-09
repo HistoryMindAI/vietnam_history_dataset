@@ -135,7 +135,7 @@ def deduplicate_and_enrich(raw_events: list) -> list:
                     is_duplicate = True
                 else:
                     sim = compute_text_similarity(event_lower, base_lower)
-                    if sim > 0.6:  # Stricter threshold for better deduplication
+                    if sim > 0.3:  # Lower threshold to catch more duplicates (matching build script)
                         is_duplicate = True
                 
                 if is_duplicate:
@@ -171,64 +171,47 @@ def deduplicate_and_enrich(raw_events: list) -> list:
 
 def format_complete_answer(events: list) -> str:
     """
-    Format events into a complete, comprehensive answer.
-    Creates full sentences with all relevant information.
+    Format events into a concise answer, grouped by year.
     """
     if not events:
         return None
     
+    # Group by year for cleaner output
+    by_year = {}
+    for e in events:
+        year = e.get("year")
+        if year not in by_year:
+            by_year[year] = []
+        by_year[year].append(e)
+    
     paragraphs = []
     
-    for e in events:
-        year = e.get("year", "")
-        story = e.get("story", "") or e.get("event", "")
-        persons = e.get("persons", [])
-        places = e.get("places", [])
-        dynasty = e.get("dynasty", "")
-        
-        # Clean the story text
-        clean_story = clean_story_text(story)
-        
-        if not clean_story:
-            continue
-        
-        # Build a complete paragraph
-        parts = []
-        
-        # Main event description with year
-        if year:
-            # Check if story already starts with event name
-            if clean_story[0].isupper():
-                parts.append(f"Năm {year}, {clean_story[0].lower()}{clean_story[1:]}")
-            else:
-                parts.append(f"Năm {year}, {clean_story}")
-        else:
-            parts.append(clean_story)
-        
-        # Add persons if available and not already in story
-        if persons:
-            persons_str = ", ".join(persons)
-            if not any(p.lower() in clean_story.lower() for p in persons):
-                parts.append(f"Nhân vật liên quan: {persons_str}.")
-        
-        # Add places if available and not already in story  
-        if places:
-            places_str = ", ".join(places)
-            if not any(p.lower() in clean_story.lower() for p in places):
-                parts.append(f"Địa điểm: {places_str}.")
-        
-        # Add dynasty context if available
-        if dynasty and dynasty not in clean_story:
-            parts.append(f"Thời kỳ: {dynasty}.")
-        
-        paragraph = " ".join(parts)
-        
-        # Ensure paragraph ends with period
-        if not paragraph.endswith(('.', '!', '?')):
-            paragraph += "."
-        
-        paragraphs.append(paragraph)
+    # Sort years
+    sorted_years = sorted(by_year.keys()) if all(isinstance(y, int) for y in by_year.keys() if y) else by_year.keys()
     
+    for year in sorted_years:
+        year_events = by_year[year]
+        event_texts = []
+        
+        for e in year_events:
+            story = e.get("story", "") or e.get("event", "")
+            clean_story = clean_story_text(story)
+            
+            # Capitalize first letter
+            if clean_story:
+                clean_story = clean_story[0].upper() + clean_story[1:]
+                # Ensure ends with punctuation
+                if not clean_story.endswith(('.', '!', '?')):
+                    clean_story += "."
+                event_texts.append(clean_story)
+        
+        if event_texts:
+            joined_events = " ".join(event_texts)
+            if year:
+                paragraphs.append(f"**Năm {year}:** {joined_events}")
+            else:
+                paragraphs.append(joined_events)
+            
     return "\n\n".join(paragraphs) if paragraphs else None
 
 
