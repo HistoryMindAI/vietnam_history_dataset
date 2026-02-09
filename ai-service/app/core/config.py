@@ -1,6 +1,9 @@
 import os
 
 # ===============================
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# ===============================
 # EMBEDDING MODEL CONFIG
 # ===============================
 EMBED_MODEL = os.getenv(
@@ -11,7 +14,7 @@ EMBED_MODEL = os.getenv(
 # ===============================
 # FAISS INDEX CONFIG
 # ===============================
-INDEX_DIR = os.getenv("FAISS_INDEX_PATH", "faiss_index")
+INDEX_DIR = os.getenv("FAISS_INDEX_PATH", os.path.join(BASE_DIR, "faiss_index"))
 
 INDEX_PATH = os.path.join(INDEX_DIR, "history.index")
 META_PATH = os.path.join(INDEX_DIR, "meta.json")
