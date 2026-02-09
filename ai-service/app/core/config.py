@@ -5,7 +5,7 @@ import os
 # ===============================
 EMBED_MODEL = os.getenv(
     "EMBED_MODEL",
-    "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+    "sentence-transformers/all-MiniLM-L6-v2"
 )
 
 # ===============================
