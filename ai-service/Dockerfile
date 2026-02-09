@@ -47,7 +47,7 @@ ENV INDEX_VERSION=v3
 
 # Copy startup script
 COPY start.sh /app/start.sh
-RUN chmod +x /app/start.sh
+RUN chmod +x /app/start.sh && sed -i 's/\r$//' /app/start.sh
 
 # Use the startup script
 CMD ["/app/start.sh"]
