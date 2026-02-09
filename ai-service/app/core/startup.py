@@ -30,7 +30,15 @@ def load_resources():
     # ===============================
     try:
         embedder = SentenceTransformer(EMBED_MODEL)
-        print(f"[STARTUP] Loaded embedding model: {EMBED_MODEL}")
+        
+        # OPTIMIZATION: Apply Dynamic Quantization to reduce RAM usage by ~60%
+        # This keeps the L12 model quality but fits it into Free Tier memory.
+        import torch
+        print(f"[STARTUP] Quantizing model {EMBED_MODEL} to int8...")
+        embedder[0].auto_model = torch.quantization.quantize_dynamic(
+            embedder[0].auto_model, {torch.nn.Linear}, dtype=torch.qint8
+        )
+        print(f"[STARTUP] Model quantized successfully.")
     except Exception as e:
         print(f"[FATAL] Failed to load embedding model: {e}")
         # We might want to raise here, or allow partial failure? 
