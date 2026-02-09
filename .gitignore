@@ -23,5 +23,5 @@ models/
 
 vietnam_history_dataset/
 
-# FAISS index - always build fresh on deploy
-ai-service/faiss_index/
+# FAISS index - Pre-built locally and pushed
+# ai-service/faiss_index/
