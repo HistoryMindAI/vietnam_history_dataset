@@ -43,7 +43,7 @@ COPY faiss_index ./faiss_index
 ENV TRANSFORMERS_CACHE=/app/.cache/huggingface
 ENV HF_HOME=/app/.cache/huggingface
 ENV PYTHONPATH=/app
-ENV INDEX_VERSION=v2
+ENV INDEX_VERSION=v3
 
 # CMD for Railway - using shell explicitly
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
