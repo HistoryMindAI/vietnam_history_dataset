@@ -215,7 +215,7 @@ def build_faiss_index(documents: list, output_dir: Path):
     
     # Load model
     print("🔧 Loading sentence transformer...")
-    model = SentenceTransformer("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+    model = SentenceTransformer("keepitreal/vietnamese-sbert")
     
     # Generate embeddings
     print("🧠 Generating embeddings...")
@@ -236,7 +236,7 @@ def build_faiss_index(documents: list, output_dir: Path):
     
     # Save metadata
     meta = {
-        "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+        "model": "keepitreal/vietnamese-sbert",
         "dimension": dimension,
         "count": len(documents),
         "source": DATASET_NAME,
