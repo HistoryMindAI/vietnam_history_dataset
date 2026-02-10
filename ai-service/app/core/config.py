@@ -12,16 +12,17 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 # )
 # Model ID for reference (and legacy scripts)
 EMBED_MODEL = "keepitreal/vietnamese-sbert"
-# Using local ONNX model
-EMBED_MODEL_PATH = "onnx_model/model_quantized.onnx"
-TOKENIZER_PATH = "onnx_model"
+# Using local ONNX model (absolute paths to avoid CWD issues)
+EMBED_MODEL_PATH = os.path.join(BASE_DIR, "onnx_model", "model_quantized.onnx")
+TOKENIZER_PATH = os.path.join(BASE_DIR, "onnx_model")
 
 # ===============================
 # FAISS INDEX CONFIG
 # ===============================
 INDEX_DIR = os.getenv("FAISS_INDEX_PATH", os.path.join(BASE_DIR, "faiss_index"))
 
-INDEX_PATH = os.path.join(INDEX_DIR, "history.index")
+# NOTE: history.index only has 1 vector (placeholder). index.bin has 630 real vectors.
+INDEX_PATH = os.path.join(INDEX_DIR, "index.bin")
 META_PATH = os.path.join(INDEX_DIR, "meta.json")
 
 # ===============================
