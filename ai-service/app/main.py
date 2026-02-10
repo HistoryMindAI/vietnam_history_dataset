@@ -2,7 +2,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import threading
+import sys
+import os
 import app.core.startup as startup
+
+# Debug Logging
+print(f"🔥 [MAIN] Initializing main.py. PORT={os.environ.get('PORT')}")
 
 from app.api.chat import router as chat_router
 
