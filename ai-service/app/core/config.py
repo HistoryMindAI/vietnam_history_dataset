@@ -6,10 +6,11 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 # ===============================
 # EMBEDDING MODEL CONFIG
 # ===============================
-EMBED_MODEL = os.getenv(
-    "EMBED_MODEL",
-    "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
-)
+# EMBED_MODEL = os.getenv(
+#     "EMBED_MODEL",
+#     "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+# )
+EMBED_MODEL = "keepitreal/vietnamese-sbert"
 
 # ===============================
 # FAISS INDEX CONFIG
