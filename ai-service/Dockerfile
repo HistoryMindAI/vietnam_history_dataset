@@ -1,4 +1,4 @@
-FROM python:3.11
+FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
@@ -8,7 +8,7 @@ WORKDIR /app
 
 EXPOSE 8080
 
-# System deps for numpy / faiss
+# System deps (minimal for faiss-cpu + numpy)
 RUN apt-get update && apt-get install -y \
     build-essential \
     git \
@@ -39,20 +39,19 @@ COPY app ./app
 COPY scripts ./scripts
 
 # =====================
-# Build FRESH FAISS index during build (NOT copied from local)
+# Copy Index (From Local)
 # =====================
-# WE DO NOT BUILD ON SERVER. WE COPY LOCAL INDEX.
 COPY faiss_index ./faiss_index
 
 ENV TRANSFORMERS_CACHE=/app/.cache/huggingface
 ENV HF_HOME=/app/.cache/huggingface
 ENV PYTHONPATH=/app
 ENV INDEX_VERSION=v6
-ENV MALLOC_ARENA_MAX=2
 
-# Copy startup script
-COPY run.py /app/run.py
+# Copy startup script & make executable
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
 
-# Run with Python directly (No shell/CRLF issues)
-CMD ["python", "/app/run.py"]
+# Run with shell script to handle env vars robustly
+CMD ["/app/start.sh"]
 
