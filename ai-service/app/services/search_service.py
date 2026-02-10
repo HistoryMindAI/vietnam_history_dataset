@@ -1,10 +1,12 @@
 import app.core.startup as startup
-import faiss
-import numpy as np
 from app.core.config import TOP_K, SIM_THRESHOLD
 from functools import lru_cache
 from app.utils.normalize import normalize_query
 import re
+
+# NOTE: Moved heavy imports (faiss, numpy) to function scope to improve startup time.
+# import faiss
+# import numpy as np
 
 # Keywords to extract from queries for relevance filtering
 def extract_important_keywords(text: str) -> set:
@@ -69,7 +71,9 @@ def get_cached_embedding(query: str):
     """
     if startup.embedder is None:
         raise RuntimeError("Embedding model is not loaded")
-        
+
+    import faiss # Lazy import
+
     emb = startup.embedder.encode([query], convert_to_numpy=True).astype("float32")
     faiss.normalize_L2(emb)
     return emb
