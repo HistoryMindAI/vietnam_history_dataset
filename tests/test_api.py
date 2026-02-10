@@ -37,7 +37,7 @@ def test_root(test_client):
     assert response.status_code == 200
     data = response.json()
     assert data["service"] == "Vietnam History AI"
-    assert data["status"] == "running"
+    assert data["status"] == "ready"
 
 
 @patch("app.api.chat.engine_answer")
