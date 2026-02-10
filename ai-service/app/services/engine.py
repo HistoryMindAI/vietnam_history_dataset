@@ -1,8 +1,18 @@
-from app.services.search_service import semantic_search, scan_by_year, detect_dynasty_from_query, detect_place_from_query
+from app.services.search_service import semantic_search, scan_by_year, scan_by_year_range, detect_dynasty_from_query, detect_place_from_query
 import re
 
 # Pre-compile regex for faster matching
 YEAR_PATTERN = re.compile(r"(?<![\d-])([1-9][0-9]{1,3})(?!\d)")
+
+# Year range: "từ năm 1225 đến năm 1400", "từ 1225 đến 1400", "giai đoạn 1225-1400"
+YEAR_RANGE_PATTERN = re.compile(
+    r"(?:từ\s*(?:năm\s*)?|giai\s*đoạn\s*)"
+    r"(\d{3,4})"
+    r"\s*(?:đến|tới|[-–—])\s*(?:năm\s*)?"
+    r"(\d{3,4})",
+    re.IGNORECASE
+)
+
 
 def extract_single_year(text: str):
     """
@@ -15,9 +25,44 @@ def extract_single_year(text: str):
             return year
     return None
 
+
+def extract_year_range(text: str):
+    """
+    Extracts a year range from text (e.g., 'từ năm 1225 đến 1400').
+    Returns (start_year, end_year) or None.
+    """
+    m = YEAR_RANGE_PATTERN.search(text)
+    if m:
+        start = int(m.group(1))
+        end = int(m.group(2))
+        if 40 <= start <= 2025 and 40 <= end <= 2025 and start < end:
+            return (start, end)
+    return None
+
+
+def extract_multiple_years(text: str):
+    """
+    Extracts multiple distinct years from text.
+    Returns list of years if 2+ found, else None.
+    E.g.: 'năm 938 và năm 1288' → [938, 1288]
+    """
+    # First check if this is a year range query (handled separately)
+    if extract_year_range(text):
+        return None
+
+    matches = YEAR_PATTERN.findall(text)
+    years = []
+    for m in matches:
+        y = int(m)
+        if 40 <= y <= 2025 and y not in years:
+            years.append(y)
+    return sorted(years) if len(years) >= 2 else None
+
+
 MAX_EVENTS_PER_YEAR = 1
 MAX_TOTAL_EVENTS = 5
 MAX_TOTAL_EVENTS_DYNASTY = 10  # More results for dynasty-level queries
+MAX_TOTAL_EVENTS_RANGE = 15   # More results for year range queries
 
 # Identity patterns - moved from FE
 IDENTITY_PATTERNS = [
@@ -271,12 +316,32 @@ def engine_answer(query: str):
     intent = "semantic"
     raw_events = []
     is_dynasty_query = False
+    is_range_query = False
 
-    # Detect intent
+    # Detect intent — priority: year_range > multi_year > dynasty > definition > single_year > semantic
+    year_range = extract_year_range(query)
+    multi_years = extract_multiple_years(query)
     dynasty = detect_dynasty_from_query(query)
     place = detect_place_from_query(query)
-    
-    if dynasty or place:
+
+    if year_range:
+        # Year range query: "từ năm 1225 đến 1400"
+        start_yr, end_yr = year_range
+        intent = "year_range"
+        is_range_query = True
+        raw_events = scan_by_year_range(start_yr, end_yr)
+        # Supplement with semantic search for richer results
+        if len(raw_events) < 3:
+            raw_events.extend(semantic_search(query))
+    elif multi_years:
+        # Multiple years: "năm 938 và năm 1288"
+        intent = "multi_year"
+        is_range_query = True
+        for yr in multi_years:
+            raw_events.extend(scan_by_year(yr))
+        # Also add semantic results for context
+        raw_events.extend(semantic_search(query))
+    elif dynasty or place:
         # Dynasty/place query — use semantic search with filters
         intent = "dynasty" if dynasty else "place"
         is_dynasty_query = True
@@ -295,8 +360,13 @@ def engine_answer(query: str):
 
     no_data = not raw_events
 
-    # Use higher event limit for dynasty/place queries
-    max_events = MAX_TOTAL_EVENTS_DYNASTY if is_dynasty_query else MAX_TOTAL_EVENTS
+    # Use higher event limit for range/dynasty queries
+    if is_range_query:
+        max_events = MAX_TOTAL_EVENTS_RANGE
+    elif is_dynasty_query:
+        max_events = MAX_TOTAL_EVENTS_DYNASTY
+    else:
+        max_events = MAX_TOTAL_EVENTS
 
     # Deduplicate and enrich events
     unique_events = deduplicate_and_enrich(raw_events, max_events) if not no_data else []

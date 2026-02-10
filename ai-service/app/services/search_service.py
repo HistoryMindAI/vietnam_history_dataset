@@ -301,3 +301,18 @@ def scan_by_year(year: int):
     if startup.DOCUMENTS_BY_YEAR is None:
         return []
     return startup.DOCUMENTS_BY_YEAR.get(year, [])
+
+
+def scan_by_year_range(start_year: int, end_year: int):
+    """
+    Returns events for a year range using indexed lookup.
+    Scans all years from start_year to end_year (inclusive).
+    """
+    if startup.DOCUMENTS_BY_YEAR is None:
+        return []
+    results = []
+    for year in range(start_year, end_year + 1):
+        events = startup.DOCUMENTS_BY_YEAR.get(year, [])
+        results.extend(events)
+    return results
+
