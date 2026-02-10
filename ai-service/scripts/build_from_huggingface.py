@@ -173,6 +173,15 @@ PRONOUNS_MAP = {
     "female": "bà",
 }
 
+# Special persons with culturally-specific pronouns
+# These override the default ông/bà
+SPECIAL_PERSON_PRONOUNS = {
+    "hồ chí minh": "Bác",
+    "nguyễn tất thành": "Bác",
+    "nguyễn ái quốc": "Bác",
+    "nguyễn sinh cung": "Bác",
+}
+
 # Words that hint female gender
 FEMALE_HINTS = {"hoàng hậu", "công chúa", "thái hậu", "hoàng thái hậu", "nữ tướng", "nữ sĩ"}
 
@@ -207,12 +216,17 @@ def _detect_repeated_subject(sentences: list[str]) -> list[tuple[int, str, str]]
         
         # Check if exact same name appears in previous sentence
         if name in prev and len(name) > 3:
-            # Determine pronoun based on context
-            context_low = (prev + ' ' + curr).lower()
-            if any(hint in context_low for hint in FEMALE_HINTS):
-                pronoun = PRONOUNS_MAP["female"]
+            # Check special persons first (e.g. HCM → 'Bác')
+            name_lower = name.lower()
+            if name_lower in SPECIAL_PERSON_PRONOUNS:
+                pronoun = SPECIAL_PERSON_PRONOUNS[name_lower]
             else:
-                pronoun = PRONOUNS_MAP["default"]
+                # Determine pronoun based on gender context
+                context_low = (prev + ' ' + curr).lower()
+                if any(hint in context_low for hint in FEMALE_HINTS):
+                    pronoun = PRONOUNS_MAP["female"]
+                else:
+                    pronoun = PRONOUNS_MAP["default"]
             
             replacements.append((i, name, pronoun))
     
@@ -403,6 +417,15 @@ def humanize_story(text: str, year: int = 0, persons: list[str] = None) -> str:
     # Step 5: Fix capitalization
     result = _fix_capitalization(result)
     
+    # Step 5b: Replace "Hồ Chí Minh" with "Bác" when the main subject
+    # is an alias (Nguyễn Tất Thành, Nguyễn Ái Quốc, etc.)
+    result_low = result.lower()
+    hcm_aliases = ["nguyễn tất thành", "nguyễn ái quốc", "nguyễn sinh cung"]
+    if any(alias in result_low for alias in hcm_aliases):
+        # Replace "Hồ Chí Minh" (not as subject start) with "Bác"
+        result = re.sub(r'(?<!^)(?<!\. )Hồ Chí Minh', 'Bác', result)
+        result = re.sub(r'Bác Hồ', 'Bác', result)
+
     # Step 6: Ensure proper ending
     result = result.strip()
     if result and not result.endswith(('.', '!', '?')):
