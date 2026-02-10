@@ -1,27 +1,60 @@
-venv/
-env/
-.env
-bin/
-lib/
-include/
-share/
-
+# --- Python ---
 __pycache__/
 *.py[cod]
 *$py.class
-.ipynb_checkpoints/
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-.vscode/
+# --- Environments ---
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# --- IDEs ---
 .idea/
-.project
-.settings/
+.vscode/
+*.swp
+*.swo
 
+# --- Logs ---
 *.log
+logs/
+
+# --- Project Specific ---
+# Exclude downloaded models (heavy)
+models/
+huggingface/
+
+# Exclude scratch scripts
+debug_*.py
 tempCodeRunnerFile.py
 
-models/
+# --- FAISS Index ---
+# We WANT to commit this small index (~20MB) so the Docker build picks it up
+# ai-service/faiss_index/ (Commented out = Committed)
 
-vietnam_history_dataset/
-
-# FAISS index - Pre-built locally and pushed
-# ai-service/faiss_index/
+# --- Large Data ---
+*.arrow
+dataset/
+data/
+default/
