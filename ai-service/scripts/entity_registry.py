@@ -334,9 +334,24 @@ def extract_dynasty(text: str, year: int = 0) -> str:
 
     text_check = text.lower()
 
-    # Pattern matching from text
+    # Revolutionary/anti-colonial context keywords
+    # If these appear in text from 1858-1945, use "Pháp thuộc" instead of "Nguyễn"
+    REVOLUTIONARY_KEYWORDS = [
+        "cách mạng", "kháng pháp", "chống pháp", "thuộc địa",
+        "ra đi tìm đường", "cứu nước", "yêu nước", "chống thực dân",
+        "bảo hộ", "đô hộ", "phong trào", "khởi nghĩa chống",
+        "nguyễn ái quốc", "nguyễn tất thành", "hồ chí minh",
+        "phan bội châu", "phan châu trinh", "phan đình phùng",
+    ]
+    is_revolutionary = any(kw in text_check for kw in REVOLUTIONARY_KEYWORDS)
+
+    # Pattern matching from text — require "nhà" prefix strictly
     for pattern, dynasty in DYNASTY_PATTERNS:
         if re.search(pattern, text, re.IGNORECASE):
+            # If text mentions "nhà Nguyễn" BUT context is revolutionary,
+            # prioritize "Pháp thuộc" for 1858-1945
+            if dynasty == "Nguyễn" and is_revolutionary and year and 1858 <= year < 1945:
+                return "Pháp thuộc"
             return dynasty
 
     # Fallback: infer from year using historical periods
@@ -345,6 +360,10 @@ def extract_dynasty(text: str, year: int = 0) -> str:
         # to avoid confusing regime names as dynasty
         if year >= 1945:
             return "Hiện đại"
+
+        # Revolutionary period: override "Nguyễn" with "Pháp thuộc"
+        if is_revolutionary and 1858 <= year < 1945:
+            return "Pháp thuộc"
 
         periods = [
             (None, 179, "Hùng Vương / An Dương Vương"),
