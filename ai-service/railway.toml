@@ -8,7 +8,8 @@ builder = "DOCKERFILE"
 # buildCommand = "chmod +x build.sh && ./build.sh" # Not needed for Dockerfile
 
 [deploy]
-startCommand = "python /app/run.py"
+# startCommand is NOT needed (Dockerfile CMD takes precedence)
+# startCommand = "python /app/run.py"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
