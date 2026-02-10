@@ -27,14 +27,14 @@ def start():
         
         # 2. Default to 8080 if not set
         if not port_env or not port_env.strip():
-            print("⚠️ [STARTUP] PORT env var is empty or missing. Defaulting to 8080.", flush=True)
-            port = 8080
+            print("⚠️ [STARTUP] PORT env var is empty or missing. Defaulting to 8000.", flush=True)
+            port = 8000
         else:
             try:
                 port = int(port_env)
             except ValueError:
-                print(f"❌ [STARTUP] PORT env var is not a number: '{port_env}'. Defaulting to 8080.", flush=True)
-                port = 8080
+                print(f"❌ [STARTUP] PORT env var is not a number: '{port_env}'. Defaulting to 8000.", flush=True)
+                port = 8000
                 
         host = "0.0.0.0"
         print(f"🚀 [STARTUP] Configured listener: {host}:{port}", flush=True)
