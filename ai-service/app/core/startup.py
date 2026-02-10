@@ -13,10 +13,13 @@ from .config import (
     EMBED_MODEL,
     INDEX_PATH,
     META_PATH,
+    EMBED_MODEL_PATH,
+    TOKENIZER_PATH,
 )
 
 # Global resources (initialized in load_resources)
-embedder = None
+session = None
+tokenizer = None
 index = None
 DOCUMENTS = []
 DOCUMENTS_BY_YEAR = defaultdict(list)
@@ -27,35 +30,42 @@ def load_resources():
     Load all heavy resources (Embedding model, FAISS index, Metadata).
     This should be called during app startup (lifespan) in a background thread.
     """
-    global embedder, index, DOCUMENTS, DOCUMENTS_BY_YEAR, LOADING_ERROR
+    global session, tokenizer, index, DOCUMENTS, DOCUMENTS_BY_YEAR, LOADING_ERROR
     
     print("[STARTUP] Loading embedding model & FAISS...", flush=True)
 
     try:
-        # Import heavy libraries here
-        import faiss
-        from sentence_transformers import SentenceTransformer
-        import torch
+        # ONNX Imports
+        import onnxruntime as ort
+        from transformers import AutoTokenizer
+        import numpy as np
 
         # ===============================
-        # LOAD EMBEDDING MODEL
+        # LOAD ONNX MODEL & TOKENIZER
         # ===============================
         try:
-            embedder = SentenceTransformer(EMBED_MODEL)
-            # Force cleanup after loading heavy model
-            gc.collect()
+            print(f"[STARTUP] Loading ONNX model from {EMBED_MODEL_PATH}...", flush=True)
+            
+            # 1. Load Tokenizer (Slow/Fast agnostic)
+            # Use local path (onnx_model folder)
+            tokenizer = AutoTokenizer.from_pretrained(TOKENIZER_PATH)
+            
+            print("[STARTUP] Tokenizer loaded.", flush=True)
 
-            # OPTIMIZATION: Apply Dynamic Quantization to reduce RAM usage by ~60%
-            # This keeps the L12 model quality but fits it into Free Tier memory.
-            print(f"[STARTUP] Quantizing model {EMBED_MODEL} to int8...", flush=True)
-            embedder[0].auto_model = torch.quantization.quantize_dynamic(
-                embedder[0].auto_model, {torch.nn.Linear}, dtype=torch.qint8
-            )
-            print(f"[STARTUP] Model quantized successfully.", flush=True)
+            # 2. Load ONNX Session
+            sess_options = ort.SessionOptions()
+            # Optimize for single-core/low-memory envs
+            sess_options.intra_op_num_threads = 1 
+            sess_options.inter_op_num_threads = 1
+            sess_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+            
+            session = ort.InferenceSession(EMBED_MODEL_PATH, sess_options)
+            print("[STARTUP] ONNX Session loaded successfully.", flush=True)
+            
             gc.collect()
 
         except Exception as e:
-            print(f"[FATAL] Failed to load embedding model: {e}", flush=True)
+            print(f"[FATAL] Failed to load ONNX model: {e}", flush=True)
             raise e
 
         # ===============================
@@ -65,6 +75,7 @@ def load_resources():
 
         if os.path.exists(INDEX_PATH):
             try:
+                import faiss
                 index = faiss.read_index(INDEX_PATH)
                 print(f"[STARTUP] FAISS index loaded from {INDEX_PATH}", flush=True)
             except Exception as e:
