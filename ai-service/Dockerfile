@@ -2,12 +2,14 @@ FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-ENV PORT=8000
 # OPTIMIZATION: Reduce memory fragmentation
 ENV MALLOC_ARENA_MAX=2
 
 WORKDIR /app
 
+# Railway will inject PORT env var at runtime.
+# Default to 8000 for local development and for this service specifically.
+ENV PORT=8000
 EXPOSE 8000
 
 # System deps (minimal for faiss-cpu + numpy + curl for LFS fallback)
@@ -56,6 +58,14 @@ COPY scripts ./scripts
 # Copy Index (From Local)
 # =====================
 COPY faiss_index ./faiss_index
+
+# CRITICAL: Validate FAISS index.bin was actually copied (not blocked by .dockerignore)
+RUN if [ ! -f /app/faiss_index/index.bin ]; then \
+    echo "❌ FATAL: faiss_index/index.bin is MISSING! Check .dockerignore" && exit 1; \
+    else \
+    INDEX_SIZE=$(stat -c%s /app/faiss_index/index.bin) && \
+    echo "✅ FAISS index.bin present: ${INDEX_SIZE} bytes"; \
+    fi
 
 ENV TRANSFORMERS_CACHE=/app/.cache/huggingface
 ENV HF_HOME=/app/.cache/huggingface
