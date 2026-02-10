@@ -9,6 +9,7 @@ Tests:
 import pytest
 import time
 import sys
+import numpy as np
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -21,18 +22,26 @@ if str(AI_SERVICE_DIR) not in sys.path:
 sys.modules.setdefault('faiss', MagicMock())
 sys.modules.setdefault('sentence_transformers', MagicMock())
 
-import numpy as np
-
 
 def test_embedding_cache_efficiency():
     """Verify that the embedding cache prevents redundant calls to the model."""
     from app.services.search_service import get_cached_embedding
     import app.core.startup as startup
     
-    # Mock startup.embedder
-    mock_embedder = MagicMock()
-    startup.embedder = mock_embedder
-    mock_embedder.encode.return_value = np.array([[0.1, 0.2, 0.3]], dtype="float32")
+    # Mock ONNX session and Tokenizer
+    mock_session = MagicMock()
+    mock_tokenizer = MagicMock()
+    startup.session = mock_session
+    startup.tokenizer = mock_tokenizer
+    
+    # Mock output of session.run (list of one numpy array)
+    mock_session.run.return_value = [np.array([[[0.1, 0.2, 0.3]]], dtype="float32")]
+    
+    # Mock tokenizer output (dict)
+    mock_tokenizer.return_value = {
+        "input_ids": np.array([[1, 2, 3]]),
+        "attention_mask": np.array([[1, 1, 1]])
+    }
         
     # Use unique query
     query = f"performance_test_{time.time()}"
@@ -42,11 +51,12 @@ def test_embedding_cache_efficiency():
     
     # First execution
     get_cached_embedding(query)
-    first_call_count = mock_embedder.encode.call_count
+    first_call_count = mock_session.run.call_count
     
     # Second execution (should hit cache)
     get_cached_embedding(query)
-    assert mock_embedder.encode.call_count == first_call_count, "Cache missed!"
+    assert first_call_count > 0, "First call should trigger run"
+    assert mock_session.run.call_count == first_call_count, "Cache missed!"
 
 
 def test_year_lookup_performance():
@@ -90,10 +100,17 @@ def test_query_normalization_caching():
     from app.services.search_service import get_cached_embedding
     import app.core.startup as startup
     
-    # Mock startup.embedder
-    mock_embedder = MagicMock()
-    startup.embedder = mock_embedder
-    mock_embedder.encode.return_value = np.array([[0.1, 0.2, 0.3]], dtype="float32")
+    # Mock startup.session/tokenizer (reuse logic)
+    mock_session = MagicMock()
+    mock_tokenizer = MagicMock()
+    startup.session = mock_session
+    startup.tokenizer = mock_tokenizer
+    
+    mock_session.run.return_value = [np.array([[[0.1, 0.2, 0.3]]], dtype="float32")]
+    mock_tokenizer.return_value = {
+        "input_ids": np.array([[1, 2, 3]]),
+        "attention_mask": np.array([[1, 1, 1]])
+    }
     
     q1 = "Quang   Trung"
     q2 = "quang trung "
@@ -106,8 +123,8 @@ def test_query_normalization_caching():
     
     # First call
     get_cached_embedding(normalize_query(q1))
-    count_after_q1 = mock_embedder.encode.call_count
+    count_after_q1 = mock_session.run.call_count
     
     # Second call (should hit cache)
     get_cached_embedding(normalize_query(q2))
-    assert mock_embedder.encode.call_count == count_after_q1
+    assert mock_session.run.call_count == count_after_q1
