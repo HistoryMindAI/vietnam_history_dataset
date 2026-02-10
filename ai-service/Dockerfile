@@ -48,10 +48,9 @@ ENV HF_HOME=/app/.cache/huggingface
 ENV PYTHONPATH=/app
 ENV INDEX_VERSION=v6
 
-# Copy startup script & make executable
-COPY start.sh /app/start.sh
-RUN chmod +x /app/start.sh
+# Copy startup script
+COPY start_server.py /app/start_server.py
 
-# Run with shell script to handle env vars robustly
-CMD ["/app/start.sh"]
+# Run with python script to handle env vars robustly
+CMD ["python", "/app/start_server.py"]
 
