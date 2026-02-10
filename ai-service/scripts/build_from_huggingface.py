@@ -32,6 +32,7 @@ from entity_registry import (
     extract_year_smart,
     extract_keywords_smart,
     extract_dynasty,
+    extract_period,
     classify_tone,
     classify_nature,
     normalize_person,
@@ -593,6 +594,7 @@ def load_from_huggingface() -> list[dict]:
         tone = classify_tone(combined_text)
         nature = classify_nature(combined_text)
         dynasty = extract_dynasty(combined_text, year)
+        period = extract_period(year)
         title = extract_event_title(clean_q, clean_a)
 
         # Ensure event is different from title
@@ -616,6 +618,7 @@ def load_from_huggingface() -> list[dict]:
             "places": places,
             "keywords": keywords,
             "dynasty": dynasty,
+            "period": period,
         }
 
         documents.append(doc)

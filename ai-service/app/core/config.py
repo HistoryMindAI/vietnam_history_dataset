@@ -29,4 +29,4 @@ META_PATH = os.path.join(INDEX_DIR, "meta.json")
 # SEARCH CONFIG
 # ===============================
 TOP_K = int(os.getenv("TOP_K", 15))
-SIM_THRESHOLD = float(os.getenv("SIM_THRESHOLD", 0.6))
+SIM_THRESHOLD = float(os.getenv("SIM_THRESHOLD", 0.35))

@@ -389,6 +389,25 @@ def extract_dynasty(text: str, year: int = 0) -> str:
     return ""
 
 
+def extract_period(year: int) -> str:
+    """
+    Classify historical event into major periods:
+    - Phong kiến: 939-1858
+    - Cận đại: 1858-1945
+    - Hiện đại: 1945-present
+    - Cổ đại: before 939
+    """
+    if year <= 0:
+        return ""
+    if year < 939:
+        return "Cổ đại"
+    if year < 1858:
+        return "Phong kiến"
+    if year < 1945:
+        return "Cận đại"
+    return "Hiện đại"
+
+
 def extract_keywords_smart(text: str, persons: list[str] = None, places: list[str] = None) -> list[str]:
     """
     Extract meaningful keywords from Vietnamese history text.
