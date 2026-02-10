@@ -25,7 +25,7 @@ def start():
         port_env = os.environ.get("PORT")
         print(f"🔍 [STARTUP] Environment PORT: '{port_env}'", flush=True)
         
-        # 2. Default to 8080 if not set
+        # 2. Default to 8000 if not set
         if not port_env or not port_env.strip():
             print("⚠️ [STARTUP] PORT env var is empty or missing. Defaulting to 8000.", flush=True)
             port = 8000
