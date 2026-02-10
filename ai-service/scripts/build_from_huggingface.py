@@ -142,6 +142,283 @@ def clean_text(text: str) -> str:
     return result
 
 
+# ========================
+# HUMANIZE TEXT (Natural Vietnamese prose)
+# ========================
+
+# AI template phrases to remove/replace
+AI_TEMPLATE_PATTERNS = [
+    # "Sự kiện này có ý nghĩa là X" -> "; X" (keep meaning, remove template)
+    (re.compile(r'\.\s*Sự kiện này có ý nghĩa là\s*'), ', qua đó '),
+    # "Về lâu dài, X" -> "; X"
+    (re.compile(r'\.\s*Về lâu dài,?\s*'), ', về lâu dài '),
+    # "Đây là cột mốc quan trọng vì X" -> ", X"
+    (re.compile(r'\.\s*Đây là cột mốc quan trọng vì\s*'), ', '),
+    # "Ý nghĩa: X" -> "; X"
+    (re.compile(r'\.\s*Ý nghĩa:\s*'), ', mang ý nghĩa '),
+    (re.compile(r';\s*Ý nghĩa:\s*'), ', mang ý nghĩa '),
+]
+
+# After these connector phrases, the next word should ALWAYS be lowercase
+# (unless it's a proper noun like a person/place name)
+CONNECTOR_PHRASES = [
+    'qua đó ', 'về lâu dài ', 'mang ý nghĩa ',
+    'từ đó ', 'nhờ đó ', 'do đó ',
+]
+
+# Vietnamese pronouns to replace repeated names
+PRONOUNS_MAP = {
+    # (gender_hint, pronoun) — used when we detect repeated person name
+    "default": "ông",
+    "female": "bà",
+}
+
+# Words that hint female gender
+FEMALE_HINTS = {"hoàng hậu", "công chúa", "thái hậu", "hoàng thái hậu", "nữ tướng", "nữ sĩ"}
+
+
+def _detect_repeated_subject(sentences: list[str]) -> list[tuple[int, str, str]]:
+    """
+    Detect sentences where the same proper noun (person/place) is the subject
+    of consecutive sentences. Returns list of (sentence_index, repeated_name, pronoun).
+    """
+    replacements = []
+    
+    for i in range(1, len(sentences)):
+        prev = sentences[i - 1].strip()
+        curr = sentences[i].strip()
+        
+        if not prev or not curr:
+            continue
+        
+        # Find multi-word proper nouns at start of current sentence
+        # Pattern: 2+ capitalized Vietnamese words at beginning
+        m = re.match(
+            r'^([A-ZĐÂÊÔƯÀÁẢÃẠÈÉẺẼẸÌÍỈĨỊÒÓỎÕỌÙÚỦŨỤỲÝỶỸỴ]'
+            r'[a-zà-ỹ]*'
+            r'(?:\s+[A-ZĐÂÊÔƯÀÁẢÃẠÈÉẺẼẸÌÍỈĨỊÒÓỎÕỌÙÚỦŨỤỲÝỶỸỴ]'
+            r'[a-zà-ỹ]*){1,4})',
+            curr
+        )
+        if not m:
+            continue
+        
+        name = m.group(1).strip()
+        
+        # Check if exact same name appears in previous sentence
+        if name in prev and len(name) > 3:
+            # Determine pronoun based on context
+            context_low = (prev + ' ' + curr).lower()
+            if any(hint in context_low for hint in FEMALE_HINTS):
+                pronoun = PRONOUNS_MAP["female"]
+            else:
+                pronoun = PRONOUNS_MAP["default"]
+            
+            replacements.append((i, name, pronoun))
+    
+    return replacements
+
+
+def _fix_capitalization(text: str) -> str:
+    """
+    Fix capitalization rules:
+    - After '.' -> capitalize
+    - After ',' or ';' -> lowercase (unless proper noun)
+    - Proper nouns (Vietnamese names, place names) -> keep capitalized
+    """
+    if not text:
+        return text
+    
+    # Split into sentences by period
+    parts = text.split('. ')
+    result_parts = []
+    
+    for part in parts:
+        if not part:
+            continue
+        
+        # Capitalize first char of each sentence
+        part = part.strip()
+        if part and part[0].islower():
+            part = part[0].upper() + part[1:]
+        
+        # Fix internal capitalization after comma/semicolon
+        # Only lowercase if it's not a proper noun
+        segments = re.split(r'([,;]\s+)', part)
+        fixed_segments = [segments[0]]
+        
+        for j in range(1, len(segments)):
+            seg = segments[j]
+            if not seg:
+                continue
+                
+            # If this is a separator, keep as-is
+            if re.match(r'^[,;]\s+$', seg):
+                fixed_segments.append(seg)
+                continue
+            
+            # Check if starts with uppercase but shouldn't
+            if seg and seg[0].isupper():
+                # Keep capitalized if it's a proper noun (followed by another capitalized word)
+                words = seg.split()
+                if len(words) >= 2 and words[1] and words[1][0].isupper():
+                    # Likely a proper noun - keep
+                    fixed_segments.append(seg)
+                else:
+                    # Check if first word looks like a common word (not proper noun)
+                    first_word_lower = words[0].lower() if words else ""
+                    common_starts = [
+                        "mở", "bảo", "khẳng", "chấm", "củng", "tạo", "giải",
+                        "đánh", "nâng", "làm", "thể", "ngăn", "đặt", "mang",
+                        "hình", "khởi", "thử", "giảm", "chuẩn", "ổn", "ban",
+                        "bước", "buộc", "tạm", "dẫn", "chính", "xây", "phá",
+                        "đẩy", "hoàn", "khai", "tiếp", "về", "qua", "từ",
+                    ]
+                    if first_word_lower in common_starts:
+                        seg = seg[0].lower() + seg[1:]
+                    fixed_segments.append(seg)
+            else:
+                fixed_segments.append(seg)
+        
+        result_parts.append(''.join(fixed_segments))
+    
+    return '. '.join(result_parts)
+
+
+def _remove_redundant_year_parens(text: str, year: int) -> str:
+    """Remove (YYYY) when it matches the document's year — redundant info."""
+    if not year:
+        return text
+    pattern = re.compile(rf'\s*\({year}\)\s*')
+    return pattern.sub(' ', text).strip()
+
+
+def _clean_leading_artifacts(text: str) -> str:
+    """Remove leading 'diễn ra', 'ông trong', etc. that are remnants of question text."""
+    patterns = [
+        (re.compile(r'^diễn ra\s+', re.I), ''),
+        (re.compile(r'^ông trong\s+', re.I), ''),
+        (re.compile(r'^đó là\s+', re.I), ''),
+    ]
+    for p, repl in patterns:
+        text = p.sub(repl, text)
+    return text
+
+
+def humanize_story(text: str, year: int = 0, persons: list[str] = None) -> str:
+    """
+    Transform AI-generated telegraphic text into natural Vietnamese prose.
+    
+    Applies:
+    1. Remove AI template phrases
+    2. Merge sentences repeating same subject
+    3. Fix capitalization
+    4. Remove redundant year parentheses
+    5. Clean leading artifacts
+    6. Add year context prefix
+    """
+    if not text or len(text.strip()) < 10:
+        return text
+    
+    result = text.strip()
+    
+    # Step 1: Clean leading artifacts
+    result = _clean_leading_artifacts(result)
+    
+    # Step 2: Remove redundant year in parentheses
+    if year:
+        result = _remove_redundant_year_parens(result, year)
+    
+    # Step 3: Replace AI template phrases with natural connectors
+    for pattern, replacement in AI_TEMPLATE_PATTERNS:
+        result = pattern.sub(replacement, result)
+
+    # Step 3b: Lowercase the word immediately after connector phrases
+    # (unless it's a proper noun: 2+ consecutive capitalized words)
+    for connector in CONNECTOR_PHRASES:
+        idx = 0
+        while True:
+            pos = result.lower().find(connector, idx)
+            if pos < 0:
+                break
+            after_pos = pos + len(connector)
+            if after_pos < len(result) and result[after_pos].isupper():
+                # Check if it's a proper noun (next word also capitalized)
+                rest = result[after_pos:]
+                words = rest.split(None, 2)
+                if len(words) >= 2 and words[1] and words[1][0].isupper():
+                    # Proper noun, keep capitalized
+                    idx = after_pos + 1
+                else:
+                    result = result[:after_pos] + result[after_pos].lower() + result[after_pos + 1:]
+                    idx = after_pos + 1
+            else:
+                idx = after_pos + 1
+    
+    # Step 4: Split into sentences and merge repeated subjects
+    # Split by '. ' AND ': ' to catch patterns like "X : Nhân vật X..."
+    # First handle ': ' by replacing with '. ' for uniform processing
+    result = re.sub(r'\s*:\s+', '. ', result)
+    
+    sentences = [s.strip() for s in result.split('. ') if s.strip()]
+    
+    if len(sentences) > 1:
+        replacements = _detect_repeated_subject(sentences)
+        
+        # Apply replacements in reverse order to keep indices valid
+        for idx, name, pronoun in reversed(replacements):
+            old = sentences[idx]
+            # Replace the name at start of sentence with pronoun
+            # But keep the name if it's part of a compound phrase
+            new = old.replace(name, pronoun.capitalize(), 1)
+            sentences[idx] = new
+        
+        # Try to join short fragmented sentences into natural flow
+        merged = []
+        i = 0
+        while i < len(sentences):
+            current = sentences[i]
+            
+            # If next sentence starts with lowercase or connector, merge
+            if i + 1 < len(sentences):
+                next_s = sentences[i + 1].strip()
+                if next_s and (
+                    next_s[0].islower() or 
+                    next_s.startswith('và ') or
+                    next_s.startswith('cũng ') or
+                    next_s.startswith('từ đó ')
+                ):
+                    current = current.rstrip('.') + ', ' + next_s[0].lower() + next_s[1:]
+                    i += 2
+                    merged.append(current)
+                    continue
+            
+            merged.append(current)
+            i += 1
+        
+        sentences = merged
+    
+    result = '. '.join(sentences)
+    
+    # Step 5: Fix capitalization
+    result = _fix_capitalization(result)
+    
+    # Step 6: Ensure proper ending
+    result = result.strip()
+    if result and not result.endswith(('.', '!', '?')):
+        result += '.'
+    
+    # Step 7: Clean double spaces and extra punctuation
+    result = re.sub(r'\s+', ' ', result)
+    result = re.sub(r'\.\s*\.', '.', result)
+    result = re.sub(r',\s*,', ',', result)
+    result = re.sub(r';\s*;', ';', result)
+    result = re.sub(r'\s+\.', '.', result)
+    result = re.sub(r'\s+,', ',', result)
+    
+    return result.strip()
+
+
 def extract_event_title(question: str, answer: str) -> str:
     """
     Dynamically extract a short event title from question+answer text.
@@ -300,12 +577,16 @@ def load_from_huggingface() -> list[dict]:
         if event_text == title:
             event_text = clean_a[:200]
 
+        # Humanize text — make it read like natural Vietnamese prose
+        humanized_story = humanize_story(clean_a, year, persons)
+        humanized_event = humanize_story(event_text, year, persons)
+
         doc = {
             "id": f"hf_{i:06d}",
             "year": year,
             "title": title,
-            "event": event_text,
-            "story": clean_a,
+            "event": humanized_event,
+            "story": humanized_story,
             "tone": tone,
             "nature": nature,
             "persons": persons,
