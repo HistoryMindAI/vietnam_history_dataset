@@ -1,0 +1,83 @@
+
+=== Year 1911: 11 events ===
+  [1] hm_PERSON_1911_01: Năm 1911, Nguyễn Tất Thành ra đi tìm đường cứu nước diễn ra năm 1911; Nguyễn Tất Thành rời bến Nhà Rồng, bắt đầu hành trình qua nhiều châu lục.
+  [2] hm_PERSON_1911_02: Năm 1911, Vào năm 1911, diễn ra Nguyễn Tất Thành ra đi tìm đường cứu nước: Nguyễn Tất Thành rời bến Nhà Rồng, bắt đầu hành trình qua nhiều châu lục.
+  [3] hm_PERSON_1911_03: Năm 1911, Nguyễn Tất Thành ra đi tìm đường cứu nước xảy ra năm 1911.
+  [4] hm_PERSON_1911_04: Năm 1911, 1911: Nguyễn Tất Thành ra đi tìm đường cứu nước.
+  [5] hm_PERSON_1911_05: Năm 1911, Kể về Nguyễn Tất Thành (Hồ Chí Minh) và đóng góp của ông trong Nguyễn Tất Thành ra đi tìm đường cứu nước (1911).
+  [6] hm_PERSON_1911_06: Năm 1911, Câu hỏi nhắm tới sự kiện Nguyễn Tất Thành ra đi tìm đường cứu nước (1911).
+  [7] hm_PERSON_1911_07: Năm 1911, gắn mốc 1911 với Nguyễn Tất Thành ra đi tìm đường cứu nước.
+  [8] hm_PERSON_1911_08: Năm 1911, Năm 1911, Nguyễn Tất Thành ra đi tìm đường cứu nước.
+  [9] hm_PERSON_1911_09: Năm 1911, Nguyễn Tất Thành ra đi tìm đường cứu nước (1911): Nguyễn Tất Thành rời bến Nhà Rồng, bắt đầu hành trình qua nhiều châu lục.
+  [10] hm_PERSON_1911_10: Năm 1911, Tóm tắt bối cảnh – diễn biến – kết quả của Nguyễn Tất Thành ra đi tìm đường cứu nước (1911).
+  [11] hm_PERSON_1911_11: Năm 1911, Nguyễn Tất Thành ra đi tìm đường cứu nước (1911).
+
+=== Year 1884: 10 events ===
+  [1] hm_DOCUMENT_1884_01: Năm 1884, Hòa ước Patenôtre (Giáp Thân) (1884).
+  [2] hm_DOCUMENT_1884_02: Năm 1884, gắn mốc 1884 với Hòa ước Patenôtre (Giáp Thân).
+  [3] hm_DOCUMENT_1884_03: Năm 1884, Năm 1884, Hòa ước Patenôtre (Giáp Thân).
+  [4] hm_DOCUMENT_1884_04: Năm 1884, Vào năm 1884, diễn ra Hòa ước Patenôtre (Giáp Thân): Triều Nguyễn ký hiệp ước đặt Việt Nam dưới chế độ bảo hộ của Pháp.
+  [5] hm_DOCUMENT_1884_05: Năm 1884, Câu hỏi nhắm tới sự kiện Hòa ước Patenôtre (Giáp Thân) (1884).
+  [6] hm_DOCUMENT_1884_06: Năm 1884, Hòa ước Patenôtre (Giáp Thân) (1884): Triều Nguyễn ký hiệp ước đặt Việt Nam dưới chế độ bảo hộ của Pháp.
+  [7] hm_DOCUMENT_1884_07: Năm 1884, Hòa ước Patenôtre (Giáp Thân) diễn ra năm 1884; Triều Nguyễn ký hiệp ước đặt Việt Nam dưới chế độ bảo hộ của Pháp.
+  [8] hm_DOCUMENT_1884_08: Năm 1884, Hòa ước Patenôtre (Giáp Thân) xảy ra năm 1884.
+  [9] hm_DOCUMENT_1884_09: Năm 1884, Tóm tắt bối cảnh – diễn biến – kết quả của Hòa ước Patenôtre (Giáp Thân) (1884).
+  [10] hm_DOCUMENT_1884_10: Năm 1884, 1884: Hòa ước Patenôtre (Giáp Thân).
+
+=== Years with >5 events: 54 ===
+  Year 1000: 13 events
+  Year 1009: 11 events
+  Year 1010: 22 events
+  Year 1054: 11 events
+  Year 1075: 11 events
+  Year 1077: 11 events
+  Year 1225: 12 events
+  Year 1258: 12 events
+  Year 1284: 11 events
+  Year 1285: 11 events
+  Year 1288: 11 events
+  Year 1400: 11 events
+  Year 1407: 10 events
+  Year 1418: 11 events
+  Year 1427: 12 events
+  Year 1428: 12 events
+  Year 1460: 11 events
+  Year 1471: 11 events
+  Year 1483: 11 events
+  Year 1527: 11 events
+  Year 1533: 10 events
+  Year 1627: 12 events
+  Year 1672: 10 events
+  Year 1771: 13 events
+  Year 1785: 11 events
+  Year 1789: 11 events
+  Year 1802: 11 events
+  Year 1839: 11 events
+  Year 1858: 10 events
+  Year 1862: 10 events
+  Year 1867: 10 events
+  Year 1884: 10 events
+  Year 1885: 12 events
+  Year 1905: 11 events
+  Year 1911: 11 events
+  Year 1930: 22 events
+  Year 1941: 11 events
+  Year 1945: 12 events
+  Year 1946: 10 events
+  Year 1954: 28 events
+  Year 1955: 10 events
+  Year 1960: 10 events
+  Year 1964: 10 events
+  Year 1968: 10 events
+  Year 1972: 10 events
+  Year 1973: 10 events
+  Year 1975: 15 events
+  Year 1976: 10 events
+  Year 1978: 10 events
+  Year 1979: 10 events
+  Year 1986: 10 events
+  Year 1989: 10 events
+  Year 1992: 13 events
+  Year 1995: 10 events
+
+=== Max events per year: 28 ===
