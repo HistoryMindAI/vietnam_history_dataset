@@ -84,6 +84,10 @@ def semantic_search(query: str):
         print("[WARN] Search called before index is ready")
         return []
 
+    if startup.embedder is None:
+        print("[WARN] Search called before embedder is ready")
+        return []
+
     # Normalize query before searching/caching to increase hit rate
     try:
         norm_q = normalize_query(query)

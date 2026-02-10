@@ -30,4 +30,8 @@ for mod_name in mock_modules:
         sys.modules[mod_name] = MagicMock()
 
 # Mock numpy with minimal implementation
-import numpy as np
+try:
+    import numpy as np
+except ImportError:
+    sys.modules["numpy"] = MagicMock()
+    import numpy as np
