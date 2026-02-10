@@ -19,66 +19,96 @@ os.environ["MKL_NUM_THREADS"] = "1"
 
 def start():
     try:
-        print("🔍 [STARTUP] Initializing server...", flush=True)
+        print("🔍 [STARTUP] Initializing server script...", flush=True)
         
         # 1. Get PORT from environment (Railway sets this)
         port_env = os.environ.get("PORT")
-        print(f"🔍 [STARTUP] Detected PORT env var: {port_env}", flush=True)
+        print(f"🔍 [STARTUP] Environment PORT: '{port_env}'", flush=True)
         
-        # 2. Default to 8080 if not set (local dev)
-        # Note: Railway sets PORT, but sometimes it might be missing in docker runs.
-        port = int(port_env) if port_env else 8080
+        # 2. Default to 8080 if not set
+        if not port_env or not port_env.strip():
+            print("⚠️ [STARTUP] PORT env var is empty or missing. Defaulting to 8080.", flush=True)
+            port = 8080
+        else:
+            try:
+                port = int(port_env)
+            except ValueError:
+                print(f"❌ [STARTUP] PORT env var is not a number: '{port_env}'. Defaulting to 8080.", flush=True)
+                port = 8080
+                
         host = "0.0.0.0"
-        
-        print(f"🚀 [STARTUP] Configured to listen on: {host}:{port}", flush=True)
+        print(f"🚀 [STARTUP] Configured listener: {host}:{port}", flush=True)
 
-        # 3. Import app (this loads the lifespan, etc.)
-        print("🔍 [STARTUP] Importing FastAPI app...", flush=True)
+        # 3. Check if we can bind to this port (Diagnostic)
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            s.bind((host, port))
+            s.close()
+            print(f"✅ [STARTUP] Port {port} is available for binding.", flush=True)
+        except Exception as bind_e:
+            print(f"⚠️ [STARTUP] Potential port conflict or bind issue on {port}: {bind_e}", flush=True)
+
+        # 4. Import app (this loads the lifespan, etc.)
+        print("🔍 [STARTUP] Importing FastAPI app from app/main.py...", flush=True)
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-        from app.main import app
-        print("✅ [STARTUP] App imported successfully.", flush=True)
+        try:
+            from app.main import app
+            print(f"✅ [STARTUP] App object loaded: {id(app)}", flush=True)
+        except Exception as imp_e:
+            print(f"❌ [STARTUP] Failed to import app: {imp_e}", flush=True)
+            raise imp_e
 
         # ===============================
         # DIAGNOSTICS: HEARTBEAT THREAD
         # ===============================
         def heartbeat():
             """Background thread to log memory usage and aliveness."""
-            print("💓 [HEARTBEAT] Thread starting...", flush=True)
+            print("💓 [HEARTBEAT] Diagnostic thread started.", flush=True)
             while True:
                 try:
                     timestamp = datetime.datetime.now().isoformat()
                     mem_str = "N/A"
-                    
-                    # Linux resource usage (in KB)
                     if resource:
                         mem_kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-                        # On Linux, ru_maxrss is in KB. On Mac, bytes. Assume Linux (Railway).
-                        mem_mb = mem_kb / 1024
-                        mem_str = f"{mem_mb:.1f} MB"
+                        mem_str = f"{mem_kb / 1024:.1f} MB"
                     
-                    print(f"💓 [HEARTBEAT] {timestamp} | RAM: {mem_str} | Status: ALIVE", flush=True)
+                    # Also log if startup error is set
+                    try:
+                        from app.core import startup
+                        ready = startup.index is not None and startup.session is not None
+                        err = getattr(startup, 'LOADING_ERROR', None)
+                        status = "READY" if ready else ("ERROR" if err else "LOADING")
+                    except:
+                        status = "UNKNOWN"
+
+                    print(f"💓 [HEARTBEAT] {timestamp} | RAM: {mem_str} | Status: {status} | Host: {host}:{port}", flush=True)
                 except Exception as hb_e:
-                    print(f"⚠️ [HEARTBEAT] Error: {hb_e}", flush=True)
+                    print(f"⚠️ [HEARTBEAT] Diagnostic error: {hb_e}", flush=True)
                 
-                time.sleep(2)
+                time.sleep(5) # 5s is plenty
 
         hb_thread = threading.Thread(target=heartbeat, daemon=True)
         hb_thread.start()
         # ===============================
 
-        # 4. Start Uvicorn
-        print(f"🚀 [STARTUP] Starting Uvicorn now on {host}:{port}...", flush=True)
+        # 5. Start Uvicorn
+        print(f"🚀 [STARTUP] Launching Uvicorn on {host}:{port}...", flush=True)
+        # Using string import to allow uvicorn to handle the import chain better if needed
+        # but here we already have the app object.
         uvicorn.run(
             app,
             host=host,
             port=port,
             log_level="info",
             proxy_headers=True,
-            forwarded_allow_ips="*"
+            forwarded_allow_ips="*",
+            timeout_keep_alive=30,
+            access_log=True # Ensure access logs are ON
         )
         
     except BaseException as e:
-        print(f"❌ [FATAL] Server crashed: {e}", flush=True)
+        print(f"❌ [FATAL] Server startup failed: {e}", flush=True)
         import traceback
         traceback.print_exc()
         sys.exit(1)
