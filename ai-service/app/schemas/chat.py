@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
 
 class EventOut(BaseModel):
@@ -10,9 +10,7 @@ class EventOut(BaseModel):
     places: Optional[List[str]] = []
     keywords: Optional[List[str]] = []
 
-    class Config:
-        # Allow extra fields without crashing
-        extra = "ignore"
+    model_config = ConfigDict(extra="ignore")
 
 class ChatRequest(BaseModel):
     query: str
