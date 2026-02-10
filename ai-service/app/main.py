@@ -41,15 +41,8 @@ async def log_requests(request, call_next):
 # ===== CORS =====
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://behistorymindai-production.up.railway.app",
-        "https://fehistorymindai-production.up.railway.app",
-        "http://localhost:8080",
-        "http://localhost:3000",
-        "http://127.0.0.1:8080",
-        "http://127.0.0.1:3000"
-    ],
-    allow_credentials=False,   # bắt buộc False khi "*"
+    allow_origins=["*"],  # Allow all origins for now to eliminate CORS as issue
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
