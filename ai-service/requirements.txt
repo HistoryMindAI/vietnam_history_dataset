@@ -2,19 +2,18 @@
 fastapi==0.110.0
 uvicorn==0.27.1
 
-# ===== Embedding (CPU-only) =====
-sentence-transformers==2.5.1
-transformers==4.36.2
-
+# ===== ONNX Runtime (CPU) =====
+onnxruntime>=1.17.0
+# tokenizers>=0.15.0 # Installed via transformers
+transformers>=4.36.0 # For tokenizer only (no torch needed)
 
 # ===== Vector Search =====
 faiss-cpu>=1.8.0
 
 # ===== Minimal deps =====
 numpy<2.0.0
-scikit-learn==1.4.0
 
-# ===== HuggingFace =====
+# ===== HuggingFace (Legacy for dataset load only) =====
 datasets>=2.16.0
 huggingface-hub>=0.20.0
 

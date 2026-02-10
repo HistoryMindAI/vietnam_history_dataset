@@ -68,15 +68,54 @@ def check_query_relevance(query: str, doc: dict) -> bool:
 def get_cached_embedding(query: str):
     """
     Encodes and normalizes a query, caching the result to speed up repeated searches.
+    Uses ONNX Runtime + Transformers Tokenizer.
     """
-    if startup.embedder is None:
-        raise RuntimeError("Embedding model is not loaded")
+    if startup.session is None or startup.tokenizer is None:
+        raise RuntimeError("ONNX model is not loaded")
 
-    import faiss # Lazy import
+    # 1. Tokenize (return numpy arrays)
+    # This handles padding, truncation, and special tokens automatically
+    inputs = startup.tokenizer(
+        query, 
+        return_tensors="np", 
+        padding=True, 
+        truncation=True, 
+        max_length=512
+    )
+    
+    # 2. Prepare Inputs
+    # ONNX expects specific input names.
+    # Transformers outputs: input_ids, attention_mask, token_type_ids (optional)
+    
+    # Cast to int64 (ONNX Runtime requirement)
+    model_inputs = {
+        "input_ids": inputs["input_ids"].astype(np.int64),
+        "attention_mask": inputs["attention_mask"].astype(np.int64)
+    }
+    
+    # Check session inputs for token_type_ids
+    input_names = [i.name for i in startup.session.get_inputs()]
+    if "token_type_ids" in input_names and "token_type_ids" in inputs:
+        model_inputs["token_type_ids"] = inputs["token_type_ids"].astype(np.int64)
 
-    emb = startup.embedder.encode([query], convert_to_numpy=True).astype("float32")
-    faiss.normalize_L2(emb)
-    return emb
+    # 3. Inference
+    outputs = startup.session.run(None, model_inputs)
+    
+    # 4. Pooling (Mean Pooling)
+    last_hidden_state = outputs[0]
+    
+    input_mask_expanded = model_inputs["attention_mask"][:, :, None].astype(last_hidden_state.dtype)
+    sum_embeddings = np.sum(last_hidden_state * input_mask_expanded, axis=1)
+    sum_mask = np.sum(input_mask_expanded, axis=1)
+    sum_mask = np.maximum(sum_mask, 1e-9)
+    embedding = sum_embeddings / sum_mask
+    
+    # 5. Normalize (L2)
+    norm = np.linalg.norm(embedding, axis=1, keepdims=True)
+    embedding = embedding / norm
+    
+    # Flatten to [dimension]
+    return embedding[0].astype("float32")
 
 
 def semantic_search(query: str):
@@ -88,8 +127,8 @@ def semantic_search(query: str):
         print("[WARN] Search called before index is ready")
         return []
 
-    if startup.embedder is None:
-        print("[WARN] Search called before embedder is ready")
+    if startup.session is None:
+        print("[WARN] Search called before ONNX session is ready")
         return []
 
     # Normalize query before searching/caching to increase hit rate
