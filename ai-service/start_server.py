@@ -3,6 +3,10 @@ import sys
 import uvicorn
 import socket
 
+# OPTIMIZATION: Reduce thread overhead for single-core environments
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+
 def start():
     try:
         print("🔍 [STARTUP] Initializing server...", flush=True)
