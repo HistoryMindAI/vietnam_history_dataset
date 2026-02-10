@@ -1,8 +1,10 @@
 #!/bin/sh
 set -e
 
-# Default to port 8000 if PORT is not set
-PORT=${PORT:-8000}
+# Default to port 8080 if PORT is not set
+# Railway provides PORT, but good to have fallback
+export PORT=${PORT:-8080}
 
-echo "Starting app on port $PORT..."
-exec uvicorn app.main:app --host 0.0.0.0 --port "$PORT"
+echo "Starting app via run.py on port $PORT..."
+# Exec python to replace shell process
+exec python /app/run.py
