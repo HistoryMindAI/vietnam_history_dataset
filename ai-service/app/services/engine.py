@@ -79,6 +79,7 @@ CREATOR_PATTERNS = [
     "tạo ra bạn", "phát triển bạn", "xây dựng bạn",
     "ai tạo bạn", "ai đã tạo", "do ai", "được tạo bởi",
     "tác giả", "nhà phát triển", "developer",
+    "được tạo ra thế nào", "tạo ra thế nào", "được tạo thế nào",
 ]
 
 IDENTITY_RESPONSE = (
@@ -94,22 +95,22 @@ IDENTITY_RESPONSE = (
 )
 
 CREATOR_RESPONSE = (
-    "Tôi được xây dựng bởi **Võ Đức Hiếu** (h1eudayne) — "
+    "Tôi được xây dựng bởi **Võ Đức Hiếu** (h1eudayne), "
     "một sinh viên đam mê công nghệ AI và lịch sử Việt Nam.\n\n"
-    "Hiếu đã thiết kế và phát triển toàn bộ hệ thống History Mind AI "
-    "từ ý tưởng đến sản phẩm hoàn chỉnh, bao gồm xây dựng bộ dữ liệu, "
-    "huấn luyện mô hình và phát triển giao diện.\n\n"
-    "**Liên hệ tác giả**\n\n"
+    "**Về tác giả**\n\n"
+    "- Thiết kế và phát triển toàn bộ hệ thống từ ý tưởng đến sản phẩm\n"
+    "- Xây dựng bộ dữ liệu hơn 1.000.000 mẫu lịch sử Việt Nam\n"
+    "- Huấn luyện mô hình AI hiểu tiếng Việt tự nhiên\n"
+    "- Phát triển giao diện web\n\n"
+    "**Công nghệ sử dụng**\n\n"
+    "- Tìm kiếm ngữ nghĩa (Semantic Search)\n"
+    "- FAISS + Embeddings cho truy vấn vector nhanh\n"
+    "- Dữ liệu từ thời Hùng Vương đến hiện đại\n\n"
+    "**Liên hệ**\n\n"
     "- GitHub: [h1eudayne](https://github.com/h1eudayne?tab=repositories)\n"
     "- Facebook: [Võ Đức Hiếu](https://www.facebook.com/vo.duc.hieu2005/)\n"
     "- Email: voduchieu42@gmail.com\n"
-    "- Phone: 0915106276\n\n"
-    "**Công nghệ**\n\n"
-    "History Mind AI sử dụng tìm kiếm ngữ nghĩa (Semantic Search) "
-    "kết hợp FAISS và Embeddings để truy vấn nhanh trong hơn 1.000.000 mẫu "
-    "dữ liệu lịch sử Việt Nam, từ thời Hùng Vương đến hiện đại.\n\n"
-    "Sứ mệnh của dự án là mang lịch sử Việt Nam đến gần hơn với mọi người "
-    "thông qua công nghệ AI."
+    "- Phone: 0915106276"
 )
 
 
