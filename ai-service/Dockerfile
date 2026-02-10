@@ -2,13 +2,13 @@ FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-ENV PORT=8080
+ENV PORT=8000
 # OPTIMIZATION: Reduce memory fragmentation
 ENV MALLOC_ARENA_MAX=2
 
 WORKDIR /app
 
-EXPOSE 8080
+EXPOSE 8000
 
 # System deps (minimal for faiss-cpu + numpy + curl for LFS fallback)
 RUN apt-get update && apt-get install -y \
