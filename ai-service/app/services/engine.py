@@ -64,16 +64,51 @@ MAX_TOTAL_EVENTS = 5
 MAX_TOTAL_EVENTS_DYNASTY = 10  # More results for dynasty-level queries
 MAX_TOTAL_EVENTS_RANGE = 15   # More results for year range queries
 
-# Identity patterns - moved from FE
+# Identity patterns — who are you?
 IDENTITY_PATTERNS = [
-    "who are you", "bạn là ai", "giới thiệu", 
-    "what is your name", "tên bạn là gì"
+    "who are you", "bạn là ai", "giới thiệu bản thân",
+    "what is your name", "tên bạn là gì", "tên của bạn",
+    "you are who", "giới thiệu về bạn", "bạn tên gì",
+    "hãy giới thiệu", "cho tôi biết về bạn",
+]
+
+# Creator patterns — who made you?
+CREATOR_PATTERNS = [
+    "ai tạo ra", "ai phát triển", "ai xây dựng", "ai làm ra",
+    "created by", "made by", "developed by", "built by",
+    "tạo ra bạn", "phát triển bạn", "xây dựng bạn",
+    "ai tạo bạn", "ai đã tạo", "do ai", "được tạo bởi",
+    "tác giả", "nhà phát triển", "developer",
 ]
 
 IDENTITY_RESPONSE = (
-    "Xin chào, tôi là History Mind AI. "
-    "Tôi ở đây để giúp bạn tìm hiểu về lịch sử Việt Nam và thế giới. "
-    "Bạn có câu hỏi nào không?"
+    "## 🏛️ Xin chào! Tôi là **History Mind AI** — Trợ lý Lịch sử Việt Nam.\n\n"
+    "Tôi được sinh ra từ niềm đam mê với **4.000 năm lịch sử dân tộc Việt Nam**, "
+    "với sứ mệnh giúp mọi người tiếp cận và khám phá di sản lịch sử một cách dễ dàng, "
+    "chính xác và sinh động.\n\n"
+    "### 📚 Tôi có thể giúp bạn:\n"
+    "- 🔍 **Tra cứu sự kiện** theo năm, triều đại, hoặc nhân vật\n"
+    "- 📖 **Kể chuyện lịch sử** từ thời Hùng Vương đến hiện đại\n"
+    "- ⚔️ **Phân tích chiến công** — Bạch Đằng, Chi Lăng, Điện Biên Phủ...\n"
+    "- 🏰 **Tìm hiểu triều đại** — Lý, Trần, Lê, Nguyễn...\n"
+    "- 📅 **So sánh giai đoạn** — từ năm X đến năm Y\n\n"
+    "Hãy hỏi tôi bất cứ điều gì về lịch sử Việt Nam! 🇻🇳"
+)
+
+CREATOR_RESPONSE = (
+    "## 🛠️ Ai đã tạo ra tôi?\n\n"
+    "Tôi — **History Mind AI** — được xây dựng bởi **đội ngũ HistoryMindAI**, "
+    "một nhóm sinh viên và kỹ sư đam mê công nghệ AI và lịch sử Việt Nam.\n\n"
+    "### 🧠 Công nghệ đằng sau tôi:\n"
+    "- **AI & NLP**: Sử dụng mô hình ngôn ngữ và tìm kiếm ngữ nghĩa (Semantic Search) "
+    "để hiểu câu hỏi của bạn bằng tiếng Việt tự nhiên\n"
+    "- **FAISS + Embeddings**: Tìm kiếm vector nhanh chóng trong hàng nghìn sự kiện lịch sử\n"
+    "- **Dữ liệu**: Được huấn luyện trên bộ dữ liệu lịch sử Việt Nam gồm hơn 50.000 mẫu, "
+    "bao phủ từ thời kỳ Hùng Vương dựng nước đến hiện đại\n\n"
+    "### 🎯 Sứ mệnh:\n"
+    "Mang lịch sử Việt Nam đến gần hơn với mọi người thông qua công nghệ AI, "
+    "giúp thế hệ trẻ hiểu và trân trọng di sản văn hóa dân tộc.\n\n"
+    "💡 *Hãy thử hỏi tôi: \"Trận Bạch Đằng 938 diễn ra như thế nào?\"*"
 )
 
 
@@ -303,7 +338,18 @@ def format_complete_answer(events: list) -> str:
 def engine_answer(query: str):
     q = query.lower()
 
-    # Handle identity queries (moved from FE)
+    # Handle creator queries — "ai tạo ra bạn?", "ai phát triển bạn?"
+    # Check BEFORE identity to avoid 'bạn là ai' substring matching
+    if any(pattern in q for pattern in CREATOR_PATTERNS):
+        return {
+            "query": query,
+            "intent": "creator",
+            "answer": CREATOR_RESPONSE,
+            "events": [],
+            "no_data": False
+        }
+
+    # Handle identity queries — "bạn là ai?", "giới thiệu bản thân"
     if any(pattern in q for pattern in IDENTITY_PATTERNS):
         return {
             "query": query,
