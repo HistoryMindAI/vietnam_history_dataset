@@ -24,7 +24,11 @@ app = FastAPI(
 # ===== CORS =====
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://behistorymindai-production.up.railway.app",
+        "http://localhost:8080",
+        "http://127.0.0.1:8080"
+    ],
     allow_credentials=False,   # bắt buộc False khi "*"
     allow_methods=["*"],
     allow_headers=["*"],
