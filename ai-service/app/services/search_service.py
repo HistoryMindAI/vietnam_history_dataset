@@ -6,7 +6,7 @@ import re
 
 # NOTE: Moved heavy imports (faiss, numpy) to function scope to improve startup time.
 # import faiss
-# import numpy as np
+import numpy as np
 
 # Keywords to extract from queries for relevance filtering
 def extract_important_keywords(text: str) -> set:
