@@ -31,14 +31,13 @@ def load_resources():
     try:
         embedder = SentenceTransformer(EMBED_MODEL)
         
-        # OPTIMIZATION: Apply Dynamic Quantization to reduce RAM usage by ~60%
-        # This keeps the L12 model quality but fits it into Free Tier memory.
-        import torch
-        print(f"[STARTUP] Quantizing model {EMBED_MODEL} to int8...")
-        embedder[0].auto_model = torch.quantization.quantize_dynamic(
-            embedder[0].auto_model, {torch.nn.Linear}, dtype=torch.qint8
-        )
-        print(f"[STARTUP] Model quantized successfully.")
+        # OPTIMIZATION: Dynamic Quantization REMOVED to prevent startup OOM.
+        # We rely on the system having enough RAM or swap for the base model (~470MB).
+        # RAM usage varies around 500MB-600MB.
+        # If this crashes on 512MB container, we MUST switch to a smaller model.
+        import gc
+        gc.collect()
+        print(f"[STARTUP] Model loaded into memory. GC collected.")
     except Exception as e:
         print(f"[FATAL] Failed to load embedding model: {e}")
         # We might want to raise here, or allow partial failure? 
@@ -73,9 +72,15 @@ def load_resources():
     # ===============================
     if os.path.exists(META_PATH):
         try:
+            print(f"[DEBUG] Loading metadata from ABS PATH: {os.path.abspath(META_PATH)}")
             with open(META_PATH, encoding="utf-8") as f:
                 META_RAW = json.load(f)
             print(f"[STARTUP] Metadata loaded from {META_PATH}")
+            print(f"[DEBUG] META_RAW keys: {list(META_RAW.keys())}")
+            if "documents" in META_RAW:
+                print(f"[DEBUG] Found 'documents' with length: {len(META_RAW['documents'])}")
+            else:
+                print(f"[ERROR] 'documents' key MISSING in meta.json")
         except Exception as e:
             print(f"[ERROR] Failed to read metadata: {e}")
             META_RAW = {"documents": []}
