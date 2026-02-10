@@ -23,15 +23,10 @@ RUN apt-get update && apt-get install -y \
 # =====================
 COPY requirements.txt .
 
-RUN pip install --no-cache-dir \
-    torch==2.2.2+cpu \
-    --index-url https://download.pytorch.org/whl/cpu
-
 RUN pip install --no-cache-dir -r requirements.txt
 
-# =====================
-# Pre-download the embedding model to cache it in the image
-RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('keepitreal/vietnamese-sbert')"
+# Copy ONNX model
+COPY onnx_model /app/onnx_model
 
 # =====================
 # App source

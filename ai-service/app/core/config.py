@@ -10,7 +10,10 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 #     "EMBED_MODEL",
 #     "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 # )
-EMBED_MODEL = "keepitreal/vietnamese-sbert"
+# EMBED_MODEL = "keepitreal/vietnamese-sbert"
+# Using local ONNX model
+EMBED_MODEL_PATH = "onnx_model/model_quantized.onnx"
+TOKENIZER_PATH = "onnx_model"
 
 # ===============================
 # FAISS INDEX CONFIG
