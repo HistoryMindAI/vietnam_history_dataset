@@ -66,28 +66,66 @@ DYNASTY_PATTERNS = [
 NOT_PERSON_PREFIXES = (
     "nhà ", "triều ", "quân ", "nghĩa quân ", "đội ",
     "đảng ", "mặt trận ", "công ty ", "tập đoàn ", "thời ",
+    "nước ", "hòa ước ", "hiệp định ", "chiếu ",
 )
-NOT_PERSON_SUFFIXES = (" triều", " quân", " tộc")
+NOT_PERSON_SUFFIXES = (" triều", " quân", " tộc", " hiệp", " mỹ")
 
 NOT_PERSON_KEYWORDS = {
     "chiến dịch", "khởi nghĩa", "phong trào", "hiệp định",
     "tuyên ngôn", "trận", "đại phá", "bản đồ", "tác phẩm",
     "hiến pháp", "luật", "sắc lệnh", "bình ngô",
+    "hòa ước", "phòng tuyến", "chiếu", "quốc hiệu",
+}
+
+# Exact strings that MUST NOT be classified as person names
+# These are common false positives from regex extraction
+NOT_PERSON_EXACT = {
+    # Country/nationality/region names
+    "việt nam", "đại việt", "đại nam", "campuchia", "trung quốc",
+    "nhật bản", "pháp", "hoa kỳ", "liên xô", "tây ban nha",
+    "đông dương", "đông nam", "nam kỳ", "bắc kỳ", "trung kỳ",
+    "miền nam", "miền bắc", "miền trung",
+    # Calendar/time terms
+    "giáp thân", "nhâm tuất", "canh tuất", "kỷ dậu",
+    "tháng tám", "tháng mười", "tháng ba",
+    # Broken tokens / verb phrases caught by regex
+    "buộc mỹ", "paris hiệp", "nước cộng", "việt nam dân",
+    "cộng hòa", "xã hội", "chủ nghĩa", "dân chủ",
+    "mông cổ", "mông nguyên", "nguyên mông",
+    # Organization names caught as persons
+    "đại hội", "quốc hội", "chính phủ", "đảng cộng",
+    "mặt trận", "việt minh",
+    # Generic event terms
+    "bắc thuộc", "minh thuộc", "đổi mới", "cần vương",
+    "đông du", "toàn quốc",
+    # Multi-word false positive patterns
+    "vijaya đại việt", "đại việt đổi", "đại việt sử",
+    "việt nam cộng", "việt nam độc", "việt nam quốc",
+    "nước việt", "quốc dân", "dân đảng",
+    "pháp nhật", "nhật pháp", "anh pháp",
 }
 
 # Known collective/place terms that regex might catch as person names
 COLLECTIVE_TERMS = {
     "nhân dân", "quân đội", "triều đình", "thực dân", "đế quốc",
     "phát xít", "nghĩa quân", "quân dân", "chính phủ", "quốc hội",
+    "giải phóng", "dân tộc", "cách mạng",
 }
 
 # Known place names that regex might catch as person names
-# These are dynamically checked against text context
 KNOWN_PLACE_PATTERNS = {
     "thăng long", "đại việt", "đại nam", "đại cồ việt",
     "bạch đằng", "chi lăng", "đống đa", "điện biên phủ",
     "ba đình", "tây sơn", "lam sơn", "đông đô",
     "hoa lư", "tháng tám", "bình ngô",
+    "sài gòn", "hà nội", "đà nẵng", "huế",
+    "nam kỳ", "bắc kỳ", "trung kỳ",
+}
+
+# Place names that should be rejected from extract_places
+NOT_PLACE_EXACT = {
+    "tháng tám", "dân", "mỹ", "pháp", "quân",
+    "cộng sản", "xã hội", "dân chủ", "chủ nghĩa",
 }
 
 # ========================
@@ -117,6 +155,17 @@ def is_valid_person(name: str) -> bool:
 
     name_low = name.strip().lower()
 
+    # Reject exact known false positives (HIGHEST PRIORITY)
+    if name_low in NOT_PERSON_EXACT:
+        return False
+
+    # Reject partial matches for common false positive patterns
+    if any(fp in name_low for fp in [
+        "việt nam", "đại việt", "đại nam", "vijaya",
+        "quốc dân", "dân đảng", "cộng sản",
+    ]):
+        return False
+
     # Reject collective/organizational terms
     if name_low in COLLECTIVE_TERMS:
         return False
@@ -138,6 +187,14 @@ def is_valid_person(name: str) -> bool:
     # Vietnamese person names: 2-5 words, each capitalized
     words = name.strip().split()
     if len(words) < 2 or len(words) > 5:
+        return False
+
+    # Each word in a person's name should be at least 2 chars
+    if any(len(w) < 2 for w in words):
+        return False
+
+    # At least first and last word should be capitalized
+    if not words[0][0].isupper() or not words[-1][0].isupper():
         return False
 
     return True
@@ -219,12 +276,17 @@ def extract_places(text: str) -> list[str]:
 
     # Pattern 3: Detect known places mentioned in text
     for place_low in KNOWN_PLACE_PATTERNS:
+        if place_low in NOT_PLACE_EXACT:
+            continue
         # Search case-insensitively in text
         pattern = re.compile(re.escape(place_low), re.IGNORECASE)
         m = pattern.search(text)
         if m:
             # Use the actual casing from text
             places.add(m.group(0))
+
+    # Filter out invalid places
+    places = {p for p in places if p.lower().strip() not in NOT_PLACE_EXACT and len(p) > 2}
 
     return sorted(places)
 
@@ -279,6 +341,11 @@ def extract_dynasty(text: str, year: int = 0) -> str:
 
     # Fallback: infer from year using historical periods
     if year > 0:
+        # Modern events (1945+) should use "Hiện đại" 
+        # to avoid confusing regime names as dynasty
+        if year >= 1945:
+            return "Hiện đại"
+
         periods = [
             (None, 179, "Hùng Vương / An Dương Vương"),
             (179, 938, "Bắc thuộc"),
@@ -294,8 +361,6 @@ def extract_dynasty(text: str, year: int = 0) -> str:
             (1533, 1789, "Lê trung hưng"),
             (1778, 1802, "Tây Sơn"),
             (1802, 1945, "Nguyễn"),
-            (1945, 1976, "Việt Nam DCCH"),
-            (1976, 2030, "CHXHCN Việt Nam"),
         ]
         for start, end, dynasty in periods:
             s = start if start is not None else -3000
