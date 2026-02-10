@@ -89,6 +89,25 @@ def clean_text(text: str) -> str:
     # Remove markdown bold
     result = re.sub(r'\*\*(.*?)\*\*', r'\1', result)
 
+    # Remove duplicate year patterns: "Năm 1930, Năm 1930," -> "Năm 1930,"
+    result = re.sub(r'(?:Năm\s+(\d{3,4}),?\s*){2,}', r'Năm \1, ', result)
+
+    # Remove redundant "xảy ra năm XXXX" / "diễn ra năm XXXX" anywhere
+    result = re.sub(r'\s+(?:xảy ra|diễn ra)\s+(?:vào\s+)?năm\s+\d{3,4}\.?\s*$', '.', result)
+    result = re.sub(r'\s+(?:xảy ra|diễn ra)\s+(?:vào\s+)?năm\s+\d{3,4}[;,]\s*', '; ', result)
+    # Also handle mid-sentence: "sự kiện xảy ra năm 1930 tại"
+    result = re.sub(r'(?:xảy ra|diễn ra)\s+(?:vào\s+)?năm\s+\d{3,4}', '', result)
+
+    # Remove question-style prefixes (meta, not content)
+    question_prefixes = [
+        r'^Câu\s+hỏi\s+nhắm\s+tới\s+sự\s+kiện\s+',
+        r'^Hãy\s+cho\s+biết\s+(?:sự\s+kiện\s+)?(?:tiêu\s+biểu\s+)?(?:của\s+)?(?:Việt\s+Nam\s+)?(?:vào\s+)?',
+        r'^Tóm\s+tắt\s+(?:và\s+nêu\s+ý\s+nghĩa\s+lịch\s+sử\s+(?:của\s+)?)?',
+        r'^\d{3,4}:\s+',
+    ]
+    for p in question_prefixes:
+        result = re.sub(p, '', result, flags=re.I)
+
     # Remove structural prefixes (meta-instructions, not content)
     structural_patterns = [
         r'^Tóm\s+tắt\s+bối\s+cảnh\s*[–-]\s*diễn\s+biến\s*[–-]\s*kết\s+quả\s+(?:của\s+)?',
@@ -107,8 +126,14 @@ def clean_text(text: str) -> str:
     # Remove year prefix only at the start (keep in body)
     result = re.sub(r'^(?:Vào\s+)?[Nn]ăm\s+\d{3,4}[,:]?\s*', '', result)
 
+    # Remove "Vào năm XXXX, diễn ra" pattern
+    result = re.sub(r'^Vào\s+năm\s+\d{3,4},?\s*diễn\s+ra\s*', '', result, flags=re.I)
+
     # Remove trailing year in parentheses if redundant
     result = re.sub(r'\s*\(\d{3,4}\)\s*\.?\s*$', '', result)
+
+    # Remove ", địa điểm X" trailing metadata
+    result = re.sub(r',\s*địa\s+điểm\s+.+$', '.', result)
 
     # Clean up whitespace and punctuation
     result = re.sub(r'\s+', ' ', result)
@@ -270,11 +295,16 @@ def load_from_huggingface() -> list[dict]:
         dynasty = extract_dynasty(combined_text, year)
         title = extract_event_title(clean_q, clean_a)
 
+        # Ensure event is different from title
+        event_text = clean_q[:200]
+        if event_text == title:
+            event_text = clean_a[:200]
+
         doc = {
             "id": f"hf_{i:06d}",
             "year": year,
             "title": title,
-            "event": clean_q[:200],
+            "event": event_text,
             "story": clean_a,
             "tone": tone,
             "nature": nature,
