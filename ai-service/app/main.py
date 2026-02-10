@@ -31,8 +31,11 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://behistorymindai-production.up.railway.app",
+        "https://fehistorymindai-production.up.railway.app",
         "http://localhost:8080",
-        "http://127.0.0.1:8080"
+        "http://localhost:3000",
+        "http://127.0.0.1:8080",
+        "http://127.0.0.1:3000"
     ],
     allow_credentials=False,   # bắt buộc False khi "*"
     allow_methods=["*"],
@@ -107,11 +110,22 @@ def health_detailed():
 
 @app.get("/")
 def root():
-    return {
-        "service": "Vietnam History AI",
-        "status": "running",
-        "ready": startup.index is not None
-    }
+    try:
+        is_ready = startup.index is not None and len(startup.DOCUMENTS) > 0
+        loading_error = getattr(startup, 'LOADING_ERROR', None)
+        return {
+            "service": "Vietnam History AI",
+            "status": "ready" if is_ready else "loading",
+            "ready": is_ready,
+            "error": loading_error
+        }
+    except Exception as e:
+        return {
+            "service": "Vietnam History AI",
+            "status": "error",
+            "ready": False,
+            "error": str(e)
+        }
 
 # ===== ENTRYPOINT (RAILWAY) =====
 # Note: Use start_server.py to run the app.
