@@ -13,11 +13,7 @@ faiss-cpu>=1.8.0
 # ===== Minimal deps =====
 numpy<2.0.0
 
-# ===== HuggingFace (Legacy for dataset load only) =====
-datasets>=2.16.0
-huggingface-hub>=0.20.0
-
-# ===== Testing =====
-pytest>=8.0.0
-httpx==0.27.0
-starlette==0.36.3
+# ===== Testing (dev only, not needed in Docker) =====
+# pytest>=8.0.0
+# httpx==0.27.0
+# starlette==0.36.3

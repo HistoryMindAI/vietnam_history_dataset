@@ -4,6 +4,6 @@ tests/
 __pycache__/
 *.npy
 *.pt
-*.bin
 *.arrow
-# NOTE: Do NOT add *.index here - faiss_index/history.index is required at runtime
+# NOTE: Do NOT add *.bin here - faiss_index/index.bin is required at runtime
+# NOTE: Do NOT add *.onnx here - onnx_model/model_quantized.onnx is required at runtime
