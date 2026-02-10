@@ -22,7 +22,7 @@ OUT_DIR = "ai-service/faiss_index"
 INDEX_PATH = f"{OUT_DIR}/history.index"
 META_PATH = f"{OUT_DIR}/meta.json"
 
-EMBED_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+EMBED_MODEL = "keepitreal/vietnamese-sbert"
 MIN_LEN = 30
 # ============================================
 
