@@ -26,6 +26,18 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# ===== MIDDLEWARE =====
+@app.middleware("http")
+async def log_requests(request, call_next):
+    import time
+    start_time = time.time()
+    path = request.url.path
+    print(f"📥 [REQUEST] {request.method} {path}", flush=True)
+    response = await call_next(request)
+    duration = time.time() - start_time
+    print(f"📤 [RESPONSE] {request.method} {path} | Status: {response.status_code} | {duration:.3f}s", flush=True)
+    return response
+
 # ===== CORS =====
 app.add_middleware(
     CORSMiddleware,
