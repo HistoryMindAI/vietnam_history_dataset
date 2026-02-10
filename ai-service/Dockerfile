@@ -52,5 +52,5 @@ ENV INDEX_VERSION=v6
 COPY start_server.py /app/start_server.py
 
 # Run with python script to handle env vars robustly
-CMD ["python", "/app/start_server.py"]
+CMD ["python", "start_server.py"]
 
