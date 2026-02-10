@@ -50,7 +50,7 @@ def check_be_chat():
 if __name__ == "__main__":
     print("🚀 Starting Full Chain Test\n")
     
-    if not check_be_health():
+    if not check_health(BE_URL):
         print("\n⚠️  BE seems down or unreachable.")
         # Try checking AI directly just in case
     
