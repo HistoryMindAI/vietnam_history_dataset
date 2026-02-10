@@ -11,7 +11,7 @@ from collections import Counter
 # Paths
 AI_SERVICE_DIR = os.path.join(os.path.dirname(__file__), '..', 'ai-service')
 META_PATH = os.path.join(AI_SERVICE_DIR, 'faiss_index', 'meta.json')
-INDEX_PATH = os.path.join(AI_SERVICE_DIR, 'faiss_index', 'history.index')
+INDEX_PATH = os.path.join(AI_SERVICE_DIR, 'faiss_index', 'index.bin')
 
 
 class TestFAISSIndexExists:

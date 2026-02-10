@@ -1,6 +1,3 @@
-import faiss
-import numpy as np
-
 def build_index(documents, embedder):
     """
     Build FAISS index from documents.
@@ -8,6 +5,10 @@ def build_index(documents, embedder):
         documents: List of document dicts
         embedder: SentenceTransformer instance
     """
+    # Lazy import to prevent top-level crash if faiss is not installed
+    import faiss
+    import numpy as np
+
     if not documents:
         return None
 
