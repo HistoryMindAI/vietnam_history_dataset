@@ -15,13 +15,15 @@ def test_client():
     with patch("app.core.startup.DOCUMENTS", [{"year": 1945, "event": "Test"}]):
         with patch("app.core.startup.DOCUMENTS_BY_YEAR", {1945: [{"year": 1945, "event": "Test"}]}):
             with patch("app.core.startup.index", MagicMock(ntotal=100)):
-                with patch("app.core.startup.embedder", MagicMock()):
-                    # Import after mocking
-                    from fastapi.testclient import TestClient
-                    from app.main import app
-                    
-                    client = TestClient(app)
-                    yield client
+                # Mock ONNX session and Tokenizer instead of SentenceTransformer
+                with patch("app.core.startup.session", MagicMock()):
+                    with patch("app.core.startup.tokenizer", MagicMock()):
+                        # Import after mocking
+                        from fastapi.testclient import TestClient
+                        from app.main import app
+                        
+                        client = TestClient(app)
+                        yield client
 
 
 def test_health(test_client):
