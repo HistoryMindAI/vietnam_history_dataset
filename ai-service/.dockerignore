@@ -2,8 +2,8 @@ vietnam_history_dataset/
 tests/
 .git/
 __pycache__/
-*.index
 *.npy
 *.pt
 *.bin
 *.arrow
+# NOTE: Do NOT add *.index here - faiss_index/history.index is required at runtime
