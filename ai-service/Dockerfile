@@ -2,8 +2,11 @@ FROM python:3.11
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV PORT=8080
 
 WORKDIR /app
+
+EXPOSE 8080
 
 # System deps for numpy / faiss
 RUN apt-get update && apt-get install -y \

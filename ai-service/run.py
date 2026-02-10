@@ -4,8 +4,8 @@ import sys
 
 if __name__ == "__main__":
     try:
-        # Get PORT from environment, default to 8000
-        port = int(os.environ.get("PORT", 8000))
+        # Get PORT from environment, default to 8080 (Standardize on 8080)
+        port = int(os.environ.get("PORT", 8080))
         print(f"🚀 Starting AI Service on port {port}...")
         
         # Start uvicorn with Proxy Headers enabled (Critical for Railway LB)
