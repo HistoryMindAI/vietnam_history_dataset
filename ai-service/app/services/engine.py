@@ -111,7 +111,7 @@ CREATOR_RESPONSE = (
     "### 🧠 Công nghệ đằng sau tôi:\n"
     "- **AI & NLP**: Tìm kiếm ngữ nghĩa (Semantic Search) hiểu tiếng Việt tự nhiên\n"
     "- **FAISS + Embeddings**: Tìm kiếm vector nhanh chóng trong hàng nghìn sự kiện\n"
-    "- **Dữ liệu**: Hơn 50.000 mẫu lịch sử Việt Nam, từ thời Hùng Vương đến hiện đại\n\n"
+    "- **Dữ liệu**: Hơn 1.000.000 mẫu lịch sử Việt Nam, từ thời Hùng Vương đến hiện đại\n\n"
     "### 🎯 Sứ mệnh:\n"
     "Mang lịch sử Việt Nam đến gần hơn với mọi người thông qua công nghệ AI, "
     "giúp thế hệ trẻ hiểu và trân trọng di sản văn hóa dân tộc.\n\n"
