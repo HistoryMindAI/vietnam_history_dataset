@@ -38,8 +38,7 @@ COPY scripts ./scripts
 # =====================
 # Build FRESH FAISS index during build (NOT copied from local)
 # =====================
-# RUN mkdir -p faiss_index && python scripts/build_from_huggingface.py
-# COPY faiss_index ./faiss_index  <-- This will be copied by "COPY . ." or specific copy below
+# WE DO NOT BUILD ON SERVER. WE COPY LOCAL INDEX.
 COPY faiss_index ./faiss_index
 
 ENV TRANSFORMERS_CACHE=/app/.cache/huggingface
