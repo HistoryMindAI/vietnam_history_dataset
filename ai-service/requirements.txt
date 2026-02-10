@@ -11,7 +11,7 @@ torch>=2.2.0
 faiss-cpu>=1.8.0
 
 # ===== Minimal deps =====
-numpy>=1.26.4
+numpy<2.0.0
 scikit-learn==1.4.0
 
 # ===== HuggingFace =====
