@@ -136,9 +136,12 @@ def semantic_search(query: str):
         norm_q = normalize_query(query)
         emb = get_cached_embedding(norm_q)
 
+        # FAISS requires 2D input: (n_queries, dim)
+        emb_2d = np.expand_dims(emb, axis=0)
+
         # Increase TOP_K to allow for filtering
         search_k = min(TOP_K * 2, 30)
-        scores, ids = startup.index.search(emb, search_k)
+        scores, ids = startup.index.search(emb_2d, search_k)
 
         # Use a higher threshold for better relevance
         higher_threshold = max(SIM_THRESHOLD, 0.55)
