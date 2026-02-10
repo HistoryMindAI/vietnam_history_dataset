@@ -2,9 +2,10 @@
 # This file configures Railway deployment
 
 [build]
-# Use custom build script
-builder = "nixpacks"
-buildCommand = "chmod +x build.sh && ./build.sh"
+# Use Dockerfile to ensure strict control over system dependencies (libgomp1, faiss)
+# and preventing OOM (via explicit base image selection)
+builder = "DOCKERFILE"
+# buildCommand = "chmod +x build.sh && ./build.sh" # Not needed for Dockerfile
 
 [deploy]
 startCommand = "python /app/run.py"
