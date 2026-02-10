@@ -1,4 +1,4 @@
-from app.services.search_service import semantic_search, scan_by_year
+from app.services.search_service import semantic_search, scan_by_year, detect_dynasty_from_query, detect_place_from_query
 import re
 
 # Pre-compile regex for faster matching
@@ -15,9 +15,9 @@ def extract_single_year(text: str):
             return year
     return None
 
-# Maximum events per year to prevent verbose responses  
 MAX_EVENTS_PER_YEAR = 1
 MAX_TOTAL_EVENTS = 5
+MAX_TOTAL_EVENTS_DYNASTY = 10  # More results for dynasty-level queries
 
 # Identity patterns - moved from FE
 IDENTITY_PATTERNS = [
@@ -107,7 +107,7 @@ def compute_text_similarity(text1: str, text2: str) -> float:
     """Compute similarity between two texts using SequenceMatcher."""
     return SequenceMatcher(None, text1, text2).ratio()
 
-def deduplicate_and_enrich(raw_events: list) -> list:
+def deduplicate_and_enrich(raw_events: list, max_events: int = MAX_TOTAL_EVENTS) -> list:
     """
     Deduplicate events and enrich with complete information.
     Aggressively merges similar events to prevent repetition.
@@ -179,10 +179,10 @@ def deduplicate_and_enrich(raw_events: list) -> list:
         for item in unique_cluster:
             result_events.append(item["event"])
             
-        if len(result_events) >= MAX_TOTAL_EVENTS:
+        if len(result_events) >= max_events:
             break
             
-    return result_events[:MAX_TOTAL_EVENTS]
+    return result_events[:max_events]
 
 
 def format_complete_answer(events: list) -> str:
@@ -270,9 +270,18 @@ def engine_answer(query: str):
 
     intent = "semantic"
     raw_events = []
+    is_dynasty_query = False
 
     # Detect intent
-    if "là gì" in q or "là ai" in q:
+    dynasty = detect_dynasty_from_query(query)
+    place = detect_place_from_query(query)
+    
+    if dynasty or place:
+        # Dynasty/place query — use semantic search with filters
+        intent = "dynasty" if dynasty else "place"
+        is_dynasty_query = True
+        raw_events = semantic_search(query)
+    elif "là gì" in q or "là ai" in q:
         intent = "definition"
         raw_events = semantic_search(query)
     else:
@@ -286,8 +295,11 @@ def engine_answer(query: str):
 
     no_data = not raw_events
 
+    # Use higher event limit for dynasty/place queries
+    max_events = MAX_TOTAL_EVENTS_DYNASTY if is_dynasty_query else MAX_TOTAL_EVENTS
+
     # Deduplicate and enrich events
-    unique_events = deduplicate_and_enrich(raw_events) if not no_data else []
+    unique_events = deduplicate_and_enrich(raw_events, max_events) if not no_data else []
     
     # Generate complete, comprehensive answer
     answer = format_complete_answer(unique_events)
