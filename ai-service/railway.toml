@@ -5,13 +5,15 @@
 # Use Dockerfile to ensure strict control over system dependencies (libgomp1, faiss)
 # and preventing OOM (via explicit base image selection)
 builder = "DOCKERFILE"
-# buildCommand = "chmod +x build.sh && ./build.sh" # Not needed for Dockerfile
 
 [deploy]
-# startCommand IS needed to ensure correct entrypoint if Dockerfile CMD is ignored
 startCommand = "python start_server.py"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
 numReplicas = 1
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 5
+
+# NOTE: PORT=8000 is set via Dockerfile ENV and Railway Dashboard.
+# Port 8080 is reserved for the Spring Boot backend service.
+# Railway will use the PORT from Dockerfile ENV if not overridden in Dashboard.
