@@ -63,69 +63,10 @@ def load_resources():
     # AUTO-BUILD INDEX IF MISSING
     # ===============================
     if index is None:
-        print("[STARTUP] FAISS index not found. Attempting to build from documents...")
-        try:
-            from app.services.vector import build_index
-            
-            if os.path.exists(META_PATH):
-                with open(META_PATH, encoding="utf-8") as f:
-                   temp_meta = json.load(f)
-                temp_docs = temp_meta.get("documents", [])
-            else:
-                print("[STARTUP] Metadata file not found locally. Attempting to load from HuggingFace...")
-                try:
-                    from datasets import load_dataset
-                    # Load dataset from Hub
-                    dataset = load_dataset("minhxthanh/Vietnam-History-1M-Vi", split="train")
-                    print(f"[STARTUP] Loaded {len(dataset)} items from HuggingFace.")
-                    
-                    # Convert to document format expected by engine
-                    temp_docs = []
-                    for item in dataset:
-                        # Adjust fields based on actual dataset structure
-                        doc = {
-                            "year": item.get("year", 0),
-                            "event": item.get("title", "") or item.get("text", "")[:50],
-                            "story": item.get("text", ""),
-                            "title": item.get("title", ""),
-                            "dynasty": item.get("dynasty", ""),
-                            "persons": item.get("persons", []),
-                            "places": item.get("places", [])
-                        }
-                        temp_docs.append(doc)
-                    
-                    # Save metadata for future use
-                    os.makedirs(os.path.dirname(META_PATH), exist_ok=True)
-                    with open(META_PATH, "w", encoding="utf-8") as f:
-                        json.dump({"documents": temp_docs}, f, ensure_ascii=False, indent=2)
-                    print(f"[STARTUP] Saved metadata to {META_PATH}")
-                    
-                except Exception as e:
-                    print(f"[ERROR] Failed to load from HuggingFace: {e}")
-                    temp_docs = []
-
-            if temp_docs:
-                print(f"[STARTUP] Found {len(temp_docs)} documents. Building index...")
-                index = build_index(temp_docs, embedder)
-                
-                # Save the newly built index
-                faiss.write_index(index, INDEX_PATH)
-                print(f"[STARTUP] Index built and saved to {INDEX_PATH}")
-            else:
-                print("[WARN] No documents found in metadata. Creating empty index.")
-                d = embedder.get_sentence_embedding_dimension()
-                index = faiss.IndexFlatL2(d)
-                
-        except Exception as e:
-            print(f"[ERROR] Failed to build index: {e}")
-            # Fallback to empty index to ensure app starts
-            d = 384
-            try:
-                d = embedder.get_sentence_embedding_dimension()
-            except:
-                pass
-            index = faiss.IndexFlatL2(d)
-            print(f"[STARTUP] Fallback empty index created (dim={d})")
+        print("[FATAL] FAISS index not found! We are in READ-ONLY mode.")
+        print("[FATAL] You must build 'faiss_index' locally and commit it to Git.")
+        # We fail fast here because the user explicitly requested NO server-side building.
+        raise RuntimeError("FAISS index missing. Server requires pre-built index.")
 
     # ===============================
     # LOAD METADATA
