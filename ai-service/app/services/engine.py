@@ -32,33 +32,49 @@ IDENTITY_RESPONSE = (
 )
 
 
-def clean_story_text(text: str) -> str:
+def clean_story_text(text: str, year: int | None = None) -> str:
     """
     Clean up story text by removing redundant prefixes and making it a complete sentence.
+    Handles various data patterns from the Vietnam history dataset.
     """
     if not text:
         return ""
     
-    # Remove common redundant prefixes
-    patterns_to_remove = [
-        r'^Năm \d+[,:]?\s*',                    # "Năm 1911, "
-        r'^Vào năm \d+[,:]?\s*',                # "Vào năm 1911, "
-        r'^năm \d+[,:]?\s*',                    # "năm 1911, "
-        r'^\d+:\s*',                            # "1911: "
-        r'^gắn mốc \d+ với\s*',                 # "gắn mốc 1911 với"
-        r'^Câu hỏi nhắm tới sự kiện\s*',        # Technical prefix
-        r'^Tóm tắt bối cảnh – diễn biến – kết quả của\s*',
-        r'^Kể về .+ và đóng góp của .+ trong\s*',
-        r'diễn ra năm \d+[.;]?\s*',             # "diễn ra năm 1911"
-        r'xảy ra năm \d+[.;]?\s*',              # "xảy ra năm 1911"
-    ]
-    
     result = text.strip()
-    for pattern in patterns_to_remove:
+    
+    # Phase 1: Remove structural/query-style prefixes (these are data artifacts, not content)
+    structural_patterns = [
+        r'^Câu hỏi nhắm tới sự kiện\s*',
+        r'^Tóm tắt bối cảnh\s*–\s*diễn biến\s*–\s*kết quả của\s*',
+        r'^Bối cảnh:\s*',
+        r'^Kể về .+ và đóng góp của .+ trong\s*',
+    ]
+    for pattern in structural_patterns:
         result = re.sub(pattern, '', result, flags=re.IGNORECASE)
     
-    # Remove duplicate year mentions
-    result = re.sub(r'\(\d{4}\)[.:,]?\s*$', '', result)  # Remove trailing (1911).
+    # Phase 2: Remove year prefixes to avoid "Năm 1930: Năm 1930, ..." duplication
+    year_prefixes = [
+        r'^Năm \d+[,:]?\s*',
+        r'^Vào năm \d+[,:]?\s*',
+        r'^năm \d+[,:]?\s*',
+        r'^\d{3,4}[,:]\s*',
+    ]
+    for pattern in year_prefixes:
+        result = re.sub(pattern, '', result, flags=re.IGNORECASE)
+    
+    # Phase 3: Remove action-style prefixes
+    action_prefixes = [
+        r'^gắn mốc \d+ với\s*',
+        r'^diễn ra\s*',
+        r'^xảy ra\s*',
+    ]
+    for pattern in action_prefixes:
+        result = re.sub(pattern, '', result, flags=re.IGNORECASE)
+    
+    # Phase 4: Remove trailing metadata
+    result = re.sub(r'\(\d{4}\)[.:,]?\s*$', '', result)  # trailing (1911).
+    result = re.sub(r',\s*địa điểm\s+.+$', '', result)   # trailing ", địa điểm Hà Nội"
+    result = re.sub(r'\s+thuộc\s+.+\d{4}[.,]?\s*$', '', result)  # trailing "thuộc X 1945."
     
     return result.strip()
 
@@ -172,6 +188,7 @@ def deduplicate_and_enrich(raw_events: list) -> list:
 def format_complete_answer(events: list) -> str:
     """
     Format events into a concise answer, grouped by year.
+    Avoids duplication and produces natural-sounding Vietnamese text.
     """
     if not events:
         return None
@@ -189,21 +206,44 @@ def format_complete_answer(events: list) -> str:
     # Sort years
     sorted_years = sorted(by_year.keys()) if all(isinstance(y, int) for y in by_year.keys() if y) else by_year.keys()
     
+    seen_texts = set()  # Prevent exact duplicate sentences across years
+    
     for year in sorted_years:
         year_events = by_year[year]
         event_texts = []
         
         for e in year_events:
+            # Prefer story (longer, more detailed), fallback to event
             story = e.get("story", "") or e.get("event", "")
-            clean_story = clean_story_text(story)
+            clean_story = clean_story_text(story, year)
+            
+            # Skip if empty
+            if not clean_story:
+                continue
+            
+            # Extract title for context if available
+            title = e.get("title", "")
+            clean_title = clean_story_text(title, year) if title else ""
+            
+            # If story is very short or same as title, try to combine
+            if clean_title and clean_story and clean_title.lower() != clean_story.lower():
+                # Check if title is already part of the story
+                if clean_title.lower() not in clean_story.lower():
+                    clean_story = f"{clean_title}: {clean_story}"
             
             # Capitalize first letter
-            if clean_story:
-                clean_story = clean_story[0].upper() + clean_story[1:]
-                # Ensure ends with punctuation
-                if not clean_story.endswith(('.', '!', '?')):
-                    clean_story += "."
-                event_texts.append(clean_story)
+            clean_story = clean_story[0].upper() + clean_story[1:]
+            
+            # Ensure ends with punctuation
+            if not clean_story.endswith(('.', '!', '?')):
+                clean_story += "."
+            
+            # Dedup check AFTER normalization so key is consistent
+            dedup_key = clean_story.lower().strip()
+            if dedup_key in seen_texts:
+                continue
+            seen_texts.add(clean_story.lower())
+            event_texts.append(clean_story)
         
         if event_texts:
             joined_events = " ".join(event_texts)
