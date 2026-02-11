@@ -1,4 +1,8 @@
-from app.services.search_service import semantic_search, scan_by_year, scan_by_year_range, detect_dynasty_from_query, detect_place_from_query
+from app.services.search_service import (
+    semantic_search, scan_by_year, scan_by_year_range,
+    detect_dynasty_from_query, detect_place_from_query,
+    resolve_query_entities, scan_by_entities,
+)
 import re
 
 # Pre-compile regex for faster matching
@@ -63,6 +67,7 @@ MAX_EVENTS_PER_YEAR = 1
 MAX_TOTAL_EVENTS = 5
 MAX_TOTAL_EVENTS_DYNASTY = 10  # More results for dynasty-level queries
 MAX_TOTAL_EVENTS_RANGE = 15   # More results for year range queries
+MAX_TOTAL_EVENTS_ENTITY = 10  # Results for multi-entity queries (person + topic)
 
 # Identity patterns — who are you?
 IDENTITY_PATTERNS = [
@@ -365,12 +370,19 @@ def engine_answer(query: str):
     raw_events = []
     is_dynasty_query = False
     is_range_query = False
+    is_entity_query = False
 
-    # Detect intent — priority: year_range > multi_year > dynasty > definition > single_year > semantic
+    # Detect intent — priority: year_range > multi_year > multi_entity > dynasty > definition > single_year > semantic
     year_range = extract_year_range(query)
     multi_years = extract_multiple_years(query)
-    dynasty = detect_dynasty_from_query(query)
-    place = detect_place_from_query(query)
+
+    # Dynamic entity resolution (data-driven, no hardcoded patterns)
+    resolved = resolve_query_entities(query)
+    has_persons = bool(resolved.get("persons"))
+    has_topics = bool(resolved.get("topics"))
+    has_dynasties = bool(resolved.get("dynasties"))
+    has_places = bool(resolved.get("places"))
+    has_entities = has_persons or has_topics or has_dynasties or has_places
 
     if year_range:
         # Year range query: "từ năm 1225 đến 1400"
@@ -389,11 +401,28 @@ def engine_answer(query: str):
             raw_events.extend(scan_by_year(yr))
         # Also add semantic results for context
         raw_events.extend(semantic_search(query))
-    elif dynasty or place:
-        # Dynasty/place query — use semantic search with filters
-        intent = "dynasty" if dynasty else "place"
-        is_dynasty_query = True
-        raw_events = semantic_search(query)
+    elif has_entities:
+        # Multi-entity query (data-driven): person, dynasty, topic, place
+        # Determines sub-intent for more specific labeling
+        if has_persons and has_dynasties:
+            intent = "multi_entity"
+        elif has_persons:
+            intent = "person"
+        elif has_dynasties:
+            intent = "dynasty"
+            is_dynasty_query = True
+        elif has_places:
+            intent = "place"
+        elif has_topics:
+            intent = "topic"
+        else:
+            intent = "multi_entity"
+        
+        is_entity_query = True
+        # Use inverted index scan for fast O(1) lookup
+        raw_events = scan_by_entities(resolved)
+        # Always supplement with semantic search for broader coverage
+        raw_events.extend(semantic_search(query))
     elif "là gì" in q or "là ai" in q:
         intent = "definition"
         raw_events = semantic_search(query)
@@ -408,11 +437,13 @@ def engine_answer(query: str):
 
     no_data = not raw_events
 
-    # Use higher event limit for range/dynasty queries
+    # Use higher event limit for range/dynasty/entity queries
     if is_range_query:
         max_events = MAX_TOTAL_EVENTS_RANGE
     elif is_dynasty_query:
         max_events = MAX_TOTAL_EVENTS_DYNASTY
+    elif is_entity_query:
+        max_events = MAX_TOTAL_EVENTS_ENTITY
     else:
         max_events = MAX_TOTAL_EVENTS
 
