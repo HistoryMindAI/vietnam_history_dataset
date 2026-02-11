@@ -1,0 +1,192 @@
+{
+  "query": "Hãy kể cho tôi về triều đại nhà Trần và những chiến công chống quân Nguyên Mông",
+  "intent": "dynasty",
+  "answer": "**Năm 938:** Vì sao Trận Bạch Đằng (Ngô Quyền) (938) quan trọng đối với lịch sử Việt Nam: Trận Bạch Đằng (Ngô Quyền). Ông dùng cọc gỗ đặt ngầm trên sông Bạch Đằng, đánh bại thủy quân Nam Hán, chấm dứt hơn một thiên niên kỷ Bắc thuộc, mở ra kỷ nguyên độc lập của người Việt.\n\n**Năm 968:** Hậu quả hay tác động dài hạn của Đinh Bộ Lĩnh dẹp loạn 12 sứ quân, lập Đại Cồ Việt đối với Việt Nam là gì: Đinh Bộ Lĩnh dẹp loạn 12 sứ quân, lập Đại Cồ Việt. Ông thống nhất cát cứ, lên ngôi Hoàng đế, đặt quốc hiệu Đại Cồ Việt, qua đó chấm dứt cát cứ, xây dựng nhà nước trung ương tập quyền đầu tiên sau độc lập.\n\n**Năm 981:** Bối cảnh nào tạo điều kiện cho Kháng Tống thắng lợi thời Lê Hoàn xảy ra: Kháng Tống thắng lợi thời Lê Hoàn. Quân Đại Cồ Việt đánh lui quân Tống xâm lược, qua đó bảo vệ nền độc lập non trẻ, khẳng định vị thế quốc gia.\n\n**Năm 1225:** Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1225: Nhà Trần thành lập. Lý Chiêu Hoàng nhường ngôi cho Trần Cảnh, mở đầu triều Trần, về lâu dài mở ra thời kỳ hưng thịnh, nổi bật với ba lần kháng Mông-Nguyên.\n\n**Năm 1258:** Trần Hưng Đạo đã làm gì để dẫn đến Kháng chiến lần 1 chống Mông Cổ: Kháng chiến lần 1 chống Mông Cổ. Đại Việt đánh bại cuộc xâm lược đầu tiên của quân Mông Cổ, qua đó bảo vệ độc lập, mở ra chuỗi thắng lợi chống xâm lăng phương Bắc.\n\n**Năm 1284:** Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1284: Hịch tướng sĩ. Trần Hưng Đạo soạn Hịch tướng sĩ khích lệ quân dân trước kháng chiến lần 2, về lâu dài tác phẩm quân sự – chính trị cổ vũ mạnh mẽ.\n\n**Năm 1285:** Trần Hưng Đạo đã làm gì để dẫn đến Kháng chiến lần 2 chống Nguyên: Kháng chiến lần 2 chống Nguyên. Quân dân Đại Việt giành thắng lợi lớn trước quân Nguyên, qua đó củng cố sức mạnh quốc gia và nghệ thuật chiến tranh nhân dân.\n\n**Năm 1288:** Trận Bạch Đằng (Trần Hưng Đạo) xảy ra khi nào và kết quả ra sao: Trận Bạch Đằng (Trần Hưng Đạo). Ông nhử địch vào bãi cọc ngầm trên sông Bạch Đằng, tiêu diệt thủy quân Nguyên, qua đó đập tan ý đồ xâm lược, kết thúc chiến tranh, ghi dấu mốc chói lọi.\n\n**Năm 1407:** Ở Việt Nam diễn ra sự kiện gì quan trọng: Nhà Minh xâm lược, bắt đầu thời kỳ Minh thuộc. Đại Việt rơi vào ách đô hộ của nhà Minh, qua đó mở ra giai đoạn đấu tranh giải phóng khốc liệt.\n\n**Năm 1428:** Trình bày ngắn gọn về Lê Lợi lên ngôi, lập nhà Hậu Lê: Lê Lợi lên ngôi, lập nhà Hậu Lê. Ông xưng vương, ban Bình Ngô đại cáo tuyên cáo độc lập, qua đó mở ra thời kỳ Lê sơ thịnh trị.",
+  "events": [
+    {
+      "id": "hf_000281",
+      "year": 938,
+      "event": "Vì sao Trận Bạch Đằng (Ngô Quyền) quan trọng đối với lịch sử Việt Nam?",
+      "story": "Trận Bạch Đằng (Ngô Quyền). Ông dùng cọc gỗ đặt ngầm trên sông Bạch Đằng, đánh bại thủy quân Nam Hán, chấm dứt hơn một thiên niên kỷ Bắc thuộc, mở ra kỷ nguyên độc lập của người Việt.",
+      "persons": [
+        "Nam Hán",
+        "Ngô Quyền"
+      ],
+      "places": [
+        "Bạch Đằng"
+      ],
+      "keywords": [
+        "bạch_đằng",
+        "nam_hán",
+        "ngô_quyền",
+        "nhà_bắc thuộc",
+        "độc_lập"
+      ]
+    },
+    {
+      "id": "hf_000038",
+      "year": 968,
+      "event": "Hậu quả hay tác động dài hạn của Đinh Bộ Lĩnh dẹp loạn 12 sứ quân, lập Đại Cồ Việt đối với Việt Nam là gì?",
+      "story": "Đinh Bộ Lĩnh dẹp loạn 12 sứ quân, lập Đại Cồ Việt. Ông thống nhất cát cứ, lên ngôi Hoàng đế, đặt quốc hiệu Đại Cồ Việt, qua đó chấm dứt cát cứ, xây dựng nhà nước trung ương tập quyền đầu tiên sau độc lập.",
+      "persons": [
+        "Đinh Bộ Lĩnh"
+      ],
+      "places": [
+        "Đại Cồ Việt"
+      ],
+      "keywords": [
+        "lên_ngôi",
+        "thống_nhất",
+        "đinh_bộ_lĩnh",
+        "đại_cồ_việt",
+        "độc_lập"
+      ]
+    },
+    {
+      "id": "hf_000074",
+      "year": 981,
+      "event": "Bối cảnh nào tạo điều kiện cho Kháng Tống thắng lợi thời Lê Hoàn xảy ra?",
+      "story": "Kháng Tống thắng lợi thời Lê Hoàn. Quân Đại Cồ Việt đánh lui quân Tống xâm lược, qua đó bảo vệ nền độc lập non trẻ, khẳng định vị thế quốc gia.",
+      "persons": [
+        "Kháng Tống",
+        "Lê Hoàn"
+      ],
+      "places": [
+        "Đại Cồ Việt"
+      ],
+      "keywords": [
+        "kháng_tống",
+        "lê_hoàn",
+        "thắng_lợi",
+        "xâm_lược",
+        "đại_cồ_việt",
+        "độc_lập"
+      ]
+    },
+    {
+      "id": "hf_000178",
+      "year": 1225,
+      "event": "Nhà Trần thành lập. Lý Chiêu Hoàng nhường ngôi cho Trần Cảnh, mở đầu triều Trần, về lâu dài mở ra thời kỳ hưng thịnh, nổi bật với ba lần kháng Mông-Nguyên.",
+      "story": "Nhà Trần thành lập. Lý Chiêu Hoàng nhường ngôi cho Trần Cảnh, mở đầu triều Trần, về lâu dài mở ra thời kỳ hưng thịnh, nổi bật với ba lần kháng Mông-Nguyên.",
+      "persons": [
+        "Lý Chiêu Hoàng",
+        "Trần Cảnh"
+      ],
+      "places": [],
+      "keywords": [
+        "lý_chiêu_hoàng",
+        "nhà_trần",
+        "thành_lập",
+        "trần_cảnh"
+      ]
+    },
+    {
+      "id": "hf_000180",
+      "year": 1258,
+      "event": "Trần Hưng Đạo đã làm gì để dẫn đến Kháng chiến lần 1 chống Mông Cổ ?",
+      "story": "Kháng chiến lần 1 chống Mông Cổ. Đại Việt đánh bại cuộc xâm lược đầu tiên của quân Mông Cổ, qua đó bảo vệ độc lập, mở ra chuỗi thắng lợi chống xâm lăng phương Bắc.",
+      "persons": [
+        "Trần Hưng Đạo"
+      ],
+      "places": [
+        "Đại Việt"
+      ],
+      "keywords": [
+        "kháng_chiến",
+        "thắng_lợi",
+        "trần_hưng_đạo",
+        "xâm_lược",
+        "đại_việt",
+        "độc_lập"
+      ]
+    },
+    {
+      "id": "hf_000003",
+      "year": 1284,
+      "event": "Hịch tướng sĩ. Trần Hưng Đạo soạn Hịch tướng sĩ khích lệ quân dân trước kháng chiến lần 2, về lâu dài tác phẩm quân sự – chính trị cổ vũ mạnh mẽ.",
+      "story": "Hịch tướng sĩ. Trần Hưng Đạo soạn Hịch tướng sĩ khích lệ quân dân trước kháng chiến lần 2, về lâu dài tác phẩm quân sự – chính trị cổ vũ mạnh mẽ.",
+      "persons": [
+        "Trần Hưng Đạo"
+      ],
+      "places": [],
+      "keywords": [
+        "kháng_chiến",
+        "trần_hưng_đạo"
+      ]
+    },
+    {
+      "id": "hf_000620",
+      "year": 1285,
+      "event": "Trần Hưng Đạo đã làm gì để dẫn đến Kháng chiến lần 2 chống Nguyên ?",
+      "story": "Kháng chiến lần 2 chống Nguyên. Quân dân Đại Việt giành thắng lợi lớn trước quân Nguyên, qua đó củng cố sức mạnh quốc gia và nghệ thuật chiến tranh nhân dân.",
+      "persons": [
+        "Trần Hưng Đạo"
+      ],
+      "places": [
+        "Đại Việt"
+      ],
+      "keywords": [
+        "kháng_chiến",
+        "thắng_lợi",
+        "trần_hưng_đạo",
+        "đại_việt"
+      ]
+    },
+    {
+      "id": "hf_000349",
+      "year": 1288,
+      "event": "Trận Bạch Đằng (Trần Hưng Đạo) xảy ra khi nào và kết quả ra sao?",
+      "story": "Trận Bạch Đằng (Trần Hưng Đạo). Ông nhử địch vào bãi cọc ngầm trên sông Bạch Đằng, tiêu diệt thủy quân Nguyên, qua đó đập tan ý đồ xâm lược, kết thúc chiến tranh, ghi dấu mốc chói lọi.",
+      "persons": [
+        "Trần Hưng Đạo"
+      ],
+      "places": [
+        "Bạch Đằng"
+      ],
+      "keywords": [
+        "bạch_đằng",
+        "tiêu_diệt",
+        "trần_hưng_đạo",
+        "xâm_lược"
+      ]
+    },
+    {
+      "id": "hf_000358",
+      "year": 1407,
+      "event": "Ở Việt Nam diễn ra sự kiện gì quan trọng?",
+      "story": "Nhà Minh xâm lược, bắt đầu thời kỳ Minh thuộc. Đại Việt rơi vào ách đô hộ của nhà Minh, qua đó mở ra giai đoạn đấu tranh giải phóng khốc liệt.",
+      "persons": [],
+      "places": [
+        "Đại Việt"
+      ],
+      "keywords": [
+        "giải_phóng",
+        "xâm_lược",
+        "đại_việt"
+      ]
+    },
+    {
+      "id": "hf_000469",
+      "year": 1428,
+      "event": "Lê Lợi lên ngôi, lập nhà Hậu Lê. Ông xưng vương, ban Bình Ngô đại cáo tuyên cáo độc lập, qua đó mở ra thời kỳ Lê sơ thịnh trị.",
+      "story": "Lê Lợi lên ngôi, lập nhà Hậu Lê. Ông xưng vương, ban Bình Ngô đại cáo tuyên cáo độc lập, qua đó mở ra thời kỳ Lê sơ thịnh trị.",
+      "persons": [
+        "Hậu Lê",
+        "Hậu Lê Lê Lợi",
+        "Lê Lợi"
+      ],
+      "places": [
+        "Bình Ngô"
+      ],
+      "keywords": [
+        "bình_ngô",
+        "hậu_lê",
+        "hậu_lê_lê_lợi",
+        "lê_lợi",
+        "lên_ngôi",
+        "độc_lập"
+      ]
+    }
+  ],
+  "no_data": false
+}

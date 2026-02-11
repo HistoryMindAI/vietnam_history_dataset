@@ -1,0 +1,46 @@
+{
+  "range": [
+    {
+      "input": "Từ năm 1225 đến năm 1400 có sự kiện gì",
+      "output": "(1225, 1400)"
+    },
+    {
+      "input": "Giai đoạn 1225-1400 có những gì",
+      "output": "(1225, 1400)"
+    },
+    {
+      "input": "Từ 938 đến 1288",
+      "output": "(938, 1288)"
+    },
+    {
+      "input": "từ năm 1858 đến 1945 có sự kiện tiêu biểu nào",
+      "output": "(1858, 1945)"
+    },
+    {
+      "input": "từ 1000 tới 1500",
+      "output": "(1000, 1500)"
+    },
+    {
+      "input": "giai đoạn 1858 – 1945",
+      "output": "(1858, 1945)"
+    }
+  ],
+  "multi": [
+    {
+      "input": "Năm 938 và năm 1288 có gì nổi bật",
+      "output": "[938, 1288]"
+    },
+    {
+      "input": "Sự kiện năm 1225, 1285 và 1288",
+      "output": "[1225, 1285, 1288]"
+    },
+    {
+      "input": "Năm 1945 có gì",
+      "output": "None"
+    },
+    {
+      "input": "Trận Bạch Đằng 938 và Khởi nghĩa Lam Sơn 1418",
+      "output": "[938, 1418]"
+    }
+  ]
+}
