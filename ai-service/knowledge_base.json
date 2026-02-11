@@ -1,0 +1,60 @@
+{
+  "_description": "Knowledge Base for HistoryMindAI - Dynamic aliases & synonyms. Edit this file to extend entity recognition without changing code.",
+  "_version": "1.0.0",
+
+  "person_aliases": {
+    "hai bà trưng": ["trưng trắc", "trưng nhị", "hai bà", "trưng vương"],
+    "trần hưng đạo": ["trần quốc tuấn", "hưng đạo vương", "hưng đạo đại vương", "quốc công tiết chế"],
+    "nguyễn huệ": ["quang trung", "bắc bình vương"],
+    "hồ chí minh": ["nguyễn tất thành", "nguyễn ái quốc", "bác hồ", "nguyễn sinh cung"],
+    "lý thường kiệt": [],
+    "ngô quyền": ["ngô vương"],
+    "lê lợi": ["lê thái tổ"],
+    "đinh bộ lĩnh": ["đinh tiên hoàng", "vạn thắng vương"],
+    "lê thánh tông": ["lê tư thành"],
+    "trần thái tông": ["trần cảnh"],
+    "lý thái tổ": ["lý công uẩn"],
+    "nguyễn trãi": ["ức trai"],
+    "võ nguyên giáp": ["đại tướng võ nguyên giáp"],
+    "phan bội châu": [],
+    "phan châu trinh": ["phan chu trinh"],
+    "lê hoàn": ["lê đại hành"],
+    "hồ quý ly": [],
+    "nguyễn ánh": ["gia long"],
+    "dương đình nghệ": [],
+    "khúc thừa dụ": [],
+    "lý thánh tông": [],
+    "trần nhân tông": [],
+    "bà triệu": ["triệu thị trinh", "triệu ẩu"]
+  },
+
+  "topic_synonyms": {
+    "nguyên mông": ["mông cổ", "mông nguyên", "quân nguyên", "quân mông", "đế quốc mông cổ"],
+    "pháp thuộc": ["thực dân pháp", "xâm lược pháp", "đô hộ pháp", "pháp xâm lược"],
+    "bắc thuộc": ["đô hộ trung quốc", "phương bắc đô hộ", "ngàn năm bắc thuộc"],
+    "giáo dục": ["văn miếu", "quốc tử giám", "khoa cử", "nho học", "thi cử"],
+    "tây sơn": ["nguyễn huệ", "nguyễn nhạc", "nguyễn lữ", "phong trào tây sơn"],
+    "cách mạng tháng tám": ["tổng khởi nghĩa", "cách mạng 1945"],
+    "điện biên phủ": ["chiến dịch điện biên", "trận điện biên phủ"],
+    "khởi nghĩa lam sơn": ["lam sơn khởi nghĩa", "lê lợi khởi nghĩa"],
+    "trịnh nguyễn": ["trịnh nguyễn phân tranh", "chúa trịnh chúa nguyễn", "đàng trong đàng ngoài"],
+    "nam quốc sơn hà": ["bài thơ thần", "lý thường kiệt"]
+  },
+
+  "dynasty_aliases": {
+    "trần": ["nhà trần", "triều trần", "thời trần"],
+    "lý": ["nhà lý", "triều lý", "thời lý"],
+    "lê": ["nhà lê", "triều lê", "thời lê"],
+    "nguyễn": ["nhà nguyễn", "triều nguyễn", "thời nguyễn"],
+    "đinh": ["nhà đinh", "triều đinh", "thời đinh"],
+    "hồ": ["nhà hồ", "triều hồ", "thời hồ"],
+    "mạc": ["nhà mạc", "triều mạc", "thời mạc"],
+    "ngô": ["nhà ngô", "triều ngô", "thời ngô"],
+    "tây sơn": ["nhà tây sơn", "triều tây sơn", "thời tây sơn"],
+    "tiền lê": ["nhà tiền lê"],
+    "lê sơ": ["nhà lê sơ", "thời lê sơ"],
+    "lê trung hưng": ["nhà lê trung hưng"],
+    "bắc thuộc": ["thời bắc thuộc"],
+    "tự chủ": ["thời tự chủ"]
+  }
+}
