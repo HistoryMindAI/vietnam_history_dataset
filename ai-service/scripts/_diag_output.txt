@@ -1,0 +1,98 @@
+[STARTUP] Loading embedding model & FAISS...
+[STARTUP] Loading ONNX model from D:\HistoryMindAI\vietnam_history_dataset\ai-service\onnx_model\model_quantized.onnx...
+[STARTUP] Tokenizer loaded.
+[STARTUP] ONNX Session loaded successfully.
+[STARTUP] FAISS index loaded from D:\HistoryMindAI\vietnam_history_dataset\ai-service\faiss_index\index.bin
+[STARTUP] Metadata loaded from D:\HistoryMindAI\vietnam_history_dataset\ai-service\faiss_index\meta.json
+[STARTUP] Ready | docs=70 | years=67
+
+=== STARTUP STATE ===
+  Documents loaded: 70
+  Index loaded: True
+  Index vectors: 70
+  Session loaded: True
+  Tokenizer loaded: True
+  Dynasties in data: {'Lê sơ', 'Hồ', 'Lê trung hưng', 'Nguyễn', 'Hùng Vương / An Dương Vương', 'Hiện đại', 'Mạc', 'Tây Sơn', 'Tiền Lê', 'Lý', 'Bắc thuộc', 'Minh thuộc', 'Lê', 'Ngô', 'Đinh', 'Pháp thuộc', 'Trần'}
+  Periods in data: {'Phong kiến', 'Hiện đại', 'Cổ đại', 'Cận đại'}
+
+================================================================================
+QUERY: Hãy kể cho tôi về triều đại nhà Trần và những chiến công chống quân Nguyên Mông
+================================================================================
+
+[1] Dynasty detected: Trần
+[1] Place detected: None
+
+[2] Keywords extracted: {'quân', 'nhà_trần', 'nhà', 'mông', 'công', 'nguyên_mông', 'chiến', 'đại', 'chống', 'trần', 'triều', 'nguyên'}
+
+[3] Dynasty scan matches: 5
+    - [1284] Trần | Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1284
+    - [1225] Trần | Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1225
+    - [1258] Trần | Trần Hưng Đạo đã làm gì để dẫn đến Kháng chiến lần 1 chống M
+
+[5] FAISS Search (threshold=0.35, TOP_K=15)
+    Normalized query: hãy kể cho tôi về triều đại nhà trần và những chiến công chống quân nguyên mông
+    search_k: 45
+    All scores: [0.613609   0.5634582  0.53157365 0.50546867 0.48460522 0.4829112
+ 0.47234255 0.45991665 0.45782638 0.44588047]
+    All IDs: [50 69  1 28 62 64 41 58 33 49]
+    Above threshold (0.35): 30
+    - score=0.6136 idx=50 relevant=True | [1258] Trần | Trần Hưng Đạo đã làm gì để dẫn đến Kháng chiến lần
+    - score=0.5635 idx=69 relevant=True | [1285] Trần | Trần Hưng Đạo đã làm gì để dẫn đến Kháng chiến lần
+    - score=0.5316 idx=1 relevant=True | [1284] Trần | Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1
+    - score=0.5055 idx=28 relevant=True | [981] Tiền Lê | Bối cảnh nào tạo điều kiện cho Kháng Tống thắng lợ
+    - score=0.4846 idx=62 relevant=True | [1288] Trần | Trận Bạch Đằng (Trần Hưng Đạo) xảy ra khi nào và k
+
+[6] semantic_search() result:
+    Found: 15 results
+    - [1284] Trần | Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1284
+    - [1225] Trần | Kể tên và tóm tắt sự kiện nổi bật ở Việt Nam năm 1225
+    - [1258] Trần | Trần Hưng Đạo đã làm gì để dẫn đến Kháng chiến lần 1 chống M
+    - [1288] Trần | Trận Bạch Đằng (Trần Hưng Đạo) xảy ra khi nào và kết quả ra 
+    - [1285] Trần | Trần Hưng Đạo đã làm gì để dẫn đến Kháng chiến lần 2 chống N
+
+[7] engine_answer() result:
+    intent: dynasty
+    no_data: False
+    events: 10
+    answer: **Năm 938:** Vì sao Trận Bạch Đằng (Ngô Quyền) (938) quan trọng đối với lịch sử Việt Nam: Trận Bạch Đằng (Ngô Quyền). Ông dùng cọc gỗ đặt ngầm trên sông Bạch Đằng, đánh bại thủy quân Nam Hán, chấm dứt
+
+================================================================================
+QUERY: Đại Việt đã được thành lập như thế nào và phát triển qua các thời kỳ ra sao
+================================================================================
+
+[1] Dynasty detected: None
+[1] Place detected: Đại Việt
+
+[2] Keywords extracted: {'thành', 'việt', 'qua', 'sao', 'thời', 'phát', 'đại', 'lập', 'triển', 'đại_việt'}
+
+[4] Place scan matches: 7
+    - [1077] Lý | Hãy mô tả ngắn gọn bối cảnh và ý nghĩa của Phòng tuyến Như N
+    - [1471] Lê sơ | ông trong Đại Việt đánh bại Champa tại Vijaya
+    - [1075] Lý | Lý Thường Kiệt chủ động tiến công Ung–Khâm–Liêm và nêu ý ngh
+
+[5] FAISS Search (threshold=0.35, TOP_K=15)
+    Normalized query: đại việt đã được thành lập như thế nào và phát triển qua các thời kỳ ra sao
+    search_k: 45
+    All scores: [0.53213    0.46634597 0.44499475 0.44049186 0.43806857 0.4357144
+ 0.4356439  0.42987245 0.42511672 0.42492408]
+    All IDs: [36 14 32 53 64 44 41 31 61 16]
+    Above threshold (0.35): 26
+    - score=0.5321 idx=36 relevant=True | [1955] Hiện đại | Hình thành Việt Nam Cộng hòa ở miền Nam xảy ra khi
+    - score=0.4663 idx=14 relevant=True | [1010] Lý | Trong năm 1010, điều gì có ý nghĩa lịch sử ở Việt 
+    - score=0.4450 idx=32 relevant=True | [1054] Lý | ông trong Đổi quốc hiệu thành Đại Việt
+    - score=0.4405 idx=53 relevant=True | [1862] Nguyễn | Trong năm 1862, điều gì có ý nghĩa lịch sử ở Việt 
+    - score=0.4381 idx=64 relevant=True | [1407] Hồ | ở Việt Nam diễn ra sự kiện gì quan trọng
+
+[6] semantic_search() result:
+    Found: 15 results
+    - [1077] Lý | Hãy mô tả ngắn gọn bối cảnh và ý nghĩa của Phòng tuyến Như N
+    - [1471] Lê sơ | ông trong Đại Việt đánh bại Champa tại Vijaya
+    - [1075] Lý | Lý Thường Kiệt chủ động tiến công Ung–Khâm–Liêm và nêu ý ngh
+    - [1054] Lý | ông trong Đổi quốc hiệu thành Đại Việt
+    - [1258] Trần | Trần Hưng Đạo đã làm gì để dẫn đến Kháng chiến lần 1 chống M
+
+[7] engine_answer() result:
+    intent: place
+    no_data: False
+    events: 10
+    answer: **Năm 1009:** Trong năm 1009, điều gì có ý nghĩa lịch sử ở Việt Nam: Lý Công Uẩn được tôn lập (kết thúc Tiền Lê). Sau khi Lê Long Đĩnh qua đời, Lý Công Uẩn được tôn làm vua. Mở ra triều Lý với nhiều c

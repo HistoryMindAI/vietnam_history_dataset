@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+intent: dynasty
+no_data: False
+events: 10
+
+=== ANSWER ===
+  File "D:\HistoryMindAI\vietnam_history_dataset\ai-service\scripts\_test_full.py", line 21, in <module>
+    print(data.get("answer", "NONE"))
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u0103' in position 3: character maps to <undefined>
