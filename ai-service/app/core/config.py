@@ -21,6 +21,11 @@ TOKENIZER_PATH = os.path.join(BASE_DIR, "onnx_model")
 # ===============================
 INDEX_DIR = os.getenv("FAISS_INDEX_PATH", os.path.join(BASE_DIR, "faiss_index"))
 
+# ===============================
+# KNOWLEDGE BASE CONFIG
+# ===============================
+KNOWLEDGE_BASE_PATH = os.path.join(BASE_DIR, "knowledge_base.json")
+
 # NOTE: history.index only has 1 vector (placeholder). index.bin has 630 real vectors.
 INDEX_PATH = os.path.join(INDEX_DIR, "index.bin")
 META_PATH = os.path.join(INDEX_DIR, "meta.json")

@@ -3,34 +3,19 @@ from app.core.config import TOP_K, SIM_THRESHOLD
 from functools import lru_cache
 from app.utils.normalize import normalize_query
 import re
+from unicodedata import normalize as unicode_normalize
 
 # NOTE: Moved heavy imports (faiss, numpy) to function scope to improve startup time.
 # import faiss
 import numpy as np
 
 # ===================================================================
-# DYNASTY / PERIOD DETECTION FROM QUERY
+# DYNAMIC ENTITY RESOLUTION (Data-Driven)
+# Uses inverted indexes + knowledge_base.json loaded at startup.
+# No hardcoded patterns — scales automatically with data.
 # ===================================================================
 
-# Map query patterns to dynasty names for metadata filtering
-DYNASTY_QUERY_PATTERNS = [
-    (re.compile(r"(?:nhà|triều|triều đại|thời)\s+(Lý)\b", re.IGNORECASE), "Lý"),
-    (re.compile(r"(?:nhà|triều|triều đại|thời)\s+(Trần)\b", re.IGNORECASE), "Trần"),
-    (re.compile(r"(?:nhà|triều|triều đại|thời)\s+(Lê)\b", re.IGNORECASE), "Lê"),
-    (re.compile(r"(?:nhà|triều|triều đại|thời)\s+(Nguyễn)\b", re.IGNORECASE), "Nguyễn"),
-    (re.compile(r"(?:nhà|triều|triều đại|thời)\s+(Đinh)\b", re.IGNORECASE), "Đinh"),
-    (re.compile(r"(?:nhà|triều|triều đại|thời)\s+(Hồ)\b", re.IGNORECASE), "Hồ"),
-    (re.compile(r"(?:nhà|triều|triều đại|thời)\s+(Mạc)\b", re.IGNORECASE), "Mạc"),
-    (re.compile(r"Tây Sơn", re.IGNORECASE), "Tây Sơn"),
-    (re.compile(r"Tiền Lê", re.IGNORECASE), "Tiền Lê"),
-    (re.compile(r"Lê sơ", re.IGNORECASE), "Lê sơ"),
-    (re.compile(r"Lê trung hưng", re.IGNORECASE), "Lê trung hưng"),
-    (re.compile(r"Bắc thuộc", re.IGNORECASE), "Bắc thuộc"),
-    (re.compile(r"Hùng Vương", re.IGNORECASE), "Hùng Vương / An Dương Vương"),
-    (re.compile(r"Pháp thuộc", re.IGNORECASE), "Pháp thuộc"),
-]
-
-# Multi-word historical phrases that should NOT be split
+# Multi-word historical phrases that should NOT be split during keyword extraction
 HISTORICAL_PHRASES = [
     "nguyên mông", "đại việt", "nhà trần", "nhà lý", "nhà lê",
     "nhà nguyễn", "nhà đinh", "nhà hồ", "nhà mạc",
@@ -46,32 +31,127 @@ HISTORICAL_PHRASES = [
 ]
 
 
+def _normalize_query_text(text: str) -> str:
+    """Lowercase + NFC normalize for consistent matching."""
+    return unicode_normalize("NFC", text.lower().strip())
+
+
+def resolve_query_entities(query: str) -> dict:
+    """
+    Dynamically resolve persons, dynasties, topics, and places from query
+    using inverted indexes and aliases loaded at startup.
+
+    Returns: {
+        "persons": [canonical_name, ...],
+        "dynasties": [canonical_dynasty, ...],
+        "topics": [canonical_topic, ...],
+        "places": [place_name, ...],
+    }
+    """
+    q_low = _normalize_query_text(query)
+    result = {"persons": [], "dynasties": [], "topics": [], "places": []}
+    seen_persons = set()
+    seen_dynasties = set()
+    seen_topics = set()
+    seen_places = set()
+
+    # --- 1. Resolve persons via knowledge_base aliases ---
+    for alias, canonical in startup.PERSON_ALIASES.items():
+        if alias in q_low and canonical not in seen_persons:
+            seen_persons.add(canonical)
+            result["persons"].append(canonical)
+
+    # --- 2. Direct person match from inverted index ---
+    for person_key in startup.PERSONS_INDEX:
+        if person_key in q_low and person_key not in seen_persons:
+            seen_persons.add(person_key)
+            result["persons"].append(person_key)
+
+    # --- 3. Resolve dynasties via aliases ---
+    for alias, canonical in startup.DYNASTY_ALIASES.items():
+        if alias in q_low and canonical not in seen_dynasties:
+            seen_dynasties.add(canonical)
+            result["dynasties"].append(canonical)
+
+    # --- 4. Direct dynasty match from inverted index ---
+    for dynasty_key in startup.DYNASTY_INDEX:
+        if dynasty_key in q_low and dynasty_key not in seen_dynasties:
+            seen_dynasties.add(dynasty_key)
+            result["dynasties"].append(dynasty_key)
+
+    # --- 5. Resolve topics via synonyms ---
+    for synonym, canonical in startup.TOPIC_SYNONYMS.items():
+        if synonym in q_low and canonical not in seen_topics:
+            seen_topics.add(canonical)
+            result["topics"].append(canonical)
+
+    # --- 6. Direct place match from inverted index ---
+    for place_key in startup.PLACES_INDEX:
+        if place_key in q_low and place_key not in seen_places:
+            seen_places.add(place_key)
+            result["places"].append(place_key)
+
+    return result
+
+
+def scan_by_entities(resolved: dict, max_results: int = 50) -> list:
+    """
+    Scan documents using inverted indexes — O(1) lookup per entity.
+    Returns deduplicated list of matching documents.
+    """
+    doc_indices = set()
+
+    for person in resolved.get("persons", []):
+        doc_indices.update(startup.PERSONS_INDEX.get(person, []))
+
+    for dynasty in resolved.get("dynasties", []):
+        doc_indices.update(startup.DYNASTY_INDEX.get(dynasty, []))
+
+    for topic in resolved.get("topics", []):
+        # Topic synonyms map to canonical topics; search both keyword and text index
+        doc_indices.update(startup.KEYWORD_INDEX.get(topic, []))
+        # Also check if topic words appear in KEYWORD_INDEX with underscores
+        topic_underscored = topic.replace(" ", "_")
+        doc_indices.update(startup.KEYWORD_INDEX.get(topic_underscored, []))
+
+    for place in resolved.get("places", []):
+        doc_indices.update(startup.PLACES_INDEX.get(place, []))
+
+    # Return actual documents, capped at max_results
+    docs = []
+    for i in sorted(doc_indices):
+        if i < len(startup.DOCUMENTS):
+            docs.append(startup.DOCUMENTS[i])
+        if len(docs) >= max_results:
+            break
+    return docs
+
+
+# ===================================================================
+# BACKWARD-COMPATIBLE WRAPPERS
+# These wrap resolve_query_entities() for engine.py compatibility.
+# ===================================================================
+
 def detect_dynasty_from_query(query: str) -> str | None:
     """
     Detect if the query is asking about a specific dynasty.
+    Uses dynamic aliases from knowledge_base.json.
     Returns dynasty name or None.
     """
-    for pattern, dynasty in DYNASTY_QUERY_PATTERNS:
-        if pattern.search(query):
-            return dynasty
-    return None
+    resolved = resolve_query_entities(query)
+    dynasties = resolved.get("dynasties", [])
+    return dynasties[0] if dynasties else None
 
 
 def detect_place_from_query(query: str) -> str | None:
     """
-    Detect if the query mentions a historical place/state name.
+    Detect if the query mentions a historical place.
+    Uses dynamic places index from DOCUMENTS.
+    Returns place name or None.
     """
-    q_low = query.lower()
-    place_patterns = [
-        ("đại việt", "Đại Việt"),
-        ("đại cồ việt", "Đại Cồ Việt"),
-        ("champa", "Champa"),
-        ("thăng long", "Thăng Long"),
-    ]
-    for pattern, place in place_patterns:
-        if pattern in q_low:
-            return place
-    return None
+    resolved = resolve_query_entities(query)
+    places = resolved.get("places", [])
+    return places[0] if places else None
 
 
 # ===================================================================

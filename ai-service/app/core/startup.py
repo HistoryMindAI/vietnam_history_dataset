@@ -15,6 +15,7 @@ from .config import (
     META_PATH,
     EMBED_MODEL_PATH,
     TOKENIZER_PATH,
+    KNOWLEDGE_BASE_PATH,
 )
 
 # Global resources (initialized in load_resources)
@@ -24,6 +25,17 @@ index = None
 DOCUMENTS = []
 DOCUMENTS_BY_YEAR = defaultdict(list)
 LOADING_ERROR = None
+
+# Dynamic inverted indexes (auto-built from DOCUMENTS at startup)
+PERSONS_INDEX = defaultdict(list)     # "trần hưng đạo" → [doc_idx, ...]
+DYNASTY_INDEX = defaultdict(list)     # "trần" → [doc_idx, ...]
+KEYWORD_INDEX = defaultdict(list)     # "khởi_nghĩa" → [doc_idx, ...]
+PLACES_INDEX = defaultdict(list)      # "bạch đằng" → [doc_idx, ...]
+
+# Knowledge base (loaded from knowledge_base.json)
+PERSON_ALIASES = {}    # "quang trung" → "nguyễn huệ"
+TOPIC_SYNONYMS = {}    # "mông cổ" → "nguyên mông"
+DYNASTY_ALIASES = {}   # "nhà trần" → "trần"
 
 def load_resources():
     """
@@ -118,8 +130,16 @@ def load_resources():
             if y is not None:
                 DOCUMENTS_BY_YEAR[y].append(doc)
 
+        # ===============================
+        # BUILD INVERTED INDEXES (Data-Driven)
+        # ===============================
+        _build_inverted_indexes()
+        _load_knowledge_base()
+
         print(
-            f"[STARTUP] Ready | docs={len(DOCUMENTS)} | years={len(DOCUMENTS_BY_YEAR)}",
+            f"[STARTUP] Ready | docs={len(DOCUMENTS)} | years={len(DOCUMENTS_BY_YEAR)}"
+            f" | persons={len(PERSONS_INDEX)} | dynasties={len(DYNASTY_INDEX)}"
+            f" | aliases={len(PERSON_ALIASES)}",
             flush=True
         )
 
@@ -127,3 +147,108 @@ def load_resources():
         print(f"❌ [STARTUP] Critical failure in load_resources: {e}", flush=True)
         LOADING_ERROR = str(e)
         # We catch everything so the thread doesn't crash silently without setting the flag.
+
+
+def _build_inverted_indexes():
+    """
+    Auto-build inverted indexes from DOCUMENTS metadata.
+    No hardcoded patterns — scales automatically with data.
+    """
+    global PERSONS_INDEX, DYNASTY_INDEX, KEYWORD_INDEX, PLACES_INDEX
+
+    PERSONS_INDEX = defaultdict(list)
+    DYNASTY_INDEX = defaultdict(list)
+    KEYWORD_INDEX = defaultdict(list)
+    PLACES_INDEX = defaultdict(list)
+
+    for idx, doc in enumerate(DOCUMENTS):
+        # Index persons (merge both fields, deduplicate via set)
+        all_persons = set(doc.get("persons", []) + doc.get("persons_all", []))
+        for person in all_persons:
+            key = person.strip().lower()
+            if key and len(key) > 1:
+                PERSONS_INDEX[key].append(idx)
+
+        # Index dynasty
+        dynasty = doc.get("dynasty", "").strip().lower()
+        if dynasty:
+            DYNASTY_INDEX[dynasty].append(idx)
+
+        # Index keywords
+        for kw in doc.get("keywords", []):
+            key = kw.strip().lower().replace("_", " ")
+            if key:
+                KEYWORD_INDEX[key].append(idx)
+
+        # Index places
+        for place in doc.get("places", []):
+            key = place.strip().lower()
+            if key and len(key) > 1:
+                PLACES_INDEX[key].append(idx)
+
+    print(
+        f"[STARTUP] Inverted indexes built:"
+        f" persons={len(PERSONS_INDEX)}, dynasties={len(DYNASTY_INDEX)},"
+        f" keywords={len(KEYWORD_INDEX)}, places={len(PLACES_INDEX)}",
+        flush=True
+    )
+
+
+def _load_knowledge_base():
+    """
+    Load aliases & synonyms from knowledge_base.json.
+    This is the ONLY file that needs editing when scaling —
+    no Python code changes required.
+    """
+    global PERSON_ALIASES, TOPIC_SYNONYMS, DYNASTY_ALIASES
+
+    PERSON_ALIASES = {}
+    TOPIC_SYNONYMS = {}
+    DYNASTY_ALIASES = {}
+
+    if not os.path.exists(KNOWLEDGE_BASE_PATH):
+        print(f"[WARN] Knowledge base not found at {KNOWLEDGE_BASE_PATH}", flush=True)
+        return
+
+    try:
+        with open(KNOWLEDGE_BASE_PATH, encoding="utf-8") as f:
+            kb = json.load(f)
+
+        # Build person alias lookup: alias → canonical name
+        for canonical, aliases in kb.get("person_aliases", {}).items():
+            canonical_lower = canonical.strip().lower()
+            # Map canonical to itself
+            PERSON_ALIASES[canonical_lower] = canonical_lower
+            for alias in aliases:
+                alias_lower = alias.strip().lower()
+                if alias_lower:
+                    PERSON_ALIASES[alias_lower] = canonical_lower
+
+        # Build topic synonym lookup: synonym → canonical topic
+        for canonical, synonyms in kb.get("topic_synonyms", {}).items():
+            canonical_lower = canonical.strip().lower()
+            TOPIC_SYNONYMS[canonical_lower] = canonical_lower
+            for syn in synonyms:
+                syn_lower = syn.strip().lower()
+                if syn_lower:
+                    TOPIC_SYNONYMS[syn_lower] = canonical_lower
+
+        # Build dynasty alias lookup: alias → canonical dynasty name
+        for canonical, aliases in kb.get("dynasty_aliases", {}).items():
+            canonical_lower = canonical.strip().lower()
+            DYNASTY_ALIASES[canonical_lower] = canonical_lower
+            for alias in aliases:
+                alias_lower = alias.strip().lower()
+                if alias_lower:
+                    DYNASTY_ALIASES[alias_lower] = canonical_lower
+
+        print(
+            f"[STARTUP] Knowledge base loaded:"
+            f" person_aliases={len(PERSON_ALIASES)},"
+            f" topic_synonyms={len(TOPIC_SYNONYMS)},"
+            f" dynasty_aliases={len(DYNASTY_ALIASES)}",
+            flush=True
+        )
+
+    except Exception as e:
+        print(f"[ERROR] Failed to load knowledge base: {e}", flush=True)
