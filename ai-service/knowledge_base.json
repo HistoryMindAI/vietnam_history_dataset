@@ -1,6 +1,6 @@
 {
   "_description": "Knowledge Base for HistoryMindAI - Dynamic aliases & synonyms. Edit this file to extend entity recognition without changing code.",
-  "_version": "1.1.0",
+  "_version": "1.2.0",
 
   "person_aliases": {
     "hai bà trưng": ["trưng trắc", "trưng nhị", "hai bà", "trưng vương"],
@@ -84,6 +84,21 @@
     "thd": "trần hưng đạo",
     "ltk": "lý thường kiệt",
     "vng": "võ nguyên giáp"
+  },
+
+  "typo_fixes": {
+    "nguyen huye": "nguyễn huệ",
+    "nguyen huee": "nguyễn huệ",
+    "nguyen huej": "nguyễn huệ",
+    "quangtrung": "quang trung",
+    "tran hung đao": "trần hưng đạo",
+    "tranhungdao": "trần hưng đạo",
+    "hochiminhh": "hồ chí minh",
+    "hochiminh": "hồ chí minh",
+    "bachđang": "bạch đằng",
+    "bachdang": "bạch đằng",
+    "dienbienphu": "điện biên phủ",
+    "dongda": "đống đa"
   },
 
   "question_patterns": {
