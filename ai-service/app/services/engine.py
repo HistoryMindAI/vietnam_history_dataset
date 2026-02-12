@@ -566,8 +566,9 @@ def engine_answer(query: str):
             raw_events.extend(scan_by_year(yr))
         # Also add semantic results for context
         raw_events.extend(semantic_search(rewritten))
-    elif same_person_info and (is_relationship or is_definition):
-        # "Quang Trung và Nguyễn Huệ là gì của nhau?" → explain + show events
+    elif same_person_info and is_relationship:
+        # "Quang Trung và Nguyễn Huệ là gì của nhau?" → explain same person
+        # NOTE: "QT và NH là ai?" falls through to definition branch (normal events)
         intent = "relationship"
         is_entity_query = True
         raw_events = scan_by_entities(resolved)
@@ -692,11 +693,12 @@ def engine_answer(query: str):
     # Generate complete, comprehensive answer
     answer = format_complete_answer(unique_events)
 
-    # Prepend same-person explanation if detected
-    if same_person_info and answer:
+    # Prepend same-person explanation ONLY for relationship queries
+    # "là ai" (definition) should return normal events without same-person header
+    if same_person_info and intent == "relationship" and answer:
         same_person_response = _generate_same_person_response(same_person_info)
         answer = same_person_response + "\n\n" + answer
-    elif same_person_info and not answer:
+    elif same_person_info and intent == "relationship" and not answer:
         answer = _generate_same_person_response(same_person_info)
 
     # Smart no_data response — suggest alternative phrasing
