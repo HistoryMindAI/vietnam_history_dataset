@@ -407,11 +407,11 @@ def format_complete_answer(events: list) -> str:
 def _filter_by_query_keywords(query: str, events: list) -> list:
     """
     Dynamic keyword relevance filter.
-    Extracts meaningful content words from the query and scores events
-    by word overlap. Removes events with zero overlap with query intent.
-    Fully data-driven — no hardcoded keyword categories.
+    Scores events by query-word overlap and removes low-scoring outliers.
+    Uses relative scoring (remove bottom quartile) instead of absolute threshold
+    to handle diverse query types gracefully.
     """
-    # Stopwords that carry no semantic meaning for Vietnamese history queries
+    # Stopwords — carry no semantic meaning for filtering
     STOPWORDS = {
         "là", "gì", "của", "và", "hay", "hoặc", "có", "không", "được", "bị",
         "cho", "với", "từ", "đến", "trong", "ngoài", "về", "theo", "như",
@@ -420,25 +420,21 @@ def _filter_by_query_keywords(query: str, events: list) -> list:
         "ạ", "vậy", "rồi", "nha", "nhỉ", "này", "đó", "kia", "ấy",
         "những", "các", "một", "mọi", "mỗi", "nhiều", "ít", "ra",
         "lên", "xuống", "vào", "đi", "lại", "đã", "đang", "sẽ", "cũng",
-        "rất", "quá", "lắm", "nhất", "hơn", "năm", "thời", "triều",
+        "rất", "quá", "lắm", "nhất", "hơn",
     }
 
     q_low = query.lower()
-    # Extract meaningful keywords (3+ chars, not stopwords)
+    # Extract meaningful keywords from query (2+ chars, not stopwords)
     query_words = set()
     for word in q_low.split():
         word_clean = word.strip(".,!?;:\"'()[]{}—–-")
-        if len(word_clean) >= 3 and word_clean not in STOPWORDS:
+        if len(word_clean) >= 2 and word_clean not in STOPWORDS:
             query_words.add(word_clean)
 
-    if not query_words or len(query_words) < 2:
-        return events  # Not enough keywords to filter meaningfully
+    if len(query_words) < 2:
+        return events  # Not enough keywords to filter
 
-    # Also extract entity names already resolved — don't filter by them
-    # (they are already used for entity-based lookup)
-    # Remove entity names from query_words to get CONTEXT keywords only
-    context_words = set(query_words)  # Will be used for relevance scoring
-
+    # Score each event by word overlap with query
     scored = []
     for doc in events:
         doc_text = (
@@ -447,14 +443,26 @@ def _filter_by_query_keywords(query: str, events: list) -> list:
             " ".join(doc.get("keywords", []) or [])
         ).lower()
 
-        # Score = number of query context words found in doc text
-        score = sum(1 for w in context_words if w in doc_text)
+        score = sum(1 for w in query_words if w in doc_text)
         scored.append((doc, score))
 
-    # Keep events with score > 0 (at least 1 query keyword matches)
-    relevant = [doc for doc, score in scored if score > 0]
+    if not scored:
+        return events
 
-    # If filtering removes everything, return original (don't over-filter)
+    # Find the maximum score achieved
+    max_score = max(s for _, s in scored)
+    if max_score <= 1:
+        return events  # All events have low overlap, don't filter
+
+    # Relative threshold: keep events with score >= 50% of max score
+    # This removes clear outliers while keeping contextually relevant events
+    threshold = max(2, max_score // 2)
+    relevant = [doc for doc, score in scored if score >= threshold]
+
+    # Fallback: if too aggressive, keep all events with score > 0
+    if not relevant:
+        relevant = [doc for doc, score in scored if score > 0]
+
     return relevant if relevant else events
 
 
