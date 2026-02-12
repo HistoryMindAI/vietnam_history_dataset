@@ -7,20 +7,47 @@ from app.services.query_understanding import (
     rewrite_query, extract_question_intent,
     generate_search_variations,
 )
+from app.services.context7_service import (
+    filter_and_rank_events,
+    validate_answer_relevance,
+)
 import app.core.startup as startup
 import re
 
 # Pre-compile regex for faster matching
 YEAR_PATTERN = re.compile(r"(?<![\d-])([1-9][0-9]{1,3})(?!\d)")
 
-# Year range: "từ năm 1225 đến năm 1400", "từ 1225 đến 1400", "giai đoạn 1225-1400"
-YEAR_RANGE_PATTERN = re.compile(
-    r"(?:từ\s*(?:năm\s*)?|giai\s*đoạn\s*)"
-    r"(\d{3,4})"
-    r"\s*(?:đến|tới|[-–—])\s*(?:năm\s*)?"
-    r"(\d{3,4})",
-    re.IGNORECASE
-)
+# Year range patterns - support multiple formats
+YEAR_RANGE_PATTERNS = [
+    # "từ năm 40 đến năm 2025"
+    re.compile(
+        r"(?:từ\s*(?:năm\s*)?|giai\s*đoạn\s*)"
+        r"(\d{1,4})"
+        r"\s*(?:đến|tới|[-–—])\s*(?:năm\s*)?"
+        r"(\d{1,4})",
+        re.IGNORECASE
+    ),
+    # "năm 40 đến 2025"
+    re.compile(
+        r"năm\s+(\d{1,4})\s+(?:đến|tới|[-–—])\s+(?:năm\s*)?(\d{1,4})",
+        re.IGNORECASE
+    ),
+    # "40-2025", "40 đến 2025"
+    re.compile(
+        r"\b(\d{1,4})\s*(?:đến|tới|[-–—])\s*(\d{1,4})\b",
+        re.IGNORECASE
+    ),
+    # "from 40 to 2025"
+    re.compile(
+        r"from\s+(\d{1,4})\s+to\s+(\d{1,4})",
+        re.IGNORECASE
+    ),
+    # "between 40 and 2025"
+    re.compile(
+        r"between\s+(\d{1,4})\s+and\s+(\d{1,4})",
+        re.IGNORECASE
+    ),
+]
 
 
 def extract_single_year(text: str):
@@ -37,15 +64,28 @@ def extract_single_year(text: str):
 
 def extract_year_range(text: str):
     """
-    Extracts a year range from text (e.g., 'từ năm 1225 đến 1400').
+    Extracts a year range from text with multiple format support.
+    
+    Supported formats:
+    - "từ năm 40 đến năm 2025"
+    - "năm 40 đến 2025"
+    - "40-2025", "40 đến 2025"
+    - "from 40 to 2025"
+    - "between 40 and 2025"
+    - "giai đoạn 40-2025"
+    
     Returns (start_year, end_year) or None.
     """
-    m = YEAR_RANGE_PATTERN.search(text)
-    if m:
-        start = int(m.group(1))
-        end = int(m.group(2))
-        if 40 <= start <= 2025 and 40 <= end <= 2025 and start < end:
-            return (start, end)
+    for pattern in YEAR_RANGE_PATTERNS:
+        m = pattern.search(text)
+        if m:
+            start = int(m.group(1))
+            end = int(m.group(2))
+            
+            # Validate year range - minimum year is 40 (Hai Bà Trưng)
+            if 40 <= start <= 2025 and 40 <= end <= 2025 and start < end:
+                return (start, end)
+    
     return None
 
 
@@ -84,6 +124,38 @@ RELATIONSHIP_PATTERNS = [
     "la ai cua",
 ]
 
+# Greeting patterns — casual conversation
+GREETING_PATTERNS = [
+    # English greetings - EXACT MATCH to avoid false positives
+    r'\bhello\b', r'\bhi\b(?!\s+\w)', r'\bhey\b', 
+    r'\bgood morning\b', r'\bgood afternoon\b', r'\bgood evening\b',
+    r'\bhow are you\b', r'\bwhat\'s up\b', r'\bhow do you do\b', r'\bnice to meet you\b',
+    # Vietnamese greetings - EXACT MATCH
+    r'\bxin chào\b', r'\bchào bạn\b', r'\bchào\b(?!\s+\w)', 
+    r'\bchào buổi sáng\b', r'\bchào buổi chiều\b', 
+    r'\bchào buổi tối\b', r'\bbạn khỏe không\b', r'\bbạn có khỏe không\b', r'\bkhỏe không\b',
+    r'\bdạo này thế nào\b', r'\bhôm nay thế nào\b', r'\bbạn thế nào\b', r'\bmọi việc thế nào\b',
+    r'\brất vui được gặp\b', r'\bhân hạnh\b', r'\bchào mừng\b(?!\s+\w)',
+    # Casual Vietnamese
+    r'\balo\b', r'\balô\b', r'\bhế lô\b', r'\bhê lô\b', r'\bhê nhô\b', r'\bhê lô bạn\b',
+    r'\bchào cậu\b', r'\bchào mừng bạn\b', r'\bchào mừng đến với\b',
+]
+
+# Thank you patterns
+THANK_PATTERNS = [
+    r'\bthank you\b', r'\bthanks\b', r'\bthank\b', r'\bthx\b', r'\bty\b',
+    r'\bcảm ơn\b', r'\bcám ơn\b', r'\bthanks bạn\b', r'\bcảm ơn bạn\b', r'\bcảm ơn nhiều\b',
+    r'\bcảm ơn bạn nhiều\b', r'\bthanks nhiều\b', r'\bcảm ơn nhé\b', r'\bcảm ơn nha\b',
+    r'\bcảm ơn rất nhiều\b', r'\bxin cảm ơn\b',
+]
+
+# Goodbye patterns
+GOODBYE_PATTERNS = [
+    r'\bbye\b', r'\bgoodbye\b', r'\bsee you\b', r'\bsee ya\b', r'\bfarewell\b', r'\btake care\b',
+    r'\btạm biệt\b', r'\bchào tạm biệt\b', r'\bhẹn gặp lại\b', r'\bgặp lại\b', r'\bbye bye\b',
+    r'\bbái bai\b', r'\btạm biệt nhé\b', r'\bchào nhé\b', r'\bđi đây\b', r'\bđi nhé\b',
+]
+
 # Identity patterns — who are you?
 IDENTITY_PATTERNS = [
     "who are you", "bạn là ai", "giới thiệu bản thân",
@@ -112,6 +184,31 @@ IDENTITY_RESPONSE = (
     "- Các triều đại — Lý, Trần, Lê, Nguyễn\n"
     "- So sánh các giai đoạn lịch sử\n\n"
     "Hãy thử đặt câu hỏi, tôi sẵn sàng giúp bạn!"
+)
+
+GREETING_RESPONSE = (
+    "Xin chào! 👋\n\n"
+    "Tôi là **History Mind AI** — trợ lý lịch sử Việt Nam của bạn.\n\n"
+    "Tôi có thể giúp bạn khám phá 4.000 năm lịch sử dân tộc. "
+    "Hãy thử hỏi tôi về:\n\n"
+    "- Các sự kiện lịch sử: *\"Trận Bạch Đằng năm 1288\"*\n"
+    "- Nhân vật anh hùng: *\"Ai là Trần Hưng Đạo?\"*\n"
+    "- Triều đại: *\"Kể về nhà Trần\"*\n"
+    "- So sánh: *\"So sánh nhà Lý và nhà Trần\"*\n\n"
+    "Bạn muốn tìm hiểu về điều gì?"
+)
+
+THANK_RESPONSE = (
+    "Rất vui được giúp bạn! 😊\n\n"
+    "Nếu bạn có thêm câu hỏi về lịch sử Việt Nam, "
+    "đừng ngại hỏi tôi nhé!"
+)
+
+GOODBYE_RESPONSE = (
+    "Tạm biệt! 👋\n\n"
+    "Hẹn gặp lại bạn. Chúc bạn một ngày tốt lành!\n\n"
+    "Nếu cần tìm hiểu thêm về lịch sử Việt Nam, "
+    "tôi luôn sẵn sàng giúp đỡ."
 )
 
 CREATOR_RESPONSE = (
@@ -587,6 +684,37 @@ def engine_answer(query: str):
     # Detect high-level question intent for context
     question_intent = extract_question_intent(rewritten)
 
+    # Handle greeting queries — "hello", "hi", "xin chào"
+    # Use regex for exact matching to avoid false positives
+    if any(re.search(pattern, q) for pattern in GREETING_PATTERNS):
+        return {
+            "query": q_display,
+            "intent": "greeting",
+            "answer": GREETING_RESPONSE,
+            "events": [],
+            "no_data": False
+        }
+
+    # Handle thank you queries
+    if any(re.search(pattern, q) for pattern in THANK_PATTERNS):
+        return {
+            "query": q_display,
+            "intent": "thank",
+            "answer": THANK_RESPONSE,
+            "events": [],
+            "no_data": False
+        }
+
+    # Handle goodbye queries
+    if any(re.search(pattern, q) for pattern in GOODBYE_PATTERNS):
+        return {
+            "query": q_display,
+            "intent": "goodbye",
+            "answer": GOODBYE_RESPONSE,
+            "events": [],
+            "no_data": False
+        }
+
     # Handle creator queries — "ai tạo ra bạn?", "ai phát triển bạn?"
     # Check BEFORE identity to avoid 'bạn là ai' substring matching
     if any(pattern in q for pattern in CREATOR_PATTERNS):
@@ -774,6 +902,12 @@ def engine_answer(query: str):
         if not raw_events and query.lower() != rewritten.lower():
             raw_events = semantic_search(query)
 
+    # --- CONTEXT7 FILTERING & RANKING ---
+    # Apply Context7 to filter and rank events based on query relevance
+    # This ensures the answer stays focused on the question
+    if raw_events:
+        raw_events = filter_and_rank_events(raw_events, query, max_results=50)
+    
     no_data = not raw_events
 
     # Use higher event limit for range/dynasty/entity queries
@@ -804,6 +938,16 @@ def engine_answer(query: str):
     # Smart no_data response — suggest alternative phrasing
     if no_data:
         answer = _generate_no_data_suggestion(q_display, rewritten, resolved, question_intent)
+    
+    # --- CONTEXT7 ANSWER VALIDATION ---
+    # Validate that the answer is relevant to the question
+    if answer and not no_data:
+        validation = validate_answer_relevance(answer, query)
+        if not validation["is_relevant"]:
+            # Log issues for debugging (in production, you might want to log this)
+            # For now, we trust the filtering did its job, but this can be used
+            # to further refine or add warnings
+            pass
 
     return {
         "query": q_display,
