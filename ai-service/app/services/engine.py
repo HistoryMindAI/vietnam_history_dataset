@@ -600,6 +600,22 @@ def engine_answer(query: str):
         is_entity_query = True
         # Use inverted index scan for fast O(1) lookup
         raw_events = scan_by_entities(resolved)
+
+        # --- DYNASTY-AWARE FILTERING ---
+        # When query specifies a dynasty, filter out docs from unrelated dynasties
+        # Prevents "nhà Nguyễn" docs from leaking into "nhà Trần" queries
+        if has_dynasties and raw_events:
+            target_dynasties = set(d.lower() for d in resolved["dynasties"])
+            filtered = []
+            for doc in raw_events:
+                doc_dynasty = doc.get("dynasty", "").strip().lower()
+                # Keep if: no dynasty metadata, OR dynasty matches target
+                if not doc_dynasty or any(td in doc_dynasty or doc_dynasty in td for td in target_dynasties):
+                    filtered.append(doc)
+            # Only apply filter if it doesn't remove everything
+            if filtered:
+                raw_events = filtered
+
         # Only supplement with semantic search when entity scan returns too few
         if len(raw_events) < 3:
             raw_events.extend(semantic_search(rewritten))
@@ -617,7 +633,9 @@ def engine_answer(query: str):
 
     # --- FALLBACK CHAIN ---
     # When primary search finds nothing, try harder
-    if not raw_events:
+    # BUT: if entities were resolved and entity scan found nothing, it's a DATA GAP
+    # → don't waste time on semantic search which will return irrelevant results
+    if not raw_events and not (is_entity_query and has_entities):
         # Fallback 1: Semantic search with rewritten query
         # (may help if rewrite changed the query significantly)
         if rewritten.lower() != query.lower():
