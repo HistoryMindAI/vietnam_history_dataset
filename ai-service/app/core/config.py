@@ -35,3 +35,10 @@ META_PATH = os.path.join(INDEX_DIR, "meta.json")
 # ===============================
 TOP_K = int(os.getenv("TOP_K", 15))
 SIM_THRESHOLD = float(os.getenv("SIM_THRESHOLD", 0.35))
+
+# ===============================
+# NLU CONFIG (Natural Language Understanding)
+# ===============================
+SIM_THRESHOLD_LOW = float(os.getenv("SIM_THRESHOLD_LOW", 0.25))  # Fallback search
+FUZZY_MATCH_THRESHOLD = float(os.getenv("FUZZY_MATCH_THRESHOLD", 0.75))  # Entity fuzzy match
+HIGH_CONFIDENCE_SCORE = float(os.getenv("HIGH_CONFIDENCE_SCORE", 0.55))  # Bypass keyword check
