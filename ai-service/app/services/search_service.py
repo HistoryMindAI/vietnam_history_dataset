@@ -9,10 +9,17 @@ from app.services.query_understanding import (
 )
 import re
 from unicodedata import normalize as unicode_normalize
+import unicodedata
 
 # NOTE: Moved heavy imports (faiss, numpy) to function scope to improve startup time.
 # import faiss
 import numpy as np
+
+
+def _strip_accents_light(text: str) -> str:
+    """Strip Vietnamese diacritical marks for fuzzy comparison."""
+    nfkd = unicodedata.normalize('NFKD', text)
+    return ''.join(c for c in nfkd if not unicodedata.combining(c))
 
 # ===================================================================
 # DYNAMIC ENTITY RESOLUTION (Data-Driven)
@@ -137,9 +144,12 @@ def resolve_query_entities(query: str) -> dict:
             if is_part_of_person:
                 continue
             # GUARD: Skip if fuzzy-matched key is very similar to a resolved topic
-            # e.g., "nguyễn" dynasty should NOT match when "nguyên mông" is a topic
+            # Use BOTH accented and stripped comparison since Vietnamese accents
+            # can differ between similar words: "nguyễn" vs "nguyên" → both strip to "nguyen"
+            matched_stripped = _strip_accents_light(matched_key)
             is_similar_to_topic = any(
-                matched_key in topic or topic in matched_key
+                matched_key in topic or topic in matched_key or
+                matched_stripped in _strip_accents_light(topic)
                 for topic in result["topics"]
             )
             if is_similar_to_topic:
@@ -224,34 +234,56 @@ def scan_by_entities(resolved: dict, max_results: int = 50) -> list:
     # --- TEXT-BASED FALLBACK ---
     # When inverted index has no entries, scan DOCUMENTS text fields directly.
     # This handles cases where pipeline didn't extract entities into metadata.
+    # PRIORITY: match in metadata fields (persons, keywords) > match in story text
     if unmatched_persons or unmatched_topics:
         # Build search terms: include all aliases for each person
-        search_terms = []
+        search_terms_persons = set()
         for person in unmatched_persons:
-            search_terms.append(person)
-            # Also search for all aliases that resolve to this canonical person
+            search_terms_persons.add(person)
             for alias, canonical in startup.PERSON_ALIASES.items():
                 if canonical == person and alias != person:
-                    search_terms.append(alias)
+                    search_terms_persons.add(alias)
+        search_terms_topics = set()
         for topic in unmatched_topics:
-            search_terms.append(topic)
+            search_terms_topics.add(topic)
             for syn, canonical in startup.TOPIC_SYNONYMS.items():
                 if canonical == topic and syn != topic:
-                    search_terms.append(syn)
+                    search_terms_topics.add(syn)
 
+        # Phase 1: Match against metadata fields (high confidence)
+        metadata_matches = set()
         for idx, doc in enumerate(startup.DOCUMENTS):
             if idx in doc_indices:
                 continue
-            doc_text = " ".join([
-                str(doc.get("story", "")),
-                str(doc.get("event", "")),
-                str(doc.get("title", "")),
-                " ".join(doc.get("persons", [])),
-            ]).lower()
-            if any(term in doc_text for term in search_terms):
-                doc_indices.add(idx)
-            if len(doc_indices) >= max_results:
-                break
+            doc_persons_lower = [p.lower() for p in doc.get("persons", [])]
+            doc_keywords_lower = [k.lower() for k in doc.get("keywords", [])]
+            persons_meta = " ".join(doc_persons_lower)
+            keywords_meta = " ".join(doc_keywords_lower)
+            if any(t in persons_meta for t in search_terms_persons):
+                metadata_matches.add(idx)
+            elif any(t in keywords_meta for t in search_terms_topics):
+                metadata_matches.add(idx)
+        
+        doc_indices.update(metadata_matches)
+
+        # Phase 2: Only fall back to story text if Phase 1 found nothing
+        # Story text matching is noisier (mentions ≠ relevance)
+        if not metadata_matches:
+            story_matches = set()
+            all_terms = search_terms_persons | search_terms_topics
+            for idx, doc in enumerate(startup.DOCUMENTS):
+                if idx in doc_indices:
+                    continue
+                doc_text = " ".join([
+                    str(doc.get("story", "")),
+                    str(doc.get("event", "")),
+                    str(doc.get("title", "")),
+                ]).lower()
+                if any(term in doc_text for term in all_terms):
+                    story_matches.add(idx)
+                if len(story_matches) >= max_results:
+                    break
+            doc_indices.update(story_matches)
 
     # Return actual documents, capped at max_results
     docs = []
