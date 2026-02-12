@@ -1,6 +1,6 @@
 # Hướng Dẫn Triển Khai AI Service (Docker)
 
-Tài liệu này hướng dẫn chi tiết các bước để cài đặt, xây dựng và chạy **AI Service** của hệ thống Vietnam History AI sử dụng Docker. Service này cung cấp API để tìm kiếm và trả lời câu hỏi lịch sử dựa trên dữ liệu đã được index.
+Tài liệu này hướng dẫn chi tiết các bước để cài đặt, xây dựng và chạy **AI Service** của hệ thống Vietnam History AI sử dụng Docker. Service này cung cấp API để tìm kiếm và trả lời câu hỏi lịch sử dựa trên kiến trúc **Data-Driven** (dữ liệu được load động từ `knowledge_base.json`).
 
 ## Yêu cầu tiên quyết
 
@@ -44,7 +44,7 @@ python pipeline/index_docs.py
 
 *Lưu ý: Trên Windows (PowerShell), thay `export PYTHONPATH=.` bằng `$env:PYTHONPATH="."`*
 
-Sau khi chạy xong, kiểm tra xem thư mục `ai-service/faiss_index/` đã được tạo chưa và có chứa `history.index` và `meta.json` không.
+Sau khi chạy xong, kiểm tra xem thư mục `ai-service/faiss_index/` đã được tạo chưa và có chứa `index.bin` và `meta.json` không.
 
 ---
 
@@ -132,6 +132,23 @@ Một số lệnh hữu ích để quản lý service:
     ```bash
     docker rmi vietnam-history-ai
     ```
+
+## 📝 Knowledge Base (`knowledge_base.json` v1.2.0)
+
+File `knowledge_base.json` là **Single Source of Truth** cho toàn bộ dữ liệu động của AI Service. Tất cả được load tự động khi startup:
+
+| Section | Mô tả | Ví dụ |
+|---|---|---|
+| `person_aliases` | Biệt danh nhân vật lịch sử | Trần Quốc Tuấn → Trần Hưng Đạo |
+| `topic_synonyms` | Từ đồng nghĩa chủ đề | Mông Cổ → Nguyên Mông |
+| `dynasty_aliases` | Alias triều đại | Nhà Trần → Trần |
+| `abbreviations` | Viết tắt | HCM → Hồ Chí Minh |
+| `typo_fixes` | Sửa lỗi chính tả | quangtrung → quang trung |
+| `question_patterns` | Mẫu câu hỏi tìm kiếm | ai đã, khi nào, ở đâu |
+
+> **Lưu ý**: `HISTORICAL_PHRASES` (cụm từ lịch sử đa từ) được **tự động sinh** từ các entities đã có trong knowledge_base — không cần khai báo thủ công.
+
+---
 
 ## Xử lý lỗi thường gặp
 

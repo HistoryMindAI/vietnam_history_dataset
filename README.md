@@ -30,7 +30,7 @@ graph TD
     subgraph "💾 Data Layer"
         D1["FAISS Index - 630 vectors"]
         D2["meta.json - Metadata"]
-        D3["knowledge_base.json - Aliases"]
+        D3["knowledge_base.json v1.2.0<br/>(Aliases, Typos, Patterns)"]
         D4["history_timeline.json"]
     end
 
@@ -130,7 +130,7 @@ Dịch vụ API sử dụng kiến trúc **Data-Driven** — không hardcode pat
 graph TD
     subgraph "🚀 Startup - Khởi tạo một lần"
         S1["meta.json<br/>(630 documents)"]
-        S2["knowledge_base.json<br/>(Aliases & Synonyms)"]
+        S2["knowledge_base.json v1.2.0<br/>(Aliases, Synonyms, Typos, Patterns)"]
         S1 -- "auto-build" --> IDX["Inverted Indexes"]
         S2 -- "load" --> KB["Knowledge Base"]
     end
@@ -146,6 +146,10 @@ graph TD
         KB --> K1["PERSON_ALIASES<br/>Trần Quốc Tuấn → Trần Hưng Đạo"]
         KB --> K2["TOPIC_SYNONYMS<br/>Mông Cổ → Nguyên Mông"]
         KB --> K3["DYNASTY_ALIASES<br/>Nhà Trần → Trần"]
+        KB --> K4["ABBREVIATIONS<br/>HCM → Hồ Chí Minh"]
+        KB --> K5["TYPO_FIXES<br/>quangtrung → quang trung"]
+        KB --> K6["QUESTION_PATTERNS<br/>ai đã, khi nào, ở đâu"]
+        KB --> K7["HISTORICAL_PHRASES<br/>(auto-gen từ entities)"]
     end
 
     Q["User Query"] --> R["resolve_query_entities()"]
@@ -233,12 +237,14 @@ graph LR
 >
 > **Thêm 1000 documents mới?** Inverted indexes tự build tại startup — KHÔNG cần cấu hình gì thêm.
 >
-> **Thêm viết tắt mới?** Sửa `abbreviations` trong `knowledge_base.json` hoặc dict `ABBREVIATIONS` trong `query_understanding.py`.
+> **Thêm viết tắt/sửa lỗi chính tả mới?** Sửa `abbreviations` hoặc `typo_fixes` trong `knowledge_base.json`.
+>
+> **HISTORICAL_PHRASES** (cụm từ lịch sử) được **tự động sinh** từ entities đã có — KHÔNG cần khai báo thủ công.
 
 ```mermaid
 graph LR
     subgraph "🔧 Chỉ cần sửa 1 file"
-        KB["knowledge_base.json"]
+        KB["knowledge_base.json v1.2.0"]
     end
 
     subgraph "✅ Tự động scale"
@@ -247,6 +253,10 @@ graph LR
         LOAD --> A2["TOPIC_SYNONYMS mới"]
         LOAD --> A3["DYNASTY_ALIASES mới"]
         LOAD --> A4["ABBREVIATIONS mới"]
+        LOAD --> A5["TYPO_FIXES mới"]
+        LOAD --> A6["QUESTION_PATTERNS mới"]
+        KB --> |"auto-gen"| PHRASES["_build_historical_phrases()"]
+        PHRASES --> A7["HISTORICAL_PHRASES<br/>(auto-generated)"]
     end
 ```
 
@@ -256,14 +266,17 @@ graph LR
 | Thêm synonym chủ đề | `knowledge_base.json` | ❌ Không |
 | Thêm alias triều đại | `knowledge_base.json` | ❌ Không |
 | Thêm viết tắt | `knowledge_base.json` | ❌ Không |
-| Thêm tên không dấu | `knowledge_base.json` | ❌ Không (auto-gen từ knowledge_base) |
+| Thêm sửa lỗi chính tả | `knowledge_base.json` | ❌ Không |
+| Thêm câu hỏi mẫu | `knowledge_base.json` | ❌ Không |
+| Thêm cụm từ lịch sử | Tự động sinh từ entities | ❌ Không |
+| Thêm tên không dấu | `knowledge_base.json` | ❌ Không (auto-gen) |
 | Thêm documents mới | `meta.json` (rebuild index) | ❌ Không |
 
 ---
 
 ## 🧪 Testing
 
-Hệ thống có **411 unit tests** bao phủ toàn diện (408 passed, 3 skipped):
+Hệ thống có **411 unit tests** bao phủ toàn diện (408 passed, 3 skipped). Bao gồm cả tests cho dynamic loading (abbreviations, typo fixes, historical phrases từ JSON):
 
 ```bash
 cd ai-service && python -m pytest ../tests/ -v
@@ -349,7 +362,7 @@ vietnam_history_dataset/
 │   ├── faiss_index/
 │   │   ├── index.bin                 # FAISS vector index
 │   │   └── meta.json                 # Document metadata
-│   └── knowledge_base.json           # 🔑 Aliases, Synonyms & Abbreviations
+│    └── knowledge_base.json           # 🔑 v1.2.0: Aliases, Synonyms, Abbreviations, Typo Fixes, Question Patterns
 ├── pipeline/                         # (Legacy) pipeline scripts
 └── tests/
     ├── test_engine.py                # Engine core tests (78)
