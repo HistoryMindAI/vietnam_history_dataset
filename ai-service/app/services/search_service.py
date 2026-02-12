@@ -128,6 +128,22 @@ def resolve_query_entities(query: str) -> dict:
     for matched_key, _score in fuzzy_dynasties:
         canonical = startup.DYNASTY_ALIASES.get(matched_key, matched_key)
         if canonical not in seen_dynasties:
+            # GUARD: Skip if fuzzy-matched dynasty is part of a resolved person name
+            # e.g., "nguyễn" dynasty should NOT match when "nguyễn huệ" is a person
+            is_part_of_person = any(
+                canonical in person or matched_key in person
+                for person in result["persons"]
+            )
+            if is_part_of_person:
+                continue
+            # GUARD: Skip if fuzzy-matched key is very similar to a resolved topic
+            # e.g., "nguyễn" dynasty should NOT match when "nguyên mông" is a topic
+            is_similar_to_topic = any(
+                matched_key in topic or topic in matched_key
+                for topic in result["topics"]
+            )
+            if is_similar_to_topic:
+                continue
             if _score >= 0.85 or not result["dynasties"]:
                 seen_dynasties.add(canonical)
                 result["dynasties"].append(canonical)
