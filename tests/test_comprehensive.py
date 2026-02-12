@@ -570,11 +570,19 @@ class TestResolveEntitiesDataDriven:
                     f"Dynasty alias '{alias}' → '{canonical}' NOT resolved. Got: {r['dynasties']}"
 
     def test_all_topic_synonyms_resolve(self):
-        """Every synonym in topic_synonyms should resolve to SOME canonical topic."""
+        """Every synonym in topic_synonyms should resolve to SOME canonical topic.
+        Exception: synonyms that are also person names (e.g., 'nguyễn huệ' → 'tây sơn')
+        are skipped because person-priority guard prevents them from resolving as topics.
+        """
         # Note: Some synonyms appear in multiple topics (e.g. 'quốc tử giám' → 'giáo dục' AND 'văn miếu')
         # So we check that at least one topic is resolved
+        import app.core.startup as startup
+        person_names = set(startup.PERSON_ALIASES.keys()) | set(startup.PERSON_ALIASES.values())
         for canonical, synonyms in self.kb["topic_synonyms"].items():
             for syn in synonyms:
+                # Skip synonyms that are person names — they get person-priority guard
+                if syn.lower() in person_names:
+                    continue
                 query = f"Hãy kể về {syn.title()}"
                 r = self.resolve(query)
                 assert len(r["topics"]) > 0, \

@@ -2,15 +2,19 @@
 query_understanding.py - Natural Language Understanding Layer
 
 Transforms diverse user phrasings into forms the engine can understand.
-Three main capabilities:
+Four main capabilities:
 1. Query Rewriting: abbreviations, typos, filler removal
 2. Fuzzy Entity Matching: approximate name matching when exact fails
 3. Query Expansion: add synonyms for better semantic search coverage
+4. Phonetic Normalization: handle common Vietnamese spelling errors
 """
 
 import re
 from unicodedata import normalize as unicode_normalize
 from difflib import SequenceMatcher
+import logging
+
+logger = logging.getLogger(__name__)
 
 # ===================================================================
 # 1. ABBREVIATIONS & COMMON SHORTHANDS
@@ -36,7 +40,8 @@ ABBREVIATIONS = {
 # 2. UNACCENTED → ACCENTED MAPPING (common Vietnamese names)
 # ===================================================================
 
-UNACCENTED_MAP = {
+# Static fallback map (always available before startup completes)
+_STATIC_UNACCENTED_MAP = {
     # Persons
     "tran hung dao": "trần hưng đạo",
     "tran quoc tuan": "trần quốc tuấn",
@@ -109,8 +114,67 @@ UNACCENTED_MAP = {
     "quoc tu giam": "quốc tử giám",
 }
 
+# Dynamic map — starts as copy of static, enriched at startup from knowledge_base.json
+UNACCENTED_MAP = dict(_STATIC_UNACCENTED_MAP)
+
 # Sort by length (longest first) so multi-word phrases match before sub-phrases
 _UNACCENTED_SORTED = sorted(UNACCENTED_MAP.keys(), key=len, reverse=True)
+
+
+def _rebuild_unaccented_sorted():
+    """Rebuild sorted key list after UNACCENTED_MAP is modified."""
+    global _UNACCENTED_SORTED
+    _UNACCENTED_SORTED = sorted(UNACCENTED_MAP.keys(), key=len, reverse=True)
+
+
+def build_unaccented_map_from_knowledge_base():
+    """
+    Auto-generate unaccented→accented mappings from knowledge_base.json data.
+    Called by startup.py after loading knowledge base.
+    Ensures UNACCENTED_MAP stays in sync with knowledge_base.json automatically.
+    """
+    import app.core.startup as startup
+    added = 0
+
+    # Helper: add entry if stripped version differs from accented
+    def _add_entry(accented_text: str):
+        nonlocal added
+        if not accented_text or not isinstance(accented_text, str):
+            return
+        accented_lower = accented_text.strip().lower()
+        stripped = _strip_accents(accented_lower)
+        if stripped != accented_lower and stripped not in UNACCENTED_MAP:
+            UNACCENTED_MAP[stripped] = accented_lower
+            added += 1
+
+    # Process all person aliases (both canonical names and their aliases)
+    for alias, canonical in startup.PERSON_ALIASES.items():
+        _add_entry(alias)
+        _add_entry(canonical)
+
+    # Process all dynasty aliases
+    for alias, canonical in startup.DYNASTY_ALIASES.items():
+        _add_entry(alias)
+        _add_entry(canonical)
+
+    # Process all topic synonyms
+    for synonym, canonical in startup.TOPIC_SYNONYMS.items():
+        _add_entry(synonym)
+        _add_entry(canonical)
+
+    # Process all place names from inverted index
+    for place_name in startup.PLACES_INDEX.keys():
+        _add_entry(place_name)
+
+    # Process all person names from inverted index
+    for person_name in startup.PERSONS_INDEX.keys():
+        _add_entry(person_name)
+
+    # Rebuild sorted list for _restore_accents
+    _rebuild_unaccented_sorted()
+
+    logger.info(f"[NLU] Auto-generated {added} new unaccented mappings (total: {len(UNACCENTED_MAP)})")
+    print(f"[NLU] UNACCENTED_MAP enriched: {len(_STATIC_UNACCENTED_MAP)} static + {added} auto-generated = {len(UNACCENTED_MAP)} total", flush=True)
 
 # ===================================================================
 # 3. FILLER / NOISE WORDS
@@ -145,6 +209,61 @@ TYPO_FIXES = {
     "dienbienphu": "điện biên phủ",
     "dongda": "đống đa",
 }
+
+# ===================================================================
+# 4b. VIETNAMESE PHONETIC NORMALIZATION
+# Common spelling mistakes based on Vietnamese pronunciation confusion.
+# These rules generate alternative spellings when exact match fails.
+# ===================================================================
+
+# Consonant pairs commonly confused in Vietnamese
+PHONETIC_CONSONANT_PAIRS = [
+    ("tr", "ch"),   # trần ↔ chần
+    ("s", "x"),     # sử ↔ xử
+    ("gi", "d"),    # giải ↔ dải (Southern dialect)
+    ("r", "g"),     # ra ↔ ga (some dialects)
+    ("v", "d"),     # về ↔ dề (some dialects)
+    ("n", "l"),     # nào ↔ lào (some dialects)
+]
+
+# Vowel groups commonly confused
+PHONETIC_VOWEL_PAIRS = [
+    ("ươ", "uô"),
+    ("iê", "yê"),
+    ("ưu", "iu"),
+]
+
+
+def generate_phonetic_variants(text: str) -> list:
+    """
+    Generate phonetically similar Vietnamese words/phrases.
+    Used as last resort when exact + fuzzy match both fail.
+    
+    Only applies consonant-initial swaps to avoid excessive false positives.
+    Returns list of unique variant strings (excluding original).
+    """
+    if not text or len(text) < 2:
+        return []
+    
+    variants = set()
+    words = text.lower().split()
+    
+    for word_idx, word in enumerate(words):
+        for original, replacement in PHONETIC_CONSONANT_PAIRS:
+            # Forward swap: original → replacement
+            if word.startswith(original):
+                new_word = replacement + word[len(original):]
+                new_words = words[:word_idx] + [new_word] + words[word_idx + 1:]
+                variants.add(" ".join(new_words))
+            # Reverse swap: replacement → original
+            if word.startswith(replacement):
+                new_word = original + word[len(replacement):]
+                new_words = words[:word_idx] + [new_word] + words[word_idx + 1:]
+                variants.add(" ".join(new_words))
+    
+    # Remove original text from variants
+    variants.discard(text.lower())
+    return list(variants)
 
 
 def _strip_accents(text: str) -> str:
@@ -299,6 +418,12 @@ def generate_search_variations(query: str, resolved_entities: dict) -> list:
     Generate search query variations for better semantic search coverage.
     Used when primary search yields few results.
     
+    Strategies:
+    1. Entity-focused queries (existing)
+    2. Alias-based variations (NEW: swap person names with aliases)
+    3. Topic synonym expansion (NEW: use all synonyms for matched topics)
+    4. Phonetic variants (NEW: handle spelling errors)
+    
     Args:
         query: Original query
         resolved_entities: Dict from resolve_query_entities
@@ -306,21 +431,19 @@ def generate_search_variations(query: str, resolved_entities: dict) -> list:
     Returns:
         List of alternative query strings to try
     """
+    import app.core.startup as startup
     variations = []
     q_low = query.lower()
     
-    # Variation 1: Entity-focused query
-    # If we found persons, create a query focused on them
     persons = resolved_entities.get("persons", [])
     topics = resolved_entities.get("topics", [])
     dynasties = resolved_entities.get("dynasties", [])
     places = resolved_entities.get("places", [])
     
+    # --- Strategy 1: Entity-focused query (existing) ---
     if persons:
-        # Create a concise person-centric query
         person_str = " ".join(persons)
         variations.append(person_str)
-        # Add person + topic if both exist
         if topics:
             variations.append(f"{person_str} {' '.join(topics)}")
     
@@ -336,6 +459,34 @@ def generate_search_variations(query: str, resolved_entities: dict) -> list:
     
     if dynasties and not persons:
         variations.append(" ".join(dynasties))
+    
+    # --- Strategy 2: Alias-based variations (NEW) ---
+    # Replace each person name with their aliases for broader search
+    for person in persons:
+        all_aliases = [person]
+        for alias, canonical in startup.PERSON_ALIASES.items():
+            if canonical == person and alias != person:
+                all_aliases.append(alias)
+        # Create query variants with each alias
+        for alt_name in all_aliases[1:]:  # Skip the canonical name itself
+            variant = q_low.replace(person, alt_name)
+            if variant != q_low and variant not in variations:
+                variations.append(variant)
+    
+    # --- Strategy 3: Topic synonym expansion (NEW) ---
+    for topic in topics:
+        for syn, canonical in startup.TOPIC_SYNONYMS.items():
+            if canonical == topic and syn != topic and syn not in variations:
+                # Add both bare synonym and synonym in context
+                variations.append(syn)
+    
+    # --- Strategy 4: Phonetic variants (NEW) ---
+    # Only if we haven't found entities (likely typo in the query)
+    if not any([persons, topics, dynasties, places]):
+        phonetic_vars = generate_phonetic_variants(q_low)
+        for pv in phonetic_vars[:3]:  # Limit to 3 phonetic variants
+            if pv not in variations:
+                variations.append(pv)
     
     return variations
 

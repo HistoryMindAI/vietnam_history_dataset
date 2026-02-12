@@ -7,6 +7,7 @@ from app.services.query_understanding import (
     rewrite_query, extract_question_intent,
     generate_search_variations,
 )
+import app.core.startup as startup
 import re
 
 # Pre-compile regex for faster matching
@@ -73,6 +74,15 @@ MAX_TOTAL_EVENTS_DYNASTY = 10  # More results for dynasty-level queries
 MAX_TOTAL_EVENTS_RANGE = 15   # More results for year range queries
 MAX_TOTAL_EVENTS_ENTITY = 10  # Results for multi-entity queries (person + topic)
 MIN_CLEAN_TEXT_LENGTH = 15    # Minimum text length after cleaning (filter metadata noise)
+
+# Relationship patterns — is X related to Y?
+RELATIONSHIP_PATTERNS = [
+    "là gì của nhau", "có quan hệ gì", "liên quan gì",
+    "là ai của", "và .+ là",
+    # Unaccented fallbacks for queries without diacritics
+    "la gi cua nhau", "co quan he gi", "lien quan gi",
+    "la ai cua",
+]
 
 # Identity patterns — who are you?
 IDENTITY_PATTERNS = [
@@ -394,6 +404,86 @@ def format_complete_answer(events: list) -> str:
     return "\n\n".join(paragraphs) if paragraphs else None
 
 
+def _strip_accents(text: str) -> str:
+    """Strip Vietnamese diacritical marks for fuzzy matching."""
+    import unicodedata
+    nfkd = unicodedata.normalize('NFKD', text)
+    return ''.join(c for c in nfkd if not unicodedata.combining(c))
+
+
+def _detect_same_person(query: str, resolved: dict) -> dict | None:
+    """
+    Detect if query mentions multiple names that are actually the same person.
+    Handles both accented and unaccented queries.
+    Returns {"canonical": str, "names_mentioned": list, "all_aliases": list} or None.
+    """
+    q_low = query.lower()
+    q_stripped = _strip_accents(q_low)
+
+    # Build complete name → canonical mapping
+    name_to_canonical = dict(startup.PERSON_ALIASES)  # alias → canonical
+    # Add canonical → canonical for self-references
+    for canonical in set(startup.PERSON_ALIASES.values()):
+        name_to_canonical[canonical] = canonical
+    # Also include person index keys
+    for person_key in startup.PERSONS_INDEX:
+        if person_key not in name_to_canonical:
+            name_to_canonical[person_key] = person_key
+
+    # Find all names mentioned in query (longest-first to avoid partial matches)
+    # Try both accented and stripped versions
+    mentioned = []
+    for name in sorted(name_to_canonical.keys(), key=len, reverse=True):
+        if name in q_low or _strip_accents(name) in q_stripped:
+            mentioned.append((name, name_to_canonical[name]))
+
+    # Remove substrings — "trần" is substring of "trần hưng đạo"
+    filtered = []
+    for name, canonical in mentioned:
+        is_substring = any(
+            name != other_name and name in other_name
+            for other_name, _ in mentioned
+        )
+        if not is_substring:
+            filtered.append((name, canonical))
+
+    if len(filtered) >= 2:
+        # Check if 2+ distinct names resolve to same canonical person
+        canonical_set = set(m[1] for m in filtered)
+        if len(canonical_set) == 1:
+            canonical = list(canonical_set)[0]
+            all_aliases = [alias for alias, can in startup.PERSON_ALIASES.items()
+                          if can == canonical and alias != canonical]
+            return {
+                "canonical": canonical,
+                "names_mentioned": [m[0] for m in filtered],
+                "all_aliases": all_aliases,
+            }
+
+    return None
+
+
+def _generate_same_person_response(info: dict) -> str:
+    """Generate a response explaining two names refer to the same person."""
+    canonical = info["canonical"]
+    names = info["names_mentioned"]
+    all_aliases = info["all_aliases"]
+
+    # Format the names mentioned
+    name_parts = [f"**{n.title()}**" for n in names]
+    names_str = " và ".join(name_parts)
+
+    response = f"{names_str} là **cùng một người**.\n\n"
+    response += f"Tên chính: **{canonical.title()}**\n"
+
+    if all_aliases:
+        alias_str = ", ".join(a.title() for a in all_aliases)
+        response += f"Các tên gọi khác: {alias_str}\n"
+
+    response += "\n---\n\nDưới đây là các sự kiện liên quan:"
+    return response
+
+
 def engine_answer(query: str):
     # --- STEP 0: Query Understanding (NLU) ---
     # Rewrite query: fix typos, expand abbreviations, restore accents
@@ -431,8 +521,9 @@ def engine_answer(query: str):
     is_dynasty_query = False
     is_range_query = False
     is_entity_query = False
+    same_person_info = None
 
-    # Detect intent — priority: year_range > multi_year > multi_entity > dynasty > definition > single_year > semantic
+    # Detect intent — priority: year_range > multi_year > relationship > definition > entity > single_year > semantic
     year_range = extract_year_range(rewritten)
     multi_years = extract_multiple_years(rewritten)
 
@@ -444,6 +535,19 @@ def engine_answer(query: str):
     has_dynasties = bool(resolved.get("dynasties"))
     has_places = bool(resolved.get("places"))
     has_entities = has_persons or has_topics or has_dynasties or has_places
+
+    # --- SAME-PERSON DETECTION ---
+    # "Quang Trung và Nguyễn Huệ là gì của nhau?" → same person
+    if has_persons:
+        same_person_info = _detect_same_person(rewritten, resolved)
+
+    # Detect relationship/definition patterns
+    # Check both rewritten (accented) and original (may be unaccented) queries
+    q_rewritten = rewritten.lower()
+    is_relationship = (any(p in q_rewritten for p in RELATIONSHIP_PATTERNS) or
+                       any(p in q for p in RELATIONSHIP_PATTERNS))
+    is_definition = ("là gì" in q_rewritten or "là ai" in q_rewritten or
+                     "la gi" in q or "la ai" in q)
 
     if year_range:
         # Year range query: "từ năm 1225 đến 1400"
@@ -462,6 +566,20 @@ def engine_answer(query: str):
             raw_events.extend(scan_by_year(yr))
         # Also add semantic results for context
         raw_events.extend(semantic_search(rewritten))
+    elif same_person_info and (is_relationship or is_definition):
+        # "Quang Trung và Nguyễn Huệ là gì của nhau?" → explain + show events
+        intent = "relationship"
+        is_entity_query = True
+        raw_events = scan_by_entities(resolved)
+        if len(raw_events) < 3:
+            raw_events.extend(semantic_search(rewritten))
+    elif is_definition and has_persons:
+        # "X là ai?" — use semantic search as primary, entity scan as supplement
+        intent = "definition"
+        is_entity_query = True
+        raw_events = scan_by_entities(resolved)
+        if len(raw_events) < 3:
+            raw_events.extend(semantic_search(rewritten))
     elif has_entities:
         # Multi-entity query (data-driven): person, dynasty, topic, place
         # Determines sub-intent for more specific labeling
@@ -482,9 +600,10 @@ def engine_answer(query: str):
         is_entity_query = True
         # Use inverted index scan for fast O(1) lookup
         raw_events = scan_by_entities(resolved)
-        # Always supplement with semantic search for broader coverage
-        raw_events.extend(semantic_search(rewritten))
-    elif "là gì" in q or "là ai" in q:
+        # Only supplement with semantic search when entity scan returns too few
+        if len(raw_events) < 3:
+            raw_events.extend(semantic_search(rewritten))
+    elif is_definition:
         intent = "definition"
         raw_events = semantic_search(rewritten)
     else:
@@ -534,6 +653,13 @@ def engine_answer(query: str):
     
     # Generate complete, comprehensive answer
     answer = format_complete_answer(unique_events)
+
+    # Prepend same-person explanation if detected
+    if same_person_info and answer:
+        same_person_response = _generate_same_person_response(same_person_info)
+        answer = same_person_response + "\n\n" + answer
+    elif same_person_info and not answer:
+        answer = _generate_same_person_response(same_person_info)
 
     # Smart no_data response — suggest alternative phrasing
     if no_data:
