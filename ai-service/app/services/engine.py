@@ -404,6 +404,60 @@ def format_complete_answer(events: list) -> str:
     return "\n\n".join(paragraphs) if paragraphs else None
 
 
+def _filter_by_query_keywords(query: str, events: list) -> list:
+    """
+    Dynamic keyword relevance filter.
+    Extracts meaningful content words from the query and scores events
+    by word overlap. Removes events with zero overlap with query intent.
+    Fully data-driven — no hardcoded keyword categories.
+    """
+    # Stopwords that carry no semantic meaning for Vietnamese history queries
+    STOPWORDS = {
+        "là", "gì", "của", "và", "hay", "hoặc", "có", "không", "được", "bị",
+        "cho", "với", "từ", "đến", "trong", "ngoài", "về", "theo", "như",
+        "hãy", "kể", "nêu", "liệt", "tóm", "tắt", "mô", "tả", "giải",
+        "thích", "tôi", "bạn", "ai", "nào", "đâu", "sao", "thế", "nhé",
+        "ạ", "vậy", "rồi", "nha", "nhỉ", "này", "đó", "kia", "ấy",
+        "những", "các", "một", "mọi", "mỗi", "nhiều", "ít", "ra",
+        "lên", "xuống", "vào", "đi", "lại", "đã", "đang", "sẽ", "cũng",
+        "rất", "quá", "lắm", "nhất", "hơn", "năm", "thời", "triều",
+    }
+
+    q_low = query.lower()
+    # Extract meaningful keywords (3+ chars, not stopwords)
+    query_words = set()
+    for word in q_low.split():
+        word_clean = word.strip(".,!?;:\"'()[]{}—–-")
+        if len(word_clean) >= 3 and word_clean not in STOPWORDS:
+            query_words.add(word_clean)
+
+    if not query_words or len(query_words) < 2:
+        return events  # Not enough keywords to filter meaningfully
+
+    # Also extract entity names already resolved — don't filter by them
+    # (they are already used for entity-based lookup)
+    # Remove entity names from query_words to get CONTEXT keywords only
+    context_words = set(query_words)  # Will be used for relevance scoring
+
+    scored = []
+    for doc in events:
+        doc_text = (
+            (doc.get("story", "") or "") + " " +
+            (doc.get("event", "") or "") + " " +
+            " ".join(doc.get("keywords", []) or [])
+        ).lower()
+
+        # Score = number of query context words found in doc text
+        score = sum(1 for w in context_words if w in doc_text)
+        scored.append((doc, score))
+
+    # Keep events with score > 0 (at least 1 query keyword matches)
+    relevant = [doc for doc, score in scored if score > 0]
+
+    # If filtering removes everything, return original (don't over-filter)
+    return relevant if relevant else events
+
+
 def _strip_accents(text: str) -> str:
     """Strip Vietnamese diacritical marks for fuzzy matching."""
     import unicodedata
@@ -668,6 +722,12 @@ def engine_answer(query: str):
             if filtered:
                 raw_events = filtered
 
+        # --- DYNAMIC KEYWORD RELEVANCE FILTER ---
+        # When query has specific action/context keywords, filter events to match
+        # E.g.: "chiến công chống Nguyên Mông" → keep only combat-related events
+        if raw_events:
+            raw_events = _filter_by_query_keywords(rewritten, raw_events)
+
         # Only supplement with semantic search when entity scan returns too few
         if len(raw_events) < 3:
             raw_events.extend(semantic_search(rewritten))
@@ -724,11 +784,13 @@ def engine_answer(query: str):
     # Generate complete, comprehensive answer
     answer = format_complete_answer(unique_events)
 
-    # Prepend same-entity explanation when detected (person, topic, or dynasty)
-    if same_person_info and answer:
+    # Prepend same-entity explanation ONLY when user explicitly asks about relationship
+    # "Quang Trung và Nguyễn Huệ là gì?" → show same-entity
+    # "Kể tên chiến công chống quân Nguyên Mông" → DON'T show same-entity
+    if same_person_info and (is_relationship or is_definition) and answer:
         same_entity_response = _generate_same_entity_response(same_person_info)
         answer = same_entity_response + "\n\n" + answer
-    elif same_person_info and not answer:
+    elif same_person_info and (is_relationship or is_definition) and not answer:
         answer = _generate_same_entity_response(same_person_info)
 
     # Smart no_data response — suggest alternative phrasing
