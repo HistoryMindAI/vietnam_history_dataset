@@ -137,10 +137,32 @@ PERSON_ALIASES = {
     "bắc bình vương": "Nguyễn Huệ",
     "gia long": "Nguyễn Ánh",
     "lý công uẩn": "Lý Thái Tổ",
+    "lý thái tổ": "Lý Thái Tổ",
     "nguyễn tất thành": "Hồ Chí Minh",
     "nguyễn ái quốc": "Hồ Chí Minh",
     "bác hồ": "Hồ Chí Minh",
+    "trưng trắc": "Hai Bà Trưng",
+    "trưng nhị": "Hai Bà Trưng",
+    "hai bà trưng": "Hai Bà Trưng",
+    "hai bà": "Hai Bà Trưng",
+    "lê thái tổ": "Lê Lợi",
+    "lê lợi": "Lê Lợi",
+    "ngô quyền": "Ngô Quyền",
+    "trần hưng đạo": "Trần Hưng Đạo",
+    "hưng đạo vương": "Trần Hưng Đạo",
+    "trần quốc tuấn": "Trần Hưng Đạo",
+    "lý thường kiệt": "Lý Thường Kiệt",
+    "nguyễn trãi": "Nguyễn Trãi",
 }
+
+# Historical figures whose names don't match PERSON_PATTERN regex
+# (e.g., "Hai Bà Trưng" — "hai" is lowercase, breaks regex)
+HARDCODED_PERSON_PATTERNS = [
+    (re.compile(r'[Hh]ai\s+[Bb]à\s+[Tt]rưng', re.IGNORECASE), "Hai Bà Trưng"),
+    (re.compile(r'[Hh]ai\s+[Bb]à', re.IGNORECASE), "Hai Bà Trưng"),
+    (re.compile(r'[Tt]rưng\s+[Tt]rắc', re.IGNORECASE), "Hai Bà Trưng"),
+    (re.compile(r'[Tt]rưng\s+[Nn]hị', re.IGNORECASE), "Hai Bà Trưng"),
+]
 
 
 # ========================
@@ -211,13 +233,20 @@ def normalize_person(name: str) -> str:
 def extract_persons(text: str) -> list[str]:
     """
     Dynamically extract person names from Vietnamese text using regex.
-    Uses capitalization patterns and context clues.
+    Uses capitalization patterns, context clues, and hardcoded patterns
+    for historically important figures whose names break regex rules.
     """
     if not text:
         return []
 
     persons = set()
 
+    # Step 1: Check hardcoded patterns for names regex can't catch
+    for pattern, canonical in HARDCODED_PERSON_PATTERNS:
+        if pattern.search(text):
+            persons.add(canonical)
+
+    # Step 2: Regex-based extraction for standard Vietnamese names
     for m in PERSON_PATTERN.finditer(text):
         raw = m.group(1).strip()
 

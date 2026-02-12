@@ -97,25 +97,68 @@ def resolve_query_entities(query: str) -> dict:
 def scan_by_entities(resolved: dict, max_results: int = 50) -> list:
     """
     Scan documents using inverted indexes — O(1) lookup per entity.
+    Falls back to text-based scan when index is empty for a resolved entity.
     Returns deduplicated list of matching documents.
     """
     doc_indices = set()
+    unmatched_persons = []  # Persons not found in inverted index
+    unmatched_topics = []   # Topics not found in inverted index
 
     for person in resolved.get("persons", []):
-        doc_indices.update(startup.PERSONS_INDEX.get(person, []))
+        idx_hits = startup.PERSONS_INDEX.get(person, [])
+        if idx_hits:
+            doc_indices.update(idx_hits)
+        else:
+            unmatched_persons.append(person)
 
     for dynasty in resolved.get("dynasties", []):
         doc_indices.update(startup.DYNASTY_INDEX.get(dynasty, []))
 
     for topic in resolved.get("topics", []):
         # Topic synonyms map to canonical topics; search both keyword and text index
-        doc_indices.update(startup.KEYWORD_INDEX.get(topic, []))
-        # Also check if topic words appear in KEYWORD_INDEX with underscores
+        hits = startup.KEYWORD_INDEX.get(topic, [])
         topic_underscored = topic.replace(" ", "_")
-        doc_indices.update(startup.KEYWORD_INDEX.get(topic_underscored, []))
+        hits_us = startup.KEYWORD_INDEX.get(topic_underscored, [])
+        if hits or hits_us:
+            doc_indices.update(hits)
+            doc_indices.update(hits_us)
+        else:
+            unmatched_topics.append(topic)
 
     for place in resolved.get("places", []):
         doc_indices.update(startup.PLACES_INDEX.get(place, []))
+
+    # --- TEXT-BASED FALLBACK ---
+    # When inverted index has no entries, scan DOCUMENTS text fields directly.
+    # This handles cases where pipeline didn't extract entities into metadata.
+    if unmatched_persons or unmatched_topics:
+        # Build search terms: include all aliases for each person
+        search_terms = []
+        for person in unmatched_persons:
+            search_terms.append(person)
+            # Also search for all aliases that resolve to this canonical person
+            for alias, canonical in startup.PERSON_ALIASES.items():
+                if canonical == person and alias != person:
+                    search_terms.append(alias)
+        for topic in unmatched_topics:
+            search_terms.append(topic)
+            for syn, canonical in startup.TOPIC_SYNONYMS.items():
+                if canonical == topic and syn != topic:
+                    search_terms.append(syn)
+
+        for idx, doc in enumerate(startup.DOCUMENTS):
+            if idx in doc_indices:
+                continue
+            doc_text = " ".join([
+                str(doc.get("story", "")),
+                str(doc.get("event", "")),
+                str(doc.get("title", "")),
+                " ".join(doc.get("persons", [])),
+            ]).lower()
+            if any(term in doc_text for term in search_terms):
+                doc_indices.add(idx)
+            if len(doc_indices) >= max_results:
+                break
 
     # Return actual documents, capped at max_results
     docs = []
@@ -203,7 +246,7 @@ def check_query_relevance(query: str, doc: dict, dynasty_filter: str = None) -> 
     """
     Check if a document is actually relevant to the query.
     Uses keyword matching AND dynasty filtering.
-    Adaptive threshold: queries with more keywords require more matches.
+    Alias-aware: expands person aliases for better matching.
     """
     # If dynasty filter is active, check dynasty first
     if dynasty_filter:
@@ -230,8 +273,24 @@ def check_query_relevance(query: str, doc: dict, dynasty_filter: str = None) -> 
     ]
     doc_text = " ".join(doc_parts).lower()
     
-    # Check keyword matching
-    matching_keywords = sum(1 for kw in query_keywords if kw in doc_text)
+    # Expand query keywords with person aliases for better matching
+    # e.g., "quang_trung" → also check "nguyễn_huệ"
+    expanded_keywords = set(query_keywords)
+    for kw in query_keywords:
+        kw_clean = kw.replace("_", " ")
+        # Check if keyword is a person alias → add canonical name
+        canonical = startup.PERSON_ALIASES.get(kw_clean)
+        if canonical and canonical != kw_clean:
+            expanded_keywords.add(canonical.replace(" ", "_"))
+            expanded_keywords.add(canonical)  # Also without underscore
+        # Check reverse: if keyword is canonical → add aliases
+        for alias, canon in startup.PERSON_ALIASES.items():
+            if canon == kw_clean and alias != kw_clean:
+                expanded_keywords.add(alias.replace(" ", "_"))
+                expanded_keywords.add(alias)
+    
+    # Check keyword matching with expanded set
+    matching_keywords = sum(1 for kw in expanded_keywords if kw in doc_text)
     
     # Adaptive threshold: more keywords in query = higher bar to pass
     # Short queries (1-3 keywords): require at least 1 match
