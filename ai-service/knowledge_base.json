@@ -1,21 +1,21 @@
 {
   "_description": "Knowledge Base for HistoryMindAI - Dynamic aliases & synonyms. Edit this file to extend entity recognition without changing code.",
-  "_version": "1.0.0",
+  "_version": "1.1.0",
 
   "person_aliases": {
     "hai bà trưng": ["trưng trắc", "trưng nhị", "hai bà", "trưng vương"],
     "trần hưng đạo": ["trần quốc tuấn", "hưng đạo vương", "hưng đạo đại vương", "quốc công tiết chế"],
-    "nguyễn huệ": ["quang trung", "bắc bình vương"],
-    "hồ chí minh": ["nguyễn tất thành", "nguyễn ái quốc", "bác hồ", "nguyễn sinh cung"],
-    "lý thường kiệt": [],
+    "nguyễn huệ": ["quang trung", "bắc bình vương", "vua quang trung"],
+    "hồ chí minh": ["nguyễn tất thành", "nguyễn ái quốc", "bác hồ", "nguyễn sinh cung", "anh ba"],
+    "lý thường kiệt": ["thái úy lý thường kiệt"],
     "ngô quyền": ["ngô vương"],
-    "lê lợi": ["lê thái tổ"],
+    "lê lợi": ["lê thái tổ", "bình định vương"],
     "đinh bộ lĩnh": ["đinh tiên hoàng", "vạn thắng vương"],
     "lê thánh tông": ["lê tư thành"],
     "trần thái tông": ["trần cảnh"],
     "lý thái tổ": ["lý công uẩn"],
     "nguyễn trãi": ["ức trai"],
-    "võ nguyên giáp": ["đại tướng võ nguyên giáp"],
+    "võ nguyên giáp": ["đại tướng võ nguyên giáp", "tướng giáp", "anh văn"],
     "phan bội châu": [],
     "phan châu trinh": ["phan chu trinh"],
     "lê hoàn": ["lê đại hành"],
@@ -24,8 +24,14 @@
     "dương đình nghệ": [],
     "khúc thừa dụ": [],
     "lý thánh tông": [],
-    "trần nhân tông": [],
-    "bà triệu": ["triệu thị trinh", "triệu ẩu"]
+    "trần nhân tông": ["phật hoàng", "phật hoàng trần nhân tông"],
+    "bà triệu": ["triệu thị trinh", "triệu ẩu"],
+    "lý nam đế": ["lý bí", "lý bôn"],
+    "mai thúc loan": ["mai hắc đế"],
+    "phùng hưng": ["bố cái đại vương"],
+    "trần quốc toản": [],
+    "nguyễn nhạc": [],
+    "nguyễn lữ": []
   },
 
   "topic_synonyms": {
@@ -33,17 +39,18 @@
     "pháp thuộc": ["thực dân pháp", "xâm lược pháp", "đô hộ pháp", "pháp xâm lược"],
     "bắc thuộc": ["đô hộ trung quốc", "phương bắc đô hộ", "ngàn năm bắc thuộc"],
     "giáo dục": ["văn miếu", "quốc tử giám", "khoa cử", "nho học", "thi cử"],
-    "tây sơn": ["nguyễn huệ", "nguyễn nhạc", "nguyễn lữ", "phong trào tây sơn"],
+    "tây sơn": ["phong trào tây sơn", "khởi nghĩa tây sơn", "nhà tây sơn"],
     "cách mạng tháng tám": ["tổng khởi nghĩa", "cách mạng 1945"],
     "điện biên phủ": ["chiến dịch điện biên", "trận điện biên phủ"],
-    "khởi nghĩa lam sơn": ["lam sơn khởi nghĩa", "lê lợi khởi nghĩa"],
+    "khởi nghĩa lam sơn": ["lam sơn khởi nghĩa"],
     "trịnh nguyễn": ["trịnh nguyễn phân tranh", "chúa trịnh chúa nguyễn", "đàng trong đàng ngoài"],
-    "nam quốc sơn hà": ["bài thơ thần", "lý thường kiệt"],
+    "nam quốc sơn hà": ["bài thơ thần"],
     "trận bạch đằng": ["bạch đằng", "sông bạch đằng", "chiến thắng bạch đằng", "cọc bạch đằng"],
-    "hai bà trưng": ["trưng trắc", "trưng nhị", "khởi nghĩa hai bà trưng", "nữ vương", "trưng vương"],
+    "hai bà trưng": ["khởi nghĩa hai bà trưng", "nữ vương"],
     "văn miếu": ["quốc tử giám", "văn miếu quốc tử giám", "trường đại học đầu tiên"],
-    "ngô quyền": ["chiến thắng bạch đằng 938", "ngô vương", "nhà ngô"],
-    "lê lợi": ["khởi nghĩa lam sơn", "lê thái tổ", "bình ngô đại cáo"]
+    "kháng chiến chống pháp": ["chiến tranh đông dương", "kháng pháp"],
+    "kháng chiến chống mỹ": ["chiến tranh việt nam", "kháng mỹ", "chống mỹ cứu nước"],
+    "nước vạn xuân": ["vạn xuân", "lý nam đế dựng nước"]
   },
 
   "dynasty_aliases": {
@@ -69,10 +76,14 @@
     "lx": "liên xô",
     "dbp": "điện biên phủ",
     "cmtt": "cách mạng tháng tám",
+    "cmt8": "cách mạng tháng tám",
     "hcm": "hồ chí minh",
     "ls": "lịch sử",
     "nv": "nhân vật",
-    "sk": "sự kiện"
+    "sk": "sự kiện",
+    "thd": "trần hưng đạo",
+    "ltk": "lý thường kiệt",
+    "vng": "võ nguyên giáp"
   },
 
   "question_patterns": {
@@ -83,3 +94,4 @@
     "place_search": ["ở đâu", "tại đâu", "nơi nào", "địa điểm nào"]
   }
 }
+
