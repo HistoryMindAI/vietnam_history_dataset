@@ -203,6 +203,7 @@ def check_query_relevance(query: str, doc: dict, dynasty_filter: str = None) -> 
     """
     Check if a document is actually relevant to the query.
     Uses keyword matching AND dynasty filtering.
+    Adaptive threshold: queries with more keywords require more matches.
     """
     # If dynasty filter is active, check dynasty first
     if dynasty_filter:
@@ -232,8 +233,11 @@ def check_query_relevance(query: str, doc: dict, dynasty_filter: str = None) -> 
     # Check keyword matching
     matching_keywords = sum(1 for kw in query_keywords if kw in doc_text)
     
-    # Require at least 1 keyword match (relaxed from 30%)
-    return matching_keywords >= 1
+    # Adaptive threshold: more keywords in query = higher bar to pass
+    # Short queries (1-3 keywords): require at least 1 match
+    # Longer queries (4+ keywords): require at least 2 matches
+    min_matches = 2 if len(query_keywords) >= 4 else 1
+    return matching_keywords >= min_matches
 
 
 # ===================================================================
