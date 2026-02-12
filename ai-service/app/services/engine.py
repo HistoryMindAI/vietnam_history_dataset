@@ -571,6 +571,26 @@ def engine_answer(query: str):
         intent = "relationship"
         is_entity_query = True
         raw_events = scan_by_entities(resolved)
+
+        # --- PERSON-RELEVANCE FILTER ---
+        # Keep only docs where the target person appears in doc's persons metadata
+        # This prevents docs that merely mention the person in story text (e.g.,
+        # "đánh bại Tây Sơn" in Nguyễn dynasty docs) from polluting results
+        if has_persons and raw_events:
+            target_persons = set(p.lower() for p in resolved["persons"])
+            # Also include all aliases for each target person
+            target_with_aliases = set(target_persons)
+            for alias, canonical in startup.PERSON_ALIASES.items():
+                if canonical in target_persons:
+                    target_with_aliases.add(alias)
+            filtered = []
+            for doc in raw_events:
+                doc_persons = set(p.lower() for p in doc.get("persons", []))
+                if doc_persons & target_with_aliases:
+                    filtered.append(doc)
+            if filtered:
+                raw_events = filtered
+
         if len(raw_events) < 3:
             raw_events.extend(semantic_search(rewritten))
     elif is_definition and has_persons:
