@@ -136,6 +136,15 @@ def load_resources():
         _build_inverted_indexes()
         _load_knowledge_base()
 
+        # ===============================
+        # AUTO-ENRICH NLU MAPS (from knowledge_base data)
+        # ===============================
+        try:
+            from app.services.query_understanding import build_unaccented_map_from_knowledge_base
+            build_unaccented_map_from_knowledge_base()
+        except Exception as e:
+            print(f"[WARN] Failed to auto-enrich UNACCENTED_MAP: {e}", flush=True)
+
         print(
             f"[STARTUP] Ready | docs={len(DOCUMENTS)} | years={len(DOCUMENTS_BY_YEAR)}"
             f" | persons={len(PERSONS_INDEX)} | dynasties={len(DYNASTY_INDEX)}"
