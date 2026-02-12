@@ -411,76 +411,106 @@ def _strip_accents(text: str) -> str:
     return ''.join(c for c in nfkd if not unicodedata.combining(c))
 
 
-def _detect_same_person(query: str, resolved: dict) -> dict | None:
+def _detect_same_entity(query: str, resolved: dict) -> dict | None:
     """
-    Detect if query mentions multiple names that are actually the same person.
+    Detect if query mentions multiple names that are actually the same entity.
+    Dynamically checks ALL alias sources: person_aliases, topic_synonyms, dynasty_aliases.
     Handles both accented and unaccented queries.
-    Returns {"canonical": str, "names_mentioned": list, "all_aliases": list} or None.
+    Returns {"entity_type": str, "canonical": str, "names_mentioned": list, "all_aliases": list} or None.
     """
     q_low = query.lower()
     q_stripped = _strip_accents(q_low)
 
-    # Build complete name → canonical mapping
-    name_to_canonical = dict(startup.PERSON_ALIASES)  # alias → canonical
-    # Add canonical → canonical for self-references
-    for canonical in set(startup.PERSON_ALIASES.values()):
-        name_to_canonical[canonical] = canonical
-    # Also include person index keys
-    for person_key in startup.PERSONS_INDEX:
-        if person_key not in name_to_canonical:
-            name_to_canonical[person_key] = person_key
+    # Define all alias sources to check dynamically
+    # Each entry: (alias_dict, entity_type_label, entity_type_vi)
+    alias_sources = [
+        (startup.PERSON_ALIASES, "person", "người"),
+        (startup.TOPIC_SYNONYMS, "topic", "chủ đề"),
+        (startup.DYNASTY_ALIASES, "dynasty", "triều đại"),
+    ]
 
-    # Find all names mentioned in query (longest-first to avoid partial matches)
-    # Try both accented and stripped versions
-    mentioned = []
-    for name in sorted(name_to_canonical.keys(), key=len, reverse=True):
-        if name in q_low or _strip_accents(name) in q_stripped:
-            mentioned.append((name, name_to_canonical[name]))
+    for alias_dict, entity_type, entity_type_vi in alias_sources:
+        if not alias_dict:
+            continue
 
-    # Remove substrings — "trần" is substring of "trần hưng đạo"
-    filtered = []
-    for name, canonical in mentioned:
-        is_substring = any(
-            name != other_name and name in other_name
-            for other_name, _ in mentioned
-        )
-        if not is_substring:
-            filtered.append((name, canonical))
+        # Build complete name → canonical mapping for this source
+        name_to_canonical = dict(alias_dict)  # alias → canonical
+        # Add canonical → canonical for self-references
+        for canonical in set(alias_dict.values()):
+            name_to_canonical[canonical] = canonical
 
-    if len(filtered) >= 2:
-        # Check if 2+ distinct names resolve to same canonical person
-        canonical_set = set(m[1] for m in filtered)
-        if len(canonical_set) == 1:
-            canonical = list(canonical_set)[0]
-            all_aliases = [alias for alias, can in startup.PERSON_ALIASES.items()
-                          if can == canonical and alias != canonical]
-            return {
-                "canonical": canonical,
-                "names_mentioned": [m[0] for m in filtered],
-                "all_aliases": all_aliases,
-            }
+        # For persons, also include person index keys
+        if entity_type == "person":
+            for person_key in startup.PERSONS_INDEX:
+                if person_key not in name_to_canonical:
+                    name_to_canonical[person_key] = person_key
+
+        # Find all names mentioned in query (longest-first to avoid partial matches)
+        mentioned = []
+        for name in sorted(name_to_canonical.keys(), key=len, reverse=True):
+            if name in q_low or _strip_accents(name) in q_stripped:
+                mentioned.append((name, name_to_canonical[name]))
+
+        # Remove substrings — "trần" is substring of "trần hưng đạo"
+        filtered = []
+        for name, canonical in mentioned:
+            is_substring = any(
+                name != other_name and name in other_name
+                for other_name, _ in mentioned
+            )
+            if not is_substring:
+                filtered.append((name, canonical))
+
+        if len(filtered) >= 2:
+            # Check if 2+ distinct names resolve to same canonical entity
+            canonical_set = set(m[1] for m in filtered)
+            if len(canonical_set) == 1:
+                canonical = list(canonical_set)[0]
+                all_aliases = [alias for alias, can in alias_dict.items()
+                              if can == canonical and alias != canonical]
+                return {
+                    "entity_type": entity_type,
+                    "entity_type_vi": entity_type_vi,
+                    "canonical": canonical,
+                    "names_mentioned": [m[0] for m in filtered],
+                    "all_aliases": all_aliases,
+                }
 
     return None
 
 
-def _generate_same_person_response(info: dict) -> str:
-    """Generate a response explaining two names refer to the same person."""
+def _generate_same_entity_response(info: dict) -> str:
+    """
+    Generate a response explaining multiple names refer to the same entity.
+    Works dynamically for any entity type: person, topic, dynasty.
+    """
     canonical = info["canonical"]
     names = info["names_mentioned"]
-    all_aliases = info["all_aliases"]
+    all_aliases = info.get("all_aliases", [])
+    entity_type = info.get("entity_type", "person")
 
     # Format the names mentioned
     name_parts = [f"**{n.title()}**" for n in names]
     names_str = " và ".join(name_parts)
 
-    response = f"{names_str} là **cùng một người**.\n\n"
-    response += f"Tên chính: **{canonical.title()}**\n"
+    # Dynamic label based on entity type
+    type_labels = {
+        "person": ("cùng một người", "Tên chính", "Các tên gọi khác"),
+        "topic": ("cùng một chủ đề / sự kiện", "Tên chính", "Các tên gọi khác"),
+        "dynasty": ("cùng một triều đại / thời kỳ", "Tên chính", "Các tên gọi khác"),
+    }
+    same_label, main_label, alias_label = type_labels.get(
+        entity_type, ("cùng một thực thể", "Tên chính", "Các tên gọi khác")
+    )
+
+    response = f"{names_str} là **{same_label}**.\n\n"
+    response += f"{main_label}: **{canonical.title()}**\n\n"
 
     if all_aliases:
         alias_str = ", ".join(a.title() for a in all_aliases)
-        response += f"Các tên gọi khác: {alias_str}\n"
+        response += f"{alias_label}: {alias_str}\n\n"
 
-    response += "\n---\n\nDưới đây là các sự kiện liên quan:"
+    response += "---\n\nDưới đây là các sự kiện liên quan:"
     return response
 
 
@@ -536,10 +566,12 @@ def engine_answer(query: str):
     has_places = bool(resolved.get("places"))
     has_entities = has_persons or has_topics or has_dynasties or has_places
 
-    # --- SAME-PERSON DETECTION ---
-    # "Quang Trung và Nguyễn Huệ là gì của nhau?" → same person
-    if has_persons:
-        same_person_info = _detect_same_person(rewritten, resolved)
+    # --- SAME-ENTITY DETECTION (Dynamic) ---
+    # Detects if 2+ names in query refer to same entity (person, topic, or dynasty)
+    # E.g.: "Quang Trung và Nguyễn Huệ" → same person
+    # E.g.: "Mông Cổ và Nguyên Mông" → same topic
+    if has_persons or has_topics or has_dynasties:
+        same_person_info = _detect_same_entity(rewritten, resolved)
 
     # Detect relationship/definition patterns
     # Check both rewritten (accented) and original (may be unaccented) queries
@@ -692,12 +724,12 @@ def engine_answer(query: str):
     # Generate complete, comprehensive answer
     answer = format_complete_answer(unique_events)
 
-    # Prepend same-person explanation when detected (both 'là ai' and 'là gì của nhau')
+    # Prepend same-entity explanation when detected (person, topic, or dynasty)
     if same_person_info and answer:
-        same_person_response = _generate_same_person_response(same_person_info)
-        answer = same_person_response + "\n\n" + answer
+        same_entity_response = _generate_same_entity_response(same_person_info)
+        answer = same_entity_response + "\n\n" + answer
     elif same_person_info and not answer:
-        answer = _generate_same_person_response(same_person_info)
+        answer = _generate_same_entity_response(same_person_info)
 
     # Smart no_data response — suggest alternative phrasing
     if no_data:
