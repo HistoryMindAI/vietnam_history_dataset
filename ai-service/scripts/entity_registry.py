@@ -39,7 +39,10 @@ STOP_WORDS_FOR_NAMES = {"và", "của", "với", "trong", "từ", "tại", "đ�
 YEAR_WITH_CONTEXT = re.compile(r"(?:năm|Năm)\s+(\d{3,4})")
 YEAR_STANDALONE = re.compile(r"(?<!\d)([1-9]\d{2,3})(?!\d)")
 ANNIVERSARY_PATTERN = re.compile(
-    r"(?:kỉ niệm|kỷ niệm)\s+(\d+)\s+năm", re.IGNORECASE
+    r"(?:kỉ niệm|kỷ niệm|đại lễ|lễ kỷ niệm|lễ kỉ niệm)\s+(\d+)\s+năm"
+    r"|(\d+)\s+(?:ngàn|nghìn)\s+năm"
+    r"|(?:ngàn|nghìn)\s+năm",
+    re.IGNORECASE
 )
 
 # Dynasty detection from text context

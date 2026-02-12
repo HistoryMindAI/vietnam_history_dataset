@@ -50,7 +50,7 @@ graph TD
 1. **Frontend (React)**: Giao diện người dùng cho phép tương tác và trò chuyện với Chatbot.
 2. **Backend (Spring Boot)**: Đóng vai trò là lớp điều phối (Orchestrator), xử lý nghiệp vụ chính và quản lý người dùng.
 3. **AI Service (FastAPI)**: Cung cấp API xử lý ngôn ngữ tự nhiên, thực hiện tìm kiếm ngữ nghĩa và truy xuất dữ liệu lịch sử.
-4. **NLU Layer**: Tầng hiểu ngôn ngữ tự nhiên — tự động sửa lỗi chính tả, mở rộng viết tắt, phục hồi dấu tiếng Việt, và fuzzy matching.
+4. **NLU Layer**: Tầng hiểu ngôn ngữ tự nhiên — tự động sửa lỗi chính tả, mở rộng viết tắt, phục hồi dấu tiếng Việt, fuzzy matching, và chuẩn hóa phát âm.
 
 ---
 
@@ -112,7 +112,10 @@ Hệ thống trang bị lớp **NLU (Natural Language Understanding)** giúp cha
 | **Sửa lỗi chính tả** | `nguyen huye` | → `nguyễn huệ` |
 | **Mở rộng viết tắt** | `VN độc lập` | → `Việt Nam độc lập` |
 | **Phục hồi dấu** | `tran hung dao` | → `trần hưng đạo` |
-| **Fuzzy Matching** | `trần hưng đao` (sai dấu) | → tìm được `trần hưng đạo` |
+| **Fuzzy Matching** (always-on) | `trần hưng đao` (sai dấu) | → tìm được `trần hưng đạo` |
+| **Phonetic Normalization** | `chần hưng đạo` (lỗi ch/tr) | → `trần hưng đạo` |
+| **Multi-query Search** | Ít kết quả → thử alias/synonym | → tìm thêm documents |
+| **Synonym Expansion** | `quân mông cổ` | → mở rộng sang `nguyên mông` |
 | **Fallback Chain** | Không tìm được → thử lại 3 cách | → gợi ý cách hỏi tốt hơn |
 
 ---
@@ -253,14 +256,14 @@ graph LR
 | Thêm synonym chủ đề | `knowledge_base.json` | ❌ Không |
 | Thêm alias triều đại | `knowledge_base.json` | ❌ Không |
 | Thêm viết tắt | `knowledge_base.json` | ❌ Không |
-| Thêm tên không dấu | `query_understanding.py` | Thêm vào dict |
+| Thêm tên không dấu | `knowledge_base.json` | ❌ Không (auto-gen từ knowledge_base) |
 | Thêm documents mới | `meta.json` (rebuild index) | ❌ Không |
 
 ---
 
 ## 🧪 Testing
 
-Hệ thống có **405 unit tests** bao phủ toàn diện (402 passed, 3 skipped):
+Hệ thống có **411 unit tests** bao phủ toàn diện (408 passed, 3 skipped):
 
 ```bash
 cd ai-service && python -m pytest ../tests/ -v
@@ -270,7 +273,7 @@ cd ai-service && python -m pytest ../tests/ -v
 |---|---|---|
 | `test_engine.py` | 78 | Engine chính: intent routing, entity resolution, year queries, multi-entity, edge cases |
 | `test_engine_dedup.py` | 13 | Deduplication, text cleaning, keyword extraction |
-| `test_nlu.py` | 49 | **NLU**: query rewriting, fuzzy matching, accent restoration, question intent, fallback |
+| `test_nlu.py` | 55 | **NLU**: query rewriting, fuzzy matching, accent restoration, question intent, phonetic normalization, fallback |
 | `test_search_utils.py` | 53 | Search utilities: keyword extraction, relevance filtering, inverted indexes |
 | `test_comprehensive.py` | 74 | Comprehensive integration tests |
 | `test_pipeline.py` | 30 | Data pipeline: storyteller, text cleaning |
@@ -351,9 +354,9 @@ vietnam_history_dataset/
 └── tests/
     ├── test_engine.py                # Engine core tests (78)
     ├── test_engine_dedup.py          # Dedup & text cleaning (13)
-    ├── test_nlu.py                   # 🧠 NLU tests (49)
+    ├── test_nlu.py                   # 🧠 NLU tests (55)
     ├── test_search_utils.py          # Search & indexing (53)
-    └── ... (15 test files total)     # 405 tests total
+    └── ... (15 test files total)     # 411 tests total
 ```
 
 ## 📚 Công nghệ sử dụng
@@ -363,7 +366,7 @@ vietnam_history_dataset/
 - **Vector Database**: FAISS
 - **AI Model**: `keepitreal/vietnamese-sbert` (ONNX) cho embedding tiếng Việt
 - **Data Processing**: HuggingFace Datasets, Dynamic Entity Registry, Regex.
-- **NLU**: Query rewriting, Fuzzy matching, Accent restoration (Python stdlib)
+- **NLU**: Query rewriting, Fuzzy matching, Accent restoration, Phonetic normalization, Multi-query search (Python stdlib)
 
 ---
 

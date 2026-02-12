@@ -2,7 +2,11 @@ import app.core.startup as startup
 from app.core.config import TOP_K, SIM_THRESHOLD, SIM_THRESHOLD_LOW, FUZZY_MATCH_THRESHOLD, HIGH_CONFIDENCE_SCORE
 from functools import lru_cache
 from app.utils.normalize import normalize_query
-from app.services.query_understanding import fuzzy_match_entity
+from app.services.query_understanding import (
+    fuzzy_match_entity,
+    generate_phonetic_variants,
+    generate_search_variations,
+)
 import re
 from unicodedata import normalize as unicode_normalize
 
@@ -77,12 +81,24 @@ def resolve_query_entities(query: str) -> dict:
     # --- 4. Direct dynasty match from inverted index ---
     for dynasty_key in startup.DYNASTY_INDEX:
         if dynasty_key in q_low and dynasty_key not in seen_dynasties:
+            # GUARD: Prevent false match when short dynasty name is part of
+            # a person name. e.g., "nguyễn" in "nguyễn huệ" ≠ dynasty "nguyễn"
+            is_part_of_person = any(
+                dynasty_key in person for person in result["persons"]
+            )
+            if is_part_of_person:
+                continue
             seen_dynasties.add(dynasty_key)
             result["dynasties"].append(dynasty_key)
 
     # --- 5. Resolve topics via synonyms ---
     for synonym, canonical in startup.TOPIC_SYNONYMS.items():
         if synonym in q_low and canonical not in seen_topics:
+            # GUARD: If synonym is a person name already matched, skip topic match
+            # e.g., "nguyễn huệ" matches person → don't also match topic "tây sơn"
+            is_person_synonym = any(synonym in person for person in result["persons"])
+            if is_person_synonym:
+                continue
             seen_topics.add(canonical)
             result["topics"].append(canonical)
 
@@ -92,32 +108,65 @@ def resolve_query_entities(query: str) -> dict:
             seen_places.add(place_key)
             result["places"].append(place_key)
 
-    # --- 7. FUZZY MATCHING FALLBACK ---
-    # When exact match finds nothing, try approximate matching
-    if not any(result.values()):
-        # Fuzzy match against person aliases
-        fuzzy_persons = fuzzy_match_entity(q_low, startup.PERSON_ALIASES, FUZZY_MATCH_THRESHOLD)
-        for matched_key, _score in fuzzy_persons:
-            canonical = startup.PERSON_ALIASES.get(matched_key, matched_key)
-            if canonical not in seen_persons:
+    # --- 7. HYBRID FUZZY MATCHING (Always-on, supplements Exact Match) ---
+    # Run fuzzy match IN PARALLEL with exact match to catch typos/variants.
+    # High-confidence fuzzy matches (>= 0.85) are always added.
+    # Lower-confidence (>= threshold) only added when no exact results for that entity type.
+    
+    # Fuzzy match against person aliases
+    fuzzy_persons = fuzzy_match_entity(q_low, startup.PERSON_ALIASES, FUZZY_MATCH_THRESHOLD)
+    for matched_key, _score in fuzzy_persons:
+        canonical = startup.PERSON_ALIASES.get(matched_key, matched_key)
+        if canonical not in seen_persons:
+            # High confidence: always add. Low confidence: only if no exact matches
+            if _score >= 0.85 or not result["persons"]:
                 seen_persons.add(canonical)
                 result["persons"].append(canonical)
 
-        # Fuzzy match against dynasty aliases
-        fuzzy_dynasties = fuzzy_match_entity(q_low, startup.DYNASTY_ALIASES, 0.80)
-        for matched_key, _score in fuzzy_dynasties:
-            canonical = startup.DYNASTY_ALIASES.get(matched_key, matched_key)
-            if canonical not in seen_dynasties:
+    # Fuzzy match against dynasty aliases
+    fuzzy_dynasties = fuzzy_match_entity(q_low, startup.DYNASTY_ALIASES, 0.80)
+    for matched_key, _score in fuzzy_dynasties:
+        canonical = startup.DYNASTY_ALIASES.get(matched_key, matched_key)
+        if canonical not in seen_dynasties:
+            if _score >= 0.85 or not result["dynasties"]:
                 seen_dynasties.add(canonical)
                 result["dynasties"].append(canonical)
 
-        # Fuzzy match against topic synonyms
-        fuzzy_topics = fuzzy_match_entity(q_low, startup.TOPIC_SYNONYMS, FUZZY_MATCH_THRESHOLD)
-        for matched_key, _score in fuzzy_topics:
-            canonical = startup.TOPIC_SYNONYMS.get(matched_key, matched_key)
-            if canonical not in seen_topics:
+    # Fuzzy match against topic synonyms
+    fuzzy_topics = fuzzy_match_entity(q_low, startup.TOPIC_SYNONYMS, FUZZY_MATCH_THRESHOLD)
+    for matched_key, _score in fuzzy_topics:
+        canonical = startup.TOPIC_SYNONYMS.get(matched_key, matched_key)
+        if canonical not in seen_topics:
+            if _score >= 0.85 or not result["topics"]:
                 seen_topics.add(canonical)
                 result["topics"].append(canonical)
+
+    # --- 8. PHONETIC VARIANT FALLBACK ---
+    # When both exact and fuzzy match find nothing, try phonetic variants
+    if not any(result.values()):
+        phonetic_variants = generate_phonetic_variants(q_low)
+        for variant in phonetic_variants[:3]:  # Limit to avoid over-expansion
+            variant_result = {"persons": [], "dynasties": [], "topics": [], "places": []}
+            # Try exact match with phonetic variant
+            for alias, canonical in startup.PERSON_ALIASES.items():
+                if alias in variant and canonical not in seen_persons:
+                    seen_persons.add(canonical)
+                    result["persons"].append(canonical)
+            for alias, canonical in startup.DYNASTY_ALIASES.items():
+                if alias in variant and canonical not in seen_dynasties:
+                    seen_dynasties.add(canonical)
+                    result["dynasties"].append(canonical)
+            for synonym, canonical in startup.TOPIC_SYNONYMS.items():
+                if synonym in variant and canonical not in seen_topics:
+                    seen_topics.add(canonical)
+                    result["topics"].append(canonical)
+            for place_key in startup.PLACES_INDEX:
+                if place_key in variant and place_key not in seen_places:
+                    seen_places.add(place_key)
+                    result["places"].append(place_key)
+            # If phonetic variant found something, stop trying more variants
+            if any(result.values()):
+                break
 
     return result
 
@@ -383,6 +432,7 @@ def semantic_search(query: str):
     """
     Perform semantic search with improved relevance filtering.
     Supports dynasty-aware filtering for broader historical queries.
+    Uses multi-query strategy for better recall.
     """
     if startup.index is None:
         print("[WARN] Search called before index is ready")
@@ -458,6 +508,29 @@ def semantic_search(query: str):
             # Limit results
             if len(results) >= TOP_K:
                 break
+
+        # --- MULTI-QUERY SEARCH (NEW) ---
+        # When primary search yields few results, try query variations
+        if len(results) < 3:
+            resolved = resolve_query_entities(query)
+            variations = generate_search_variations(query, resolved)
+            for var_query in variations[:4]:  # Max 4 variations
+                try:
+                    var_norm = normalize_query(var_query)
+                    var_emb = get_cached_embedding(var_norm)
+                    var_emb_2d = np.expand_dims(var_emb, axis=0)
+                    var_scores, var_ids = startup.index.search(var_emb_2d, TOP_K)
+                    for v_score, v_idx in zip(var_scores[0], var_ids[0]):
+                        if v_idx == -1 or v_score < threshold:
+                            continue
+                        if v_idx < len(startup.DOCUMENTS):
+                            doc = startup.DOCUMENTS[v_idx]
+                            if doc not in results:
+                                results.append(doc)
+                    if len(results) >= TOP_K:
+                        break
+                except Exception:
+                    continue  # Skip failed variations silently
 
         return results
     except Exception as e:
