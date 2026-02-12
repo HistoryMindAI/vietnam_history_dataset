@@ -7,8 +7,5 @@
 # ===== Testing =====
 pytest>=8.0.0
 
-# CRITICAL: httpx and starlette versions MUST be compatible with fastapi==0.110.0
-# fastapi 0.110.0 depends on starlette==0.36.3
-# starlette 0.36.3 TestClient requires httpx<0.28.0 (httpx 0.28+ removed 'app' kwarg)
-httpx==0.27.0
-starlette==0.36.3
+# NOTE: httpx is pinned in requirements.txt (httpx>=0.27.0,<0.28.0)
+# starlette is auto-installed by fastapi==0.110.0 (starlette==0.36.3)
