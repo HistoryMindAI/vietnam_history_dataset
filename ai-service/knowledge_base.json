@@ -50,7 +50,9 @@
     "văn miếu": ["quốc tử giám", "văn miếu quốc tử giám", "trường đại học đầu tiên"],
     "kháng chiến chống pháp": ["chiến tranh đông dương", "kháng pháp"],
     "kháng chiến chống mỹ": ["chiến tranh việt nam", "kháng mỹ", "chống mỹ cứu nước"],
-    "nước vạn xuân": ["vạn xuân", "lý nam đế dựng nước"]
+    "nước vạn xuân": ["vạn xuân", "lý nam đế dựng nước"],
+    "ngô quyền": ["trận bạch đằng 938", "đánh quân nam hán"],
+    "lê lợi": ["khởi nghĩa lam sơn", "bình định vương", "lê thái tổ khởi nghĩa"]
   },
 
   "dynasty_aliases": {

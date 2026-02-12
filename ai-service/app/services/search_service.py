@@ -30,6 +30,20 @@ def _strip_accents_light(text: str) -> str:
 # NOTE: HISTORICAL_PHRASES is auto-generated at startup from knowledge_base.json.
 # Access via startup.HISTORICAL_PHRASES (set of multi-word phrases).
 # No hardcoded list needed — adding entries to knowledge_base.json is sufficient.
+# Fallback set only used if startup hasn't loaded yet (e.g. unit tests outside Docker).
+_FALLBACK_HISTORICAL_PHRASES = {
+    "nguyên mông", "đại việt", "nhà trần", "nhà lý", "nhà lê",
+    "nhà nguyễn", "nhà đinh", "nhà hồ", "nhà mạc",
+    "bắc thuộc", "pháp thuộc", "tây sơn", "tiền lê",
+    "lê sơ", "lê trung hưng", "hùng vương",
+    "hồ chí minh", "nguyễn ái quốc", "nguyễn tất thành",
+    "trần hưng đạo", "lý thường kiệt", "quang trung", "nguyễn huệ",
+    "lê lợi", "lê thánh tông", "đinh bộ lĩnh",
+    "bạch đằng", "chi lăng", "đống đa", "điện biên phủ",
+    "sông như nguyệt", "khởi nghĩa", "chiến thắng", "chiến dịch",
+    "cách mạng", "độc lập", "thống nhất", "giải phóng",
+    "kháng chiến", "phong trào", "cần vương",
+}
 
 
 def _normalize_query_text(text: str) -> str:
@@ -337,7 +351,8 @@ def extract_important_keywords(text: str) -> set:
     extracted = set()
     
     # Step 1: Extract multi-word phrases first
-    for phrase in startup.HISTORICAL_PHRASES:
+    phrases = startup.HISTORICAL_PHRASES if startup.HISTORICAL_PHRASES else _FALLBACK_HISTORICAL_PHRASES
+    for phrase in phrases:
         if phrase in q_low:
             # Add as underscore-joined keyword for matching
             extracted.add(phrase.replace(" ", "_"))
