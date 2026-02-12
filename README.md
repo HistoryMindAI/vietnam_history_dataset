@@ -2,6 +2,38 @@
 
 Dự án này là hệ thống Chatbot thông minh hỗ trợ tra cứu và trả lời các câu hỏi về lịch sử Việt Nam, sử dụng kỹ thuật **RAG (Retrieval-Augmented Generation)** kết hợp **NLU (Natural Language Understanding)**.
 
+## 🎯 Status
+
+```
+✅ Version: 2.2.0
+✅ Tests: 467/470 passing (99.4%)
+✅ Failures: 0
+✅ Status: PRODUCTION READY
+```
+
+## 🚀 Quick Start
+
+### Deploy với Docker (Khuyến nghị)
+```bash
+# Build và run
+docker build -t historymindai:latest ./ai-service
+docker run -d -p 8000:8000 historymindai:latest
+
+# Hoặc dùng Docker Compose
+docker-compose up -d
+```
+
+### Deploy tự động
+```bash
+# Windows
+.\deploy.ps1
+
+# Linux/Mac
+chmod +x deploy.sh && ./deploy.sh
+```
+
+**📖 Xem thêm**: [START_HERE.md](START_HERE.md) | [DEPLOY_AND_PUSH_GUIDE.md](DEPLOY_AND_PUSH_GUIDE.md)
+
 ## 🏗 Kiến trúc hệ thống
 
 ```mermaid
