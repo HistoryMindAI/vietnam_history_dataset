@@ -13,27 +13,19 @@ import re
 from unicodedata import normalize as unicode_normalize
 from difflib import SequenceMatcher
 import logging
+import app.core.startup as startup
 
 logger = logging.getLogger(__name__)
 
 # ===================================================================
 # 1. ABBREVIATIONS & COMMON SHORTHANDS
 # ===================================================================
-
-ABBREVIATIONS = {
-    # Country / geo
-    "vn": "việt nam",
-    "tq": "trung quốc",
-    "lx": "liên xô",
-    # Famous places / events
-    "dbp": "điện biên phủ",
-    "cmtt": "cách mạng tháng tám",
-    "tnđl": "tuyên ngôn độc lập",
-    "hcm": "hồ chí minh",
-    # Common shortenings
-    "ls": "lịch sử",
-    "nv": "nhân vật",
-    "sk": "sự kiện",
+# NOTE: Loaded dynamically from knowledge_base.json via startup.ABBREVIATIONS.
+# Fallback dict only used if startup hasn't loaded yet.
+_FALLBACK_ABBREVIATIONS = {
+    "vn": "việt nam", "tq": "trung quốc", "lx": "liên xô",
+    "dbp": "điện biên phủ", "cmtt": "cách mạng tháng tám",
+    "hcm": "hồ chí minh", "ls": "lịch sử", "nv": "nhân vật", "sk": "sự kiện",
 }
 
 # ===================================================================
@@ -194,8 +186,9 @@ FILLER_PATTERNS = [
 # ===================================================================
 # 4. TYPO / SPELLING CORRECTIONS
 # ===================================================================
-
-TYPO_FIXES = {
+# NOTE: Loaded dynamically from knowledge_base.json via startup.TYPO_FIXES.
+# Fallback dict only used if startup hasn't loaded yet.
+_FALLBACK_TYPO_FIXES = {
     "nguyen huye": "nguyễn huệ",
     "nguyen huee": "nguyễn huệ",
     "nguyen huej": "nguyễn huệ",
@@ -300,13 +293,15 @@ def rewrite_query(query: str) -> str:
     
     result = _normalize_text(query)
     
-    # Step 1: Fix known typos
-    for typo, fix in TYPO_FIXES.items():
+    # Step 1: Fix known typos (dynamic from knowledge_base.json)
+    typo_fixes = startup.TYPO_FIXES if startup.TYPO_FIXES else _FALLBACK_TYPO_FIXES
+    for typo, fix in typo_fixes.items():
         if typo in result:
             result = result.replace(typo, fix)
     
-    # Step 2: Expand abbreviations (word-boundary aware)
-    for abbr, expansion in ABBREVIATIONS.items():
+    # Step 2: Expand abbreviations (dynamic from knowledge_base.json)
+    abbreviations = startup.ABBREVIATIONS if startup.ABBREVIATIONS else _FALLBACK_ABBREVIATIONS
+    for abbr, expansion in abbreviations.items():
         # Match as whole word to avoid partial replacements
         pattern = r'\b' + re.escape(abbr) + r'\b'
         result = re.sub(pattern, expansion, result)
@@ -557,5 +552,15 @@ def extract_question_intent(query: str) -> str | None:
     for p in comparison_patterns:
         if re.search(p, q):
             return "comparison"
+    
+    # --- Fallback: check plain-text patterns from knowledge_base.json ---
+    if startup.QUESTION_PATTERNS:
+        for intent, patterns in startup.QUESTION_PATTERNS.items():
+            if intent.startswith("_"):  # Skip metadata keys like "_description"
+                continue
+            if isinstance(patterns, list):
+                for pattern in patterns:
+                    if pattern in q:
+                        return intent
     
     return None
