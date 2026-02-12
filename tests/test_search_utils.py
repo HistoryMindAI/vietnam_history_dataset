@@ -370,3 +370,157 @@ class TestDetectDynastyWrapper:
         startup.PLACES_INDEX = defaultdict(list, {"bạch đằng": [0]})
         from app.services.search_service import detect_place_from_query
         assert detect_place_from_query("Trận Bạch Đằng") == "bạch đằng"
+
+
+# ===================================================================
+# G. BUG FIX: Prefix-style text dedup (lặp ý/lặp câu)
+# ===================================================================
+
+class TestPrefixStyleDedup:
+    """Test that various prefix-style texts from dataset are properly cleaned
+    and deduplicated, preventing repetitive output."""
+
+    def test_clean_semicolon_summary_dien_ra(self):
+        """'X diễn ra năm 1960; description' → keep only description."""
+        from app.services.engine import clean_story_text
+        text = "Thành lập Mặt trận Dân tộc Giải phóng miền Nam diễn ra năm 1960; Mặt trận ra đời nhằm đoàn kết lực lượng yêu nước ở miền Nam."
+        result = clean_story_text(text)
+        assert not result.startswith("Thành lập Mặt trận")
+        assert "Mặt trận ra đời" in result
+
+    def test_clean_semicolon_summary_xay_ra(self):
+        """'X xảy ra năm 1284; description' → keep only description."""
+        from app.services.engine import clean_story_text
+        text = "Hịch tướng sĩ xảy ra năm 1284; Trần Hưng Đạo soạn bài hịch khích lệ quân dân."
+        result = clean_story_text(text)
+        assert "Trần Hưng Đạo" in result
+
+    def test_clean_event_title_prefix(self):
+        """'Event (1284): Description' → keep only Description."""
+        from app.services.engine import clean_story_text
+        text = "Hịch tướng sĩ (1284): Trần Hưng Đạo soạn Hịch tướng sĩ khích lệ quân dân trước kháng chiến lần 2."
+        result = clean_story_text(text)
+        assert "Trần Hưng Đạo" in result
+        assert not result.startswith("Hịch tướng sĩ (1284)")
+
+    def test_clean_bare_title_year(self):
+        """'Hịch tướng sĩ (1284).' → should be cleaned away entirely."""
+        from app.services.engine import clean_story_text
+        text = "Hịch tướng sĩ (1284)."
+        result = clean_story_text(text)
+        # After cleaning, this is essentially empty or very short
+        assert len(result.strip()) < 15
+
+    def test_clean_ke_ve_prefix(self):
+        """'Kể về X và đóng góp...' prefix should be removed."""
+        from app.services.engine import clean_story_text
+        text = "Kể về Trần Hưng Đạo và đóng góp của ông trong Hịch tướng sĩ (1284)."
+        result = clean_story_text(text)
+        assert not result.startswith("Kể về")
+
+    def test_clean_tom_tat_prefix(self):
+        """'Tóm tắt bối cảnh – diễn biến – kết quả...' should be removed."""
+        from app.services.engine import clean_story_text
+        text = "Tóm tắt bối cảnh – diễn biến – kết quả của Hịch tướng sĩ (1284)."
+        result = clean_story_text(text)
+        assert not result.startswith("Tóm tắt")
+
+
+class TestMinTextLengthFilter:
+    """Test that very short texts after cleaning are filtered out."""
+
+    def test_short_text_filtered(self):
+        """Events with <15 chars after clean should be filtered from dedup."""
+        from app.services.engine import deduplicate_and_enrich
+        short_event = {
+            "year": 1284, "event": "Hịch tướng sĩ",
+            "story": "Hịch tướng sĩ (1284).",  # Becomes empty after clean
+            "persons": [], "places": []
+        }
+        long_event = {
+            "year": 1284, "event": "Hịch tướng sĩ",
+            "story": "Trần Hưng Đạo soạn Hịch tướng sĩ khích lệ quân dân trước kháng chiến lần 2.",
+            "persons": ["Trần Hưng Đạo"], "places": []
+        }
+        result = deduplicate_and_enrich([short_event, long_event])
+        # Short event should be filtered, only long event kept
+        assert len(result) == 1
+        assert "Trần Hưng Đạo" in result[0].get("story", "")
+
+
+class TestCrossYearDedup:
+    """Test that dedup works across years (global dedup)."""
+
+    def test_same_event_different_year_groups(self):
+        """Same event text appearing in docs with same year but different phrasing."""
+        from app.services.engine import deduplicate_and_enrich
+        event1 = {
+            "year": 1284, "event": "Hịch tướng sĩ",
+            "story": "Trần Hưng Đạo soạn Hịch tướng sĩ khích lệ quân dân trước kháng chiến lần 2.",
+            "persons": ["Trần Hưng Đạo"], "places": []
+        }
+        event2 = {
+            "year": 1284, "event": "Hịch tướng sĩ",
+            "story": "Hịch tướng sĩ (1284): Trần Hưng Đạo soạn Hịch tướng sĩ khích lệ quân dân trước kháng chiến lần 2.",
+            "persons": ["Trần Hưng Đạo"], "places": []
+        }
+        event3 = {
+            "year": 1284, "event": "Hịch tướng sĩ",
+            "story": "Kể về Trần Hưng Đạo và đóng góp của ông trong Hịch tướng sĩ (1284).",
+            "persons": ["Trần Hưng Đạo"], "places": []
+        }
+        result = deduplicate_and_enrich([event1, event2, event3])
+        # All 3 are about the same event — should merge to 1
+        assert len(result) == 1
+
+    def test_distinct_events_not_merged(self):
+        """Different events in the same year should both be kept."""
+        from app.services.engine import deduplicate_and_enrich
+        event1 = {
+            "year": 1285, "event": "Kháng chiến lần 2 chống Nguyên",
+            "story": "Quân dân Đại Việt giành thắng lợi lớn trước quân Nguyên.",
+            "persons": ["Trần Hưng Đạo"], "places": []
+        }
+        event2 = {
+            "year": 1288, "event": "Trận Bạch Đằng",
+            "story": "Trần Hưng Đạo nhử địch vào bãi cọc ngầm trên sông Bạch Đằng, tiêu diệt thủy quân Nguyên.",
+            "persons": ["Trần Hưng Đạo"], "places": ["Bạch Đằng"]
+        }
+        result = deduplicate_and_enrich([event1, event2])
+        assert len(result) == 2
+
+
+# ===================================================================
+# H. BUG FIX: Adaptive relevance filtering
+# ===================================================================
+
+class TestAdaptiveRelevance:
+    """Test that check_query_relevance uses adaptive thresholds."""
+
+    def setup_method(self):
+        from app.services.search_service import check_query_relevance
+        self.check = check_query_relevance
+
+    def test_long_query_rejects_weak_match(self):
+        """A query with many keywords should reject docs matching only 1 keyword."""
+        doc_war = {
+            "year": 1968, "event": "Tổng tiến công và nổi dậy Tết Mậu Thân",
+            "story": "Lực lượng cách mạng đồng loạt tiến công trên nhiều đô thị miền Nam.",
+            "persons": [], "places": ["Miền Nam"], "dynasty": "", "period": "1954–1975",
+            "keywords": ["tết_mậu_thân"], "title": "Mậu Thân 1968"
+        }
+        # This query has 4+ keywords: văn, miếu, quốc, giám, lịch, giáo, dục, ý, nghĩa...
+        query = "Văn Miếu Quốc Tử Giám có lịch sử và ý nghĩa như thế nào trong nền giáo dục Việt Nam"
+        # War doc should NOT match an education query
+        assert self.check(query, doc_war) is False
+
+    def test_short_query_accepts_single_match(self):
+        """A short query (1-3 keywords) should still accept 1 keyword match."""
+        doc = {
+            "year": 1077, "event": "Phòng tuyến Như Nguyệt",
+            "story": "Lý Thường Kiệt chặn quân Tống.", "title": "",
+            "persons": ["Lý Thường Kiệt"], "places": ["Như Nguyệt"],
+            "dynasty": "Lý", "period": "", "keywords": ["lý_thường_kiệt"]
+        }
+        assert self.check("Lý Thường Kiệt", doc) is True
+

@@ -68,6 +68,7 @@ MAX_TOTAL_EVENTS = 5
 MAX_TOTAL_EVENTS_DYNASTY = 10  # More results for dynasty-level queries
 MAX_TOTAL_EVENTS_RANGE = 15   # More results for year range queries
 MAX_TOTAL_EVENTS_ENTITY = 10  # Results for multi-entity queries (person + topic)
+MIN_CLEAN_TEXT_LENGTH = 15    # Minimum text length after cleaning (filter metadata noise)
 
 # Identity patterns — who are you?
 IDENTITY_PATTERNS = [
@@ -139,6 +140,20 @@ def clean_story_text(text: str, year: int | None = None) -> str:
     for pattern in structural_patterns:
         result = re.sub(pattern, '', result, flags=re.IGNORECASE)
     
+    # Phase 1b: Remove semicolon-style summary prefixes
+    # Pattern: "Event diễn ra năm 1960; Description..." → keep only Description
+    # Pattern: "Event xảy ra năm 1284; Description..." → keep only Description
+    result = re.sub(r'^.+\s+diễn ra năm\s+\d{3,4};\s*', '', result, flags=re.IGNORECASE)
+    result = re.sub(r'^.+\s+xảy ra năm\s+\d{3,4};\s*', '', result, flags=re.IGNORECASE)
+    
+    # Phase 1c: Remove event-title prefix patterns
+    # Pattern: "Event (1284): Description" → keep only Description
+    result = re.sub(r'^.+\(\d{4}\):\s*', '', result, flags=re.IGNORECASE)
+    # Pattern: "Hịch tướng sĩ (1284)." → remove if it's just a bare title+year
+    # Only match short text (< 80 chars) to avoid stripping full sentences
+    if len(result) < 80:
+        result = re.sub(r'^[^.;!?]+\(\d{4}\)\.?\s*$', '', result, flags=re.IGNORECASE)
+    
     # Phase 2: Remove year prefixes to avoid "Năm 1930: Năm 1930, ..." duplication
     year_prefixes = [
         r'^Năm \d+[,:]?\s*',
@@ -194,10 +209,36 @@ def compute_text_similarity(text1: str, text2: str) -> float:
     """Compute similarity between two texts using SequenceMatcher."""
     return SequenceMatcher(None, text1, text2).ratio()
 
+def _is_similar_event(text1_lower: str, text2_lower: str, kw1: set | None = None, kw2: set | None = None) -> bool:
+    """
+    Check if two cleaned event texts are similar enough to be considered duplicates.
+    Uses multiple strategies: containment, SequenceMatcher, and keyword overlap.
+    """
+    # Strategy 1: Direct containment
+    if text1_lower in text2_lower or text2_lower in text1_lower:
+        return True
+    
+    # Strategy 2: SequenceMatcher similarity
+    sim = compute_text_similarity(text1_lower, text2_lower)
+    if sim > 0.6:
+        return True
+    
+    # Strategy 3: Keyword-based Jaccard overlap (catches reformulated sentences)
+    if kw1 is not None and kw2 is not None and kw1 and kw2:
+        intersection = kw1 & kw2
+        union = kw1 | kw2
+        jaccard = len(intersection) / len(union) if union else 0
+        if jaccard > 0.7:
+            return True
+    
+    return False
+
+
 def deduplicate_and_enrich(raw_events: list, max_events: int = MAX_TOTAL_EVENTS) -> list:
     """
     Deduplicate events and enrich with complete information.
     Aggressively merges similar events to prevent repetition.
+    Uses GLOBAL cross-year dedup to catch same-event across different year groups.
     """
     if not raw_events:
         return []
@@ -210,7 +251,8 @@ def deduplicate_and_enrich(raw_events: list, max_events: int = MAX_TOTAL_EVENTS)
             by_year[year] = []
         by_year[year].append(e)
     
-    result_events = []
+    # Global cluster for cross-year dedup
+    global_cluster = []  # [{"event": doc, "text": cleaned, "text_lower": lower, "keywords": set}]
     
     for year in sorted(by_year.keys()):
         year_events = by_year[year]
@@ -220,30 +262,28 @@ def deduplicate_and_enrich(raw_events: list, max_events: int = MAX_TOTAL_EVENTS)
         # Sort by content length (descending) to prefer longer, detailed stories as base 
         year_events.sort(key=lambda x: len(x.get("story", "") or x.get("event", "")), reverse=True)
         
-        unique_cluster = []
-        
         for event in year_events:
             event_text = clean_story_text(event.get("story", "") or event.get("event", ""))
+            
+            # Filter out texts that are too short after cleaning (metadata noise)
+            if len(event_text.strip()) < MIN_CLEAN_TEXT_LENGTH:
+                continue
+            
             event_lower = event_text.lower()
+            event_keywords = extract_core_keywords(event_text)
             
             is_duplicate = False
             
-            for cluster_item in unique_cluster:
+            # Compare against ALL previously accepted events (global cross-year dedup)
+            for cluster_item in global_cluster:
                 base_event = cluster_item["event"]
-                base_text = clean_story_text(base_event.get("story", "") or base_event.get("event", ""))
-                base_lower = base_text.lower()
+                base_lower = cluster_item["text_lower"]
+                base_keywords = cluster_item["keywords"]
                 
-                # Check for containment or high similarity
-                if (event_lower in base_lower or base_lower in event_lower):
+                if _is_similar_event(event_lower, base_lower, event_keywords, base_keywords):
                     is_duplicate = True
-                else:
-                    sim = compute_text_similarity(event_lower, base_lower)
-                    if sim > 0.5:  # Tuned threshold: 0.3 too aggressive, 0.6 too loose
-                        is_duplicate = True
-                
-                if is_duplicate:
+                    
                     # Merge info into base_event (the longer one usually)
-                    # Merge persons/places
                     current_persons = set(base_event.get("persons", []))
                     current_persons.update(event.get("persons", []))
                     base_event["persons"] = list(current_persons)
@@ -253,23 +293,31 @@ def deduplicate_and_enrich(raw_events: list, max_events: int = MAX_TOTAL_EVENTS)
                     base_event["places"] = list(current_places)
                     
                     # Keep the absolute longest story text
+                    base_text = cluster_item["text"]
                     if len(event_text) > len(base_text):
-                         base_event["story"] = event.get("story", "")
-                         base_event["event"] = event.get("event", "")
+                        base_event["story"] = event.get("story", "")
+                        base_event["event"] = event.get("event", "")
+                        cluster_item["text"] = event_text
+                        cluster_item["text_lower"] = event_lower
+                        cluster_item["keywords"] = event_keywords
                     
-                    break # Found a match, stop checking other clusters
+                    break  # Found a match, stop checking other clusters
             
             if not is_duplicate:
-                unique_cluster.append({"event": event, "text": event_text})
+                global_cluster.append({
+                    "event": event,
+                    "text": event_text,
+                    "text_lower": event_lower,
+                    "keywords": event_keywords,
+                })
+            
+            if len(global_cluster) >= max_events:
+                break
         
-        # Add enriched unique events from this year
-        for item in unique_cluster:
-            result_events.append(item["event"])
-            
-        if len(result_events) >= max_events:
+        if len(global_cluster) >= max_events:
             break
-            
-    return result_events[:max_events]
+    
+    return [item["event"] for item in global_cluster[:max_events]]
 
 
 def format_complete_answer(events: list) -> str:

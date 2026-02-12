@@ -238,26 +238,17 @@ graph LR
 
 ## 🧪 Testing
 
-Hệ thống có **78 unit tests** bao phủ toàn diện:
+Hệ thống có **282 unit tests** bao phủ toàn diện:
 
 ```bash
-python -m pytest tests/test_engine.py -v
+python -m pytest tests/ -v
 ```
 
-| Test Class | Tests | Kiểm tra |
-|---|---|---|
-| `TestIdentityCreator` | 5 | Nhận diện câu hỏi "bạn là ai?", "ai tạo ra bạn?" |
-| `TestYearQueries` | 4 | Tra cứu năm đơn, khoảng năm, nhiều năm |
-| `TestPersonAliases` | 12 | Alias nhân vật (THĐ, Hai Bà Trưng, Bác Hồ, ...) |
-| `TestDynastyAliases` | 8 | Alias triều đại (nhà/triều/thời + tên) |
-| `TestTopicSynonyms` | 10 | Synonym chủ đề (Mông Cổ→Nguyên Mông, ...) |
-| `TestPlaceDetection` | 4 | Nhận diện địa danh (Bạch Đằng, Đống Đa, ...) |
-| `TestMultiEntityCombined` | 6 | Kết hợp nhiều entity trong 1 câu hỏi |
-| `TestScanByEntities` | 6 | Inverted index lookup |
-| `TestEngineIntentRouting` | 8 | Phân loại intent đúng |
-| `TestPhrasingVariations` | 6 | Cùng 1 câu hỏi, nhiều cách diễn đạt |
-| `TestEdgeCases` | 6 | Empty, gibberish, case, unicode |
-| `TestFormatOutput` | 3 | Định dạng output |
+| File | Nội dung |
+|---|---|
+| `test_engine.py` | Engine chính: intent routing, entity resolution, year queries, multi-entity, edge cases |
+| `test_engine_dedup.py` | Deduplication, text cleaning, keyword extraction |
+| `test_search_utils.py` | Search utilities: keyword extraction, relevance filtering, inverted indexes, knowledge base |
 
 ---
 
@@ -320,7 +311,9 @@ vietnam_history_dataset/
 │   ├── storyteller.py            # Data extraction pipeline
 │   └── index_docs.py             # Vector indexing pipeline
 └── tests/
-    └── test_engine.py            # 78 unit tests
+    ├── test_engine.py            # Engine core tests
+    ├── test_engine_dedup.py      # Dedup & text cleaning tests
+    └── test_search_utils.py      # Search & indexing tests
 ```
 
 ## 📚 Công nghệ sử dụng
