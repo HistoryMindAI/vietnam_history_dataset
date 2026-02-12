@@ -37,6 +37,12 @@ PERSON_ALIASES = {}    # "quang trung" → "nguyễn huệ"
 TOPIC_SYNONYMS = {}    # "mông cổ" → "nguyên mông"
 DYNASTY_ALIASES = {}   # "nhà trần" → "trần"
 
+# Dynamic data loaded from knowledge_base.json (replaces hardcoded dicts)
+ABBREVIATIONS = {}          # "dbp" → "điện biên phủ"
+TYPO_FIXES = {}             # "quangtrung" → "quang trung"
+QUESTION_PATTERNS = {}      # "person_search" → ["ai đã", ...]
+HISTORICAL_PHRASES = set()  # Auto-generated multi-word phrases
+
 def load_resources():
     """
     Load all heavy resources (Embedding model, FAISS index, Metadata).
@@ -145,10 +151,14 @@ def load_resources():
         except Exception as e:
             print(f"[WARN] Failed to auto-enrich UNACCENTED_MAP: {e}", flush=True)
 
+        # Build HISTORICAL_PHRASES from knowledge base (auto-generated)
+        _build_historical_phrases()
+
         print(
             f"[STARTUP] Ready | docs={len(DOCUMENTS)} | years={len(DOCUMENTS_BY_YEAR)}"
             f" | persons={len(PERSONS_INDEX)} | dynasties={len(DYNASTY_INDEX)}"
-            f" | aliases={len(PERSON_ALIASES)}",
+            f" | aliases={len(PERSON_ALIASES)} | abbrevs={len(ABBREVIATIONS)}"
+            f" | typos={len(TYPO_FIXES)} | phrases={len(HISTORICAL_PHRASES)}",
             flush=True
         )
 
@@ -210,10 +220,14 @@ def _load_knowledge_base():
     no Python code changes required.
     """
     global PERSON_ALIASES, TOPIC_SYNONYMS, DYNASTY_ALIASES
+    global ABBREVIATIONS, TYPO_FIXES, QUESTION_PATTERNS
 
     PERSON_ALIASES = {}
     TOPIC_SYNONYMS = {}
     DYNASTY_ALIASES = {}
+    ABBREVIATIONS = {}
+    TYPO_FIXES = {}
+    QUESTION_PATTERNS = {}
 
     if not os.path.exists(KNOWLEDGE_BASE_PATH):
         print(f"[WARN] Knowledge base not found at {KNOWLEDGE_BASE_PATH}", flush=True)
@@ -226,7 +240,6 @@ def _load_knowledge_base():
         # Build person alias lookup: alias → canonical name
         for canonical, aliases in kb.get("person_aliases", {}).items():
             canonical_lower = canonical.strip().lower()
-            # Map canonical to itself
             PERSON_ALIASES[canonical_lower] = canonical_lower
             for alias in aliases:
                 alias_lower = alias.strip().lower()
@@ -251,13 +264,67 @@ def _load_knowledge_base():
                 if alias_lower:
                     DYNASTY_ALIASES[alias_lower] = canonical_lower
 
+        # Load abbreviations (replaces hardcoded ABBREVIATIONS in query_understanding.py)
+        ABBREVIATIONS = {k.strip().lower(): v.strip().lower()
+                         for k, v in kb.get("abbreviations", {}).items()}
+
+        # Load typo fixes (replaces hardcoded TYPO_FIXES in query_understanding.py)
+        TYPO_FIXES = {k.strip().lower(): v.strip().lower()
+                      for k, v in kb.get("typo_fixes", {}).items()}
+
+        # Load question patterns (supplements regex in extract_question_intent)
+        QUESTION_PATTERNS = kb.get("question_patterns", {})
+
         print(
             f"[STARTUP] Knowledge base loaded:"
             f" person_aliases={len(PERSON_ALIASES)},"
             f" topic_synonyms={len(TOPIC_SYNONYMS)},"
-            f" dynasty_aliases={len(DYNASTY_ALIASES)}",
+            f" dynasty_aliases={len(DYNASTY_ALIASES)},"
+            f" abbreviations={len(ABBREVIATIONS)},"
+            f" typo_fixes={len(TYPO_FIXES)}",
             flush=True
         )
 
     except Exception as e:
         print(f"[ERROR] Failed to load knowledge base: {e}", flush=True)
+
+
+def _build_historical_phrases():
+    """
+    Auto-generate HISTORICAL_PHRASES from knowledge_base entities.
+    These are multi-word phrases that should NOT be split during keyword extraction.
+    Replaces hardcoded HISTORICAL_PHRASES list in search_service.py.
+    """
+    global HISTORICAL_PHRASES
+    phrases = set()
+
+    # Collect all multi-word names from person aliases
+    for name in PERSON_ALIASES:
+        if " " in name:
+            phrases.add(name)
+
+    # Collect all multi-word topics/synonyms
+    for name in TOPIC_SYNONYMS:
+        if " " in name:
+            phrases.add(name)
+
+    # Collect all multi-word dynasty aliases
+    for name in DYNASTY_ALIASES:
+        if " " in name:
+            phrases.add(name)
+
+    # Collect all multi-word places from index
+    for place in PLACES_INDEX:
+        if " " in place:
+            phrases.add(place)
+
+    # Common historical action phrases (linguistic, not data)
+    _action_phrases = [
+        "khởi nghĩa", "chiến thắng", "chiến dịch", "cách mạng",
+        "độc lập", "thống nhất", "giải phóng", "kháng chiến",
+        "phong trào", "cần vương",
+    ]
+    phrases.update(_action_phrases)
+
+    HISTORICAL_PHRASES = phrases
+    print(f"[STARTUP] Historical phrases auto-generated: {len(HISTORICAL_PHRASES)}", flush=True)
