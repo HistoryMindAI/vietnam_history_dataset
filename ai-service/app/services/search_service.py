@@ -1,7 +1,8 @@
 import app.core.startup as startup
-from app.core.config import TOP_K, SIM_THRESHOLD
+from app.core.config import TOP_K, SIM_THRESHOLD, SIM_THRESHOLD_LOW, FUZZY_MATCH_THRESHOLD, HIGH_CONFIDENCE_SCORE
 from functools import lru_cache
 from app.utils.normalize import normalize_query
+from app.services.query_understanding import fuzzy_match_entity
 import re
 from unicodedata import normalize as unicode_normalize
 
@@ -90,6 +91,33 @@ def resolve_query_entities(query: str) -> dict:
         if place_key in q_low and place_key not in seen_places:
             seen_places.add(place_key)
             result["places"].append(place_key)
+
+    # --- 7. FUZZY MATCHING FALLBACK ---
+    # When exact match finds nothing, try approximate matching
+    if not any(result.values()):
+        # Fuzzy match against person aliases
+        fuzzy_persons = fuzzy_match_entity(q_low, startup.PERSON_ALIASES, FUZZY_MATCH_THRESHOLD)
+        for matched_key, _score in fuzzy_persons:
+            canonical = startup.PERSON_ALIASES.get(matched_key, matched_key)
+            if canonical not in seen_persons:
+                seen_persons.add(canonical)
+                result["persons"].append(canonical)
+
+        # Fuzzy match against dynasty aliases
+        fuzzy_dynasties = fuzzy_match_entity(q_low, startup.DYNASTY_ALIASES, 0.80)
+        for matched_key, _score in fuzzy_dynasties:
+            canonical = startup.DYNASTY_ALIASES.get(matched_key, matched_key)
+            if canonical not in seen_dynasties:
+                seen_dynasties.add(canonical)
+                result["dynasties"].append(canonical)
+
+        # Fuzzy match against topic synonyms
+        fuzzy_topics = fuzzy_match_entity(q_low, startup.TOPIC_SYNONYMS, FUZZY_MATCH_THRESHOLD)
+        for matched_key, _score in fuzzy_topics:
+            canonical = startup.TOPIC_SYNONYMS.get(matched_key, matched_key)
+            if canonical not in seen_topics:
+                seen_topics.add(canonical)
+                result["topics"].append(canonical)
 
     return result
 
@@ -292,10 +320,9 @@ def check_query_relevance(query: str, doc: dict, dynasty_filter: str = None) -> 
     # Check keyword matching with expanded set
     matching_keywords = sum(1 for kw in expanded_keywords if kw in doc_text)
     
-    # Adaptive threshold: more keywords in query = higher bar to pass
-    # Short queries (1-3 keywords): require at least 1 match
-    # Longer queries (4+ keywords): require at least 2 matches
-    min_matches = 2 if len(query_keywords) >= 4 else 1
+    # More lenient threshold: always require at least 1 match
+    # Only raise to 2 for very keyword-rich queries (5+)
+    min_matches = 2 if len(query_keywords) >= 5 else 1
     return matching_keywords >= min_matches
 
 
@@ -420,12 +447,13 @@ def semantic_search(query: str):
             if idx < len(startup.DOCUMENTS):
                 doc = startup.DOCUMENTS[idx]
                 
-                # Check keyword relevance
-                if not check_query_relevance(query, doc, dynasty_filter):
-                    continue
-                
-                if doc not in results:
-                    results.append(doc)
+                # High-confidence results bypass keyword check
+                if score >= HIGH_CONFIDENCE_SCORE:
+                    if doc not in results:
+                        results.append(doc)
+                elif check_query_relevance(query, doc, dynasty_filter):
+                    if doc not in results:
+                        results.append(doc)
             
             # Limit results
             if len(results) >= TOP_K:

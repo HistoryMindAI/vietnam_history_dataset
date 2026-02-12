@@ -3,6 +3,10 @@ from app.services.search_service import (
     detect_dynasty_from_query, detect_place_from_query,
     resolve_query_entities, scan_by_entities,
 )
+from app.services.query_understanding import (
+    rewrite_query, extract_question_intent,
+    generate_search_variations,
+)
 import re
 
 # Pre-compile regex for faster matching
@@ -391,13 +395,21 @@ def format_complete_answer(events: list) -> str:
 
 
 def engine_answer(query: str):
-    q = query.lower()
+    # --- STEP 0: Query Understanding (NLU) ---
+    # Rewrite query: fix typos, expand abbreviations, restore accents
+    rewritten = rewrite_query(query)
+    # Use rewritten for all downstream processing
+    q = rewritten.lower()
+    q_display = query  # Keep original for display
+
+    # Detect high-level question intent for context
+    question_intent = extract_question_intent(rewritten)
 
     # Handle creator queries — "ai tạo ra bạn?", "ai phát triển bạn?"
     # Check BEFORE identity to avoid 'bạn là ai' substring matching
     if any(pattern in q for pattern in CREATOR_PATTERNS):
         return {
-            "query": query,
+            "query": q_display,
             "intent": "creator",
             "answer": CREATOR_RESPONSE,
             "events": [],
@@ -407,7 +419,7 @@ def engine_answer(query: str):
     # Handle identity queries — "bạn là ai?", "giới thiệu bản thân"
     if any(pattern in q for pattern in IDENTITY_PATTERNS):
         return {
-            "query": query,
+            "query": q_display,
             "intent": "identity",
             "answer": IDENTITY_RESPONSE,
             "events": [],
@@ -421,11 +433,12 @@ def engine_answer(query: str):
     is_entity_query = False
 
     # Detect intent — priority: year_range > multi_year > multi_entity > dynasty > definition > single_year > semantic
-    year_range = extract_year_range(query)
-    multi_years = extract_multiple_years(query)
+    year_range = extract_year_range(rewritten)
+    multi_years = extract_multiple_years(rewritten)
 
     # Dynamic entity resolution (data-driven, no hardcoded patterns)
-    resolved = resolve_query_entities(query)
+    # Uses rewritten query for better entity matching
+    resolved = resolve_query_entities(rewritten)
     has_persons = bool(resolved.get("persons"))
     has_topics = bool(resolved.get("topics"))
     has_dynasties = bool(resolved.get("dynasties"))
@@ -440,7 +453,7 @@ def engine_answer(query: str):
         raw_events = scan_by_year_range(start_yr, end_yr)
         # Supplement with semantic search for richer results
         if len(raw_events) < 3:
-            raw_events.extend(semantic_search(query))
+            raw_events.extend(semantic_search(rewritten))
     elif multi_years:
         # Multiple years: "năm 938 và năm 1288"
         intent = "multi_year"
@@ -448,7 +461,7 @@ def engine_answer(query: str):
         for yr in multi_years:
             raw_events.extend(scan_by_year(yr))
         # Also add semantic results for context
-        raw_events.extend(semantic_search(query))
+        raw_events.extend(semantic_search(rewritten))
     elif has_entities:
         # Multi-entity query (data-driven): person, dynasty, topic, place
         # Determines sub-intent for more specific labeling
@@ -470,17 +483,38 @@ def engine_answer(query: str):
         # Use inverted index scan for fast O(1) lookup
         raw_events = scan_by_entities(resolved)
         # Always supplement with semantic search for broader coverage
-        raw_events.extend(semantic_search(query))
+        raw_events.extend(semantic_search(rewritten))
     elif "là gì" in q or "là ai" in q:
         intent = "definition"
-        raw_events = semantic_search(query)
+        raw_events = semantic_search(rewritten)
     else:
-        year = extract_single_year(query)
+        year = extract_single_year(rewritten)
         if year:
             intent = "year"
             raw_events = scan_by_year(year)
         else:
             intent = "semantic"
+            raw_events = semantic_search(rewritten)
+
+    # --- FALLBACK CHAIN ---
+    # When primary search finds nothing, try harder
+    if not raw_events:
+        # Fallback 1: Semantic search with rewritten query
+        # (may help if rewrite changed the query significantly)
+        if rewritten.lower() != query.lower():
+            raw_events = semantic_search(rewritten)
+        
+        # Fallback 2: Try search variations (entity-focused queries)
+        if not raw_events and has_entities:
+            variations = generate_search_variations(rewritten, resolved)
+            for var_query in variations:
+                var_results = semantic_search(var_query)
+                if var_results:
+                    raw_events.extend(var_results)
+                    break  # Use first successful variation
+        
+        # Fallback 3: Pure semantic search with original query
+        if not raw_events and query.lower() != rewritten.lower():
             raw_events = semantic_search(query)
 
     no_data = not raw_events
@@ -501,10 +535,35 @@ def engine_answer(query: str):
     # Generate complete, comprehensive answer
     answer = format_complete_answer(unique_events)
 
+    # Smart no_data response — suggest alternative phrasing
+    if no_data:
+        answer = _generate_no_data_suggestion(q_display, rewritten, resolved, question_intent)
+
     return {
-        "query": query,
+        "query": q_display,
         "intent": intent,
         "answer": answer,
         "events": unique_events,  # Return deduplicated, enriched events
         "no_data": no_data
     }
+
+
+def _generate_no_data_suggestion(original_query: str, rewritten: str, resolved: dict, question_intent: str | None) -> str:
+    """
+    Generate a helpful suggestion when no data is found.
+    Instead of just saying "không tìm thấy", guide the user to rephrase.
+    """
+    suggestions = []
+    
+    # Check if query was rewritten (means user may have typos)
+    if rewritten.lower() != original_query.lower():
+        suggestions.append(f"Tôi đã hiểu câu hỏi của bạn là: *\"{rewritten}\"*")
+    
+    suggestions.append("Tôi chưa tìm thấy thông tin phù hợp. Bạn có thể thử:")
+    suggestions.append("")
+    suggestions.append("- **Hỏi cụ thể hơn** — ví dụ: *\"Trận Bạch Đằng năm 1288\"*")
+    suggestions.append("- **Dùng tên nhân vật** — ví dụ: *\"Trần Hưng Đạo đánh quân Nguyên\"*")
+    suggestions.append("- **Nêu triều đại** — ví dụ: *\"Nhà Trần có sự kiện gì nổi bật?\"*")
+    suggestions.append("- **Tra theo năm** — ví dụ: *\"Năm 1945 có sự kiện gì?\"*")
+    
+    return "\n".join(suggestions)

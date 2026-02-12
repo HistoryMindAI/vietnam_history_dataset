@@ -19,10 +19,12 @@ graph TD
     end
 
     subgraph "🤖 AI Service - FastAPI"
+        NLU["NLU Layer - Query Understanding"]
         C["Query Engine"]
         C1["Semantic Search - FAISS"]
-        C2["Entity Resolution"]
+        C2["Entity Resolution (Exact + Fuzzy)"]
         C3["Intent Detection"]
+        C4["Fallback Chain"]
     end
 
     subgraph "💾 Data Layer"
@@ -33,11 +35,14 @@ graph TD
     end
 
     A -- "HTTP Request" --> B
-    B -- "REST API" --> C
+    B -- "REST API" --> NLU
+    NLU -- "rewrite & expand" --> C
     C --> C1 & C2 & C3
     C1 --> D1
     C2 --> D3
     C3 --> D2
+    C1 -- "no results" --> C4
+    C4 -- "retry" --> C1
     D4 -. "pipeline build" .-> D1
     D4 -. "pipeline build" .-> D2
 ```
@@ -45,12 +50,13 @@ graph TD
 1. **Frontend (React)**: Giao diện người dùng cho phép tương tác và trò chuyện với Chatbot.
 2. **Backend (Spring Boot)**: Đóng vai trò là lớp điều phối (Orchestrator), xử lý nghiệp vụ chính và quản lý người dùng.
 3. **AI Service (FastAPI)**: Cung cấp API xử lý ngôn ngữ tự nhiên, thực hiện tìm kiếm ngữ nghĩa và truy xuất dữ liệu lịch sử.
+4. **NLU Layer**: Tầng hiểu ngôn ngữ tự nhiên — tự động sửa lỗi chính tả, mở rộng viết tắt, phục hồi dấu tiếng Việt, và fuzzy matching.
 
 ---
 
 ## 🚀 Pipeline xử lý dữ liệu (AI Pipeline)
 
-Quá trình xây dựng cơ sở tri thức cho AI bao gồm các bước:
+Quá trình xây dựng cơ sở tri thức cho AI sử dụng script tập trung `build_from_huggingface.py`:
 
 ```mermaid
 graph LR
@@ -58,58 +64,60 @@ graph LR
         A["Vietnam-History-1M-Vi<br/>(HuggingFace Dataset)"]
     end
 
-    subgraph "🔧 Bước 1: Chuẩn hóa"
-        B["storyteller.py"]
+    subgraph "🔧 build_from_huggingface.py"
         B1["Làm sạch văn bản"]
-        B2["Trích xuất thời gian"]
-        B3["Nhận diện thực thể"]
-        B4["Phân loại sự kiện"]
-    end
-
-    subgraph "📊 Bước 2: Đánh chỉ mục"
-        C["index_docs.py"]
-        C1["Tạo Embedding vectors"]
-        C2["Build FAISS Index"]
-        C3["Export Metadata"]
+        B2["Trích xuất thời gian (smart)"]
+        B3["Nhận diện thực thể<br/>(entity_registry.py)"]
+        B4["Phân loại sự kiện & Humanize"]
+        B5["Tạo Embedding vectors"]
+        B6["Build FAISS Index"]
     end
 
     subgraph "📦 Output"
-        D1["history_timeline.json"]
         D2["faiss_index/index.bin"]
         D3["faiss_index/meta.json"]
     end
 
-    A --> B
-    B --> B1 & B2 & B3 & B4
-    B1 & B2 & B3 & B4 --> D1
-    D1 --> C
-    C --> C1 & C2 & C3
-    C1 --> D2
-    C2 --> D2
-    C3 --> D3
+    A --> B1 & B2 & B3 & B4
+    B1 & B2 & B3 & B4 --> B5
+    B5 --> B6
+    B6 --> D2 & D3
 ```
 
-### 1. Chuẩn hóa và Trích xuất thực thể (`pipeline/storyteller.py`)
+### Script chính: `ai-service/scripts/build_from_huggingface.py`
 
-- **Dữ liệu đầu vào**: Sử dụng tập dữ liệu [Vietnam-History-1M-Vi](https://huggingface.co/datasets/minhxthanh/Vietnam-History-1M-Vi) (dạng Arrow).
+- **Dữ liệu đầu vào**: Tập dữ liệu [Vietnam-History-1M-Vi](https://huggingface.co/datasets/minhxthanh/Vietnam-History-1M-Vi) (streaming từ HuggingFace).
 - **Xử lý**:
-  - Làm sạch văn bản, loại bỏ các nội dung nhiễu.
-  - Trích xuất chính xác thời gian (năm diễn ra sự kiện).
-  - Nhận diện các thực thể lịch sử: Nhân vật (Vua, Tướng lĩnh), Địa danh (Chiến trường, Kinh đô), Tập thể (Triều đại, Quân đội).
-  - Phân loại tính chất sự kiện (Quân sự, Thể chế, Văn hóa, Kinh tế) và sắc thái (Hào hùng, Bi thương, Trung tính).
-- **Kết quả**: Tạo ra file `data/history_timeline.json` chứa dòng thời gian lịch sử đã được cấu trúc hóa.
+  - Làm sạch văn bản, loại bỏ nội dung nhiễu/junk.
+  - Trích xuất thời gian thông minh (xử lý edge case: "kỉ niệm 1000 năm").
+  - Nhận diện thực thể lịch sử: Nhân vật, Địa danh, Từ khóa (qua `entity_registry.py`).
+  - Phân loại tính chất sự kiện (Quân sự, Thể chế, Văn hóa, Kinh tế) và sắc thái.
+  - Tự động humanize text thành văn xuôi tiếng Việt tự nhiên.
+  - Tạo vector embedding và build FAISS index.
+- **Kết quả**: Tạo ra `faiss_index/index.bin` và `faiss_index/meta.json`.
 
-### 2. Đánh chỉ mục Vector (`pipeline/index_docs.py`)
+### Mô hình Embedding
 
-- **Mô hình Embedding**: Sử dụng `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`. Đây là mô hình đa ngôn ngữ mạnh mẽ, hỗ trợ tốt tiếng Việt.
-- **Quy trình**:
-  - Chuyển đổi các sự kiện lịch sử thành các câu chuyện (stories) có ngữ cảnh.
-  - Tạo vector embedding cho từng câu chuyện.
-  - Lưu trữ vào **FAISS** (Facebook AI Similarity Search) để thực hiện tìm kiếm vector tốc độ cao.
+- Sử dụng `keepitreal/vietnamese-sbert` — mô hình tiếng Việt chuyên dụng, hỗ trợ tốt tìm kiếm ngữ nghĩa.
+- Vector được lưu trữ vào **FAISS** (Facebook AI Similarity Search) để tìm kiếm tốc độ cao.
 
 ---
 
-## 🤖 AI Service — Data-Driven Architecture
+## � NLU — Hiểu Ngôn Ngữ Tự Nhiên
+
+Hệ thống trang bị lớp **NLU (Natural Language Understanding)** giúp chatbot hiểu được nhiều cách diễn đạt khác nhau cho cùng một câu hỏi:
+
+| Tính năng | Ví dụ | Kết quả |
+|-----------|-------|--------|
+| **Sửa lỗi chính tả** | `nguyen huye` | → `nguyễn huệ` |
+| **Mở rộng viết tắt** | `VN độc lập` | → `Việt Nam độc lập` |
+| **Phục hồi dấu** | `tran hung dao` | → `trần hưng đạo` |
+| **Fuzzy Matching** | `trần hưng đao` (sai dấu) | → tìm được `trần hưng đạo` |
+| **Fallback Chain** | Không tìm được → thử lại 3 cách | → gợi ý cách hỏi tốt hơn |
+
+---
+
+## �🤖 AI Service — Data-Driven Architecture
 
 Dịch vụ API sử dụng kiến trúc **Data-Driven** — không hardcode patterns, tự động scale theo dữ liệu.
 
@@ -149,7 +157,8 @@ graph TD
 
 ```mermaid
 flowchart TD
-    INPUT["📝 Câu hỏi người dùng"] --> CREATOR{"Hỏi về tác giả?"}
+    INPUT["📝 Câu hỏi người dùng"] --> NLU["🧠 NLU: Query Rewriting<br/>Fix typo, expand abbr, restore accents"]
+    NLU --> CREATOR{"Hỏi về tác giả?"}
     CREATOR -- Có --> CR["🤖 Creator Response"]
     CREATOR -- Không --> IDENTITY{"Hỏi 'bạn là ai'?"}
     IDENTITY -- Có --> ID["🤖 Identity Response"]
@@ -157,7 +166,7 @@ flowchart TD
     YEAR_RANGE -- Có --> YR["📅 scan_by_year_range()"]
     YEAR_RANGE -- Không --> MULTI_YEAR{"Nhiều năm?<br/>VD: 938 và 1288"}
     MULTI_YEAR -- Có --> MY["📅 scan_by_year() x N"]
-    MULTI_YEAR -- Không --> ENTITY{"Có entity?<br/>Person/Dynasty/Topic/Place"}
+    MULTI_YEAR -- Không --> ENTITY{"Có entity?<br/>Exact + Fuzzy Match"}
     ENTITY -- Có --> ME["🔍 scan_by_entities()"]
     ENTITY -- Không --> DEFINITION{"Chứa 'là gì/là ai'?"}
     DEFINITION -- Có --> DEF["📖 semantic_search()"]
@@ -165,10 +174,18 @@ flowchart TD
     SINGLE_YEAR -- Có --> SY["📅 scan_by_year()"]
     SINGLE_YEAR -- Không --> SEM["🧠 semantic_search()"]
 
-    YR & MY & ME & DEF & SY & SEM --> DEDUP["Deduplicate & Enrich"]
+    YR & MY & ME & DEF & SY & SEM --> RESULT{"Có kết quả?"}
+    RESULT -- Có --> DEDUP["Deduplicate & Enrich"]
+    RESULT -- Không --> FALLBACK["🔄 Fallback Chain<br/>1. Retry rewritten query<br/>2. Try search variations<br/>3. Try original query"]
+    FALLBACK --> RESULT2{"Có kết quả?"}
+    RESULT2 -- Có --> DEDUP
+    RESULT2 -- Không --> SUGGEST["💡 Smart Suggestion<br/>Gợi ý cách hỏi tốt hơn"]
     DEDUP --> FORMAT["Format Answer"]
     FORMAT --> OUTPUT["📤 JSON Response"]
+    SUGGEST --> OUTPUT
 
+    style NLU fill:#1b4332,color:#fff
+    style FALLBACK fill:#7f5539,color:#fff
     style ME fill:#2d6a4f,color:#fff
     style ENTITY fill:#2d6a4f,color:#fff
 ```
@@ -212,6 +229,8 @@ graph LR
 > **Muốn thêm nhân vật/alias mới?** Chỉ cần sửa file `knowledge_base.json` — KHÔNG cần sửa code Python.
 >
 > **Thêm 1000 documents mới?** Inverted indexes tự build tại startup — KHÔNG cần cấu hình gì thêm.
+>
+> **Thêm viết tắt mới?** Sửa `abbreviations` trong `knowledge_base.json` hoặc dict `ABBREVIATIONS` trong `query_understanding.py`.
 
 ```mermaid
 graph LR
@@ -224,6 +243,7 @@ graph LR
         LOAD --> A1["PERSON_ALIASES mới"]
         LOAD --> A2["TOPIC_SYNONYMS mới"]
         LOAD --> A3["DYNASTY_ALIASES mới"]
+        LOAD --> A4["ABBREVIATIONS mới"]
     end
 ```
 
@@ -232,23 +252,37 @@ graph LR
 | Thêm alias nhân vật | `knowledge_base.json` | ❌ Không |
 | Thêm synonym chủ đề | `knowledge_base.json` | ❌ Không |
 | Thêm alias triều đại | `knowledge_base.json` | ❌ Không |
+| Thêm viết tắt | `knowledge_base.json` | ❌ Không |
+| Thêm tên không dấu | `query_understanding.py` | Thêm vào dict |
 | Thêm documents mới | `meta.json` (rebuild index) | ❌ Không |
 
 ---
 
 ## 🧪 Testing
 
-Hệ thống có **282 unit tests** bao phủ toàn diện:
+Hệ thống có **405 unit tests** bao phủ toàn diện (402 passed, 3 skipped):
 
 ```bash
-python -m pytest tests/ -v
+cd ai-service && python -m pytest ../tests/ -v
 ```
 
-| File | Nội dung |
-|---|---|
-| `test_engine.py` | Engine chính: intent routing, entity resolution, year queries, multi-entity, edge cases |
-| `test_engine_dedup.py` | Deduplication, text cleaning, keyword extraction |
-| `test_search_utils.py` | Search utilities: keyword extraction, relevance filtering, inverted indexes, knowledge base |
+| File | Tests | Nội dung |
+|---|---|---|
+| `test_engine.py` | 78 | Engine chính: intent routing, entity resolution, year queries, multi-entity, edge cases |
+| `test_engine_dedup.py` | 13 | Deduplication, text cleaning, keyword extraction |
+| `test_nlu.py` | 49 | **NLU**: query rewriting, fuzzy matching, accent restoration, question intent, fallback |
+| `test_search_utils.py` | 53 | Search utilities: keyword extraction, relevance filtering, inverted indexes |
+| `test_comprehensive.py` | 74 | Comprehensive integration tests |
+| `test_pipeline.py` | 30 | Data pipeline: storyteller, text cleaning |
+| `test_year_extraction.py` | 30 | Year extraction từ text |
+| `test_text_cleaning.py` | 20 | Text normalization và cleaning |
+| `test_storyteller_unit.py` | 18 | Storyteller unit tests |
+| `test_e2e_api.py` | 10 | End-to-end API tests |
+| `test_data_quality.py` | 10 | Data quality validation |
+| `test_normalize.py` | 5 | Unicode normalization |
+| `test_schema_integrity.py` | 5 | Schema validation |
+| `test_api.py` | 5 | API endpoint tests |
+| `test_performance.py` | 4 | Performance benchmarks |
 
 ---
 
@@ -277,14 +311,18 @@ API sẽ mặc định chạy tại: `http://localhost:8000`
 
 ### Chạy Pipeline dữ liệu (Khi cần cập nhật dữ liệu)
 
-1.  Chuẩn hóa dữ liệu:
-    ```bash
-    python pipeline/storyteller.py
-    ```
-2.  Tạo chỉ mục vector:
-    ```bash
-    python pipeline/index_docs.py
-    ```
+Script chính tải dữ liệu từ HuggingFace, xử lý, và build FAISS index trong một lần chạy:
+
+```bash
+cd ai-service
+python scripts/build_from_huggingface.py
+```
+
+Có thể tùy chỉnh qua biến môi trường:
+```bash
+# Số samples tối đa (mặc định: 500,000)
+MAX_SAMPLES=100000 python scripts/build_from_huggingface.py
+```
 
 ---
 
@@ -292,28 +330,30 @@ API sẽ mặc định chạy tại: `http://localhost:8000`
 
 ```
 vietnam_history_dataset/
-├── ai-service/                   # 🤖 FastAPI AI Service
+├── ai-service/                       # 🤖 FastAPI AI Service
 │   ├── app/
 │   │   ├── core/
-│   │   │   ├── config.py         # Cấu hình paths & constants
-│   │   │   └── startup.py        # Build indexes + load knowledge base
+│   │   │   ├── config.py             # Cấu hình paths & constants (incl. NLU)
+│   │   │   └── startup.py            # Build indexes + load knowledge base
 │   │   ├── services/
-│   │   │   ├── engine.py         # Query Engine — intent routing
-│   │   │   └── search_service.py # Entity resolution + FAISS search
-│   │   └── main.py               # FastAPI entry point
+│   │   │   ├── engine.py             # Query Engine — intent routing + fallback
+│   │   │   ├── query_understanding.py # 🧠 NLU Layer (query rewriting, fuzzy match)
+│   │   │   └── search_service.py     # Entity resolution + FAISS search
+│   │   └── main.py                   # FastAPI entry point
+│   ├── scripts/
+│   │   ├── build_from_huggingface.py  # 🚀 Pipeline chính: load + process + build FAISS
+│   │   └── entity_registry.py        # Dynamic entity extraction
 │   ├── faiss_index/
-│   │   ├── index.bin             # FAISS vector index (630 docs)
-│   │   └── meta.json             # Document metadata
-│   └── knowledge_base.json       # 🔑 Aliases & Synonyms (edit here!)
-├── data/
-│   └── history_timeline.json     # Structured historical data
-├── pipeline/
-│   ├── storyteller.py            # Data extraction pipeline
-│   └── index_docs.py             # Vector indexing pipeline
+│   │   ├── index.bin                 # FAISS vector index
+│   │   └── meta.json                 # Document metadata
+│   └── knowledge_base.json           # 🔑 Aliases, Synonyms & Abbreviations
+├── pipeline/                         # (Legacy) pipeline scripts
 └── tests/
-    ├── test_engine.py            # Engine core tests
-    ├── test_engine_dedup.py      # Dedup & text cleaning tests
-    └── test_search_utils.py      # Search & indexing tests
+    ├── test_engine.py                # Engine core tests (78)
+    ├── test_engine_dedup.py          # Dedup & text cleaning (13)
+    ├── test_nlu.py                   # 🧠 NLU tests (49)
+    ├── test_search_utils.py          # Search & indexing (53)
+    └── ... (15 test files total)     # 405 tests total
 ```
 
 ## 📚 Công nghệ sử dụng
@@ -321,8 +361,9 @@ vietnam_history_dataset/
 - **Ngôn ngữ**: Python
 - **Framework**: FastAPI
 - **Vector Database**: FAISS
-- **AI Model**: Sentence-Transformers (MiniLM-L12)
-- **Data Processing**: HuggingFace Datasets, Regex, Multiprocessing.
+- **AI Model**: `keepitreal/vietnamese-sbert` (ONNX) cho embedding tiếng Việt
+- **Data Processing**: HuggingFace Datasets, Dynamic Entity Registry, Regex.
+- **NLU**: Query rewriting, Fuzzy matching, Accent restoration (Python stdlib)
 
 ---
 
