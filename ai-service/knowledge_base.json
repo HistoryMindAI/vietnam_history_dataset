@@ -61,5 +61,25 @@
     "lê trung hưng": ["nhà lê trung hưng"],
     "bắc thuộc": ["thời bắc thuộc"],
     "tự chủ": ["thời tự chủ"]
+  },
+
+  "abbreviations": {
+    "vn": "việt nam",
+    "tq": "trung quốc",
+    "lx": "liên xô",
+    "dbp": "điện biên phủ",
+    "cmtt": "cách mạng tháng tám",
+    "hcm": "hồ chí minh",
+    "ls": "lịch sử",
+    "nv": "nhân vật",
+    "sk": "sự kiện"
+  },
+
+  "question_patterns": {
+    "_description": "Common Vietnamese question patterns that indicate search intent",
+    "person_search": ["ai đã", "vị tướng nào", "nhân vật nào", "ai là người"],
+    "event_search": ["chuyện gì xảy ra", "có sự kiện gì", "điều gì đã xảy ra"],
+    "time_search": ["khi nào", "năm nào", "bao giờ", "thời gian nào"],
+    "place_search": ["ở đâu", "tại đâu", "nơi nào", "địa điểm nào"]
   }
 }

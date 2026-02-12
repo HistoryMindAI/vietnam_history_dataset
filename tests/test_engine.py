@@ -249,7 +249,9 @@ class TestYearQueries:
         r = engine_answer("Sự kiện không tồn tại abc xyz")
         assert r["no_data"] is True
         assert r["events"] == []
-        assert r["answer"] is None
+        # Smart no_data response now returns helpful suggestion instead of None
+        assert r["answer"] is not None
+        assert "thử" in r["answer"].lower()
 
 
 # ===================================================================

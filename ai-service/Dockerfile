@@ -53,6 +53,7 @@ RUN ONNX_SIZE=$(stat -c%s /app/onnx_model/model_quantized.onnx 2>/dev/null || ec
 # =====================
 COPY app ./app
 COPY scripts ./scripts
+COPY knowledge_base.json ./knowledge_base.json
 
 # =====================
 # Copy Index (From Local)
