@@ -432,10 +432,37 @@ def deduplicate_and_enrich(raw_events: list, max_events: int = MAX_TOTAL_EVENTS)
     return [item["event"] for item in global_cluster[:max_events]]
 
 
+# Pattern to detect question/prompt titles dynamically
+_QUESTION_TITLE_RE = re.compile(
+    r'(?:'
+    r'kể tên|tóm tắt|vì sao|tại sao|vì lý do gì|'
+    r'ai là|điều gì|hãy cho biết|nêu|giải thích|'
+    r'bối cảnh nào|hậu quả|tác động|vai trò|'
+    r'quan trọng đối với|ý nghĩa|kết quả ra sao|'
+    r'xảy ra khi nào|diễn biến|liệt kê|mô tả|'
+    r'so sánh|phân tích|nhân vật trung tâm|'
+    r'sự kiện nổi bật|có ý nghĩa lịch sử|'
+    r'trong năm \d{3,4}|ở việt nam'
+    r')',
+    re.IGNORECASE,
+)
+
+
+def _is_question_title(title: str) -> bool:
+    """Dynamically detect if a title is actually a question/prompt."""
+    if not title:
+        return False
+    t = title.lower().strip()
+    if t.endswith('?'):
+        return True
+    return bool(_QUESTION_TITLE_RE.search(t))
+
+
 def format_complete_answer(events: list) -> str:
     """
     Format events into a concise answer, grouped by year.
     Avoids duplication and produces natural-sounding Vietnamese text.
+    Dynamically detects and skips question-style titles.
     """
     if not events:
         return None
@@ -472,11 +499,13 @@ def format_complete_answer(events: list) -> str:
             title = e.get("title", "")
             clean_title = clean_story_text(title, year) if title else ""
             
-            # If story is very short or same as title, try to combine
+            # Only combine title + story if title is a REAL event title
+            # Skip titles that are question/prompts (detected dynamically)
             if clean_title and clean_story and clean_title.lower() != clean_story.lower():
-                # Check if title is already part of the story
-                if clean_title.lower() not in clean_story.lower():
-                    clean_story = f"{clean_title}: {clean_story}"
+                if not _is_question_title(clean_title):
+                    # Check if title is already part of the story
+                    if clean_title.lower() not in clean_story.lower():
+                        clean_story = f"{clean_title}: {clean_story}"
             
             # Capitalize first letter
             clean_story = clean_story[0].upper() + clean_story[1:]
@@ -817,14 +846,14 @@ def engine_answer(query: str):
             if filtered:
                 raw_events = filtered
 
-        if len(raw_events) < 3:
+        if 0 < len(raw_events) < 3:
             raw_events.extend(semantic_search(rewritten))
     elif is_definition and has_persons:
         # "X là ai?" — use semantic search as primary, entity scan as supplement
         intent = "definition"
         is_entity_query = True
         raw_events = scan_by_entities(resolved)
-        if len(raw_events) < 3:
+        if 0 < len(raw_events) < 3:
             raw_events.extend(semantic_search(rewritten))
     elif has_entities:
         # Multi-entity query (data-driven): person, dynasty, topic, place
@@ -847,10 +876,37 @@ def engine_answer(query: str):
         # Use inverted index scan for fast O(1) lookup
         raw_events = scan_by_entities(resolved)
 
+        # --- PERSON-RELEVANCE FILTER ---
+        # When query specifies persons BUT NOT dynasties, keep only docs where
+        # person appears in doc's persons metadata. Skip when dynasties are present
+        # because dynasty matching is more reliable (person may be misresolved).
+        # E.g., "nhà Trần + chiến công" might misresolve "bà triệu" as person,
+        # but dynasty "trần" correctly finds nhà Trần docs.
+        if has_persons and not has_dynasties and not has_topics and raw_events:
+            target_persons = set(p.lower() for p in resolved["persons"])
+            target_with_aliases = set(target_persons)
+            for alias, canonical in startup.PERSON_ALIASES.items():
+                if canonical in target_persons:
+                    target_with_aliases.add(alias)
+            person_filtered = [
+                doc for doc in raw_events
+                if set(p.lower() for p in doc.get("persons", [])) & target_with_aliases
+            ]
+            # If person filter removed everything, the entity resolution may be wrong
+            # → clear results so no_data=true and UI auto-response kicks in
+            raw_events = person_filtered
+
         # --- DYNASTY-AWARE FILTERING ---
         # When query specifies a dynasty, filter out docs from unrelated dynasties
         # Prevents "nhà Nguyễn" docs from leaking into "nhà Trần" queries
-        if has_dynasties and raw_events:
+        # EXCEPTION: Skip when query contains quốc hiệu (country names like
+        # "Đại Việt", "Đại Cồ Việt", "Đại Nam") because these span multiple
+        # dynasties and shouldn't be filtered to just one
+        QUOC_HIEU = {"đại việt", "đại cồ việt", "đại nam", "việt nam"}
+        has_quoc_hieu = bool(
+            set(p.lower() for p in resolved.get("places", [])) & QUOC_HIEU
+        )
+        if has_dynasties and raw_events and not has_quoc_hieu:
             target_dynasties = set(d.lower() for d in resolved["dynasties"])
             filtered = []
             for doc in raw_events:
@@ -868,8 +924,12 @@ def engine_answer(query: str):
         if raw_events:
             raw_events = _filter_by_query_keywords(rewritten, raw_events)
 
-        # Only supplement with semantic search when entity scan returns too few
-        if len(raw_events) < 3:
+        # Only supplement with semantic search when entity scan found SOME results
+        # but fewer than 3. When entity scan found ZERO results for specific
+        # person/entity queries, DON'T fallback — this is a DATA GAP and semantic
+        # search will only return noise. Let no_data=true so the UI can respond.
+        entity_scan_count = len(raw_events)
+        if 0 < entity_scan_count < 3:
             raw_events.extend(semantic_search(rewritten))
     elif is_definition:
         intent = "definition"
@@ -914,10 +974,46 @@ def engine_answer(query: str):
 
     # --- NLI ANSWER VALIDATION ---
     # Use NLI model to verify events actually address the question
-    # Runs AFTER cross-encoder reranking for maximum accuracy
-    if raw_events:
+    # SKIP for entity/dynasty queries — events already passed 4 filter layers:
+    #   entity-scan → dynasty filter → keyword filter → cross-encoder
+    # NLI is too aggressive for broad queries like "kể về X" and causes
+    # false negatives (e.g., removes "Trận Bạch Đằng 1288" from nhà Trần query)
+    # Only apply NLI for pure semantic searches where there's no structural match
+    if raw_events and not (is_entity_query or is_dynasty_query or is_range_query):
         raw_events = validate_events_nli(query, raw_events)
-    
+
+    # --- FINAL RELEVANCE GUARD ---
+    # When query mentions specific persons, verify at least one result actually
+    # discusses that person. Only check persons that appear in the ORIGINAL query
+    # text — entity resolution may produce false matches (e.g., "họ" → "hồ").
+    if raw_events and has_persons and resolved.get("persons"):
+        query_lower = query.lower()
+        # Only validate persons that actually appear in the original query
+        query_persons = [p.lower() for p in resolved["persons"] if p.lower() in query_lower]
+        
+        if query_persons:
+            # Check if at least one result mentions the queried person
+            has_relevant = False
+            for doc in raw_events:
+                doc_text = (
+                    (doc.get("story", "") or "") + " " +
+                    (doc.get("event", "") or "") + " " +
+                    (doc.get("title", "") or "") + " " +
+                    " ".join(p for p in doc.get("persons", []) or [])
+                ).lower()
+                for person in query_persons:
+                    person_words = person.split()
+                    if len(person_words) >= 2 and all(w in doc_text for w in person_words):
+                        has_relevant = True
+                        break
+                    elif len(person_words) == 1 and person in doc_text:
+                        has_relevant = True
+                        break
+                if has_relevant:
+                    break
+            if not has_relevant:
+                raw_events = []  # No doc mentions the queried person → noise
+
     no_data = not raw_events
 
     # Use higher event limit for range/dynasty/entity queries
@@ -935,6 +1031,51 @@ def engine_answer(query: str):
     
     # Generate complete, comprehensive answer
     answer = format_complete_answer(unique_events)
+
+    # --- SPECIAL & QUỐC HIỆU INTRO SENTENCES ---
+    # Prepend a poetic, engaging intro based on query keywords or quốc hiệu
+    if answer and not no_data:
+        intro_added = False
+
+        # 1) Keyword-based special intros (checked against original query text)
+        _KEYWORD_INTROS = {
+            "chiến tranh việt nam": (
+                'Bạn đang muốn tìm hiểu về: "Kháng chiến chống giặc ngoại xâm'
+                " – bản hùng ca giữ nước vang vọng suốt chiều dài"
+                ' lịch sử dân tộc Việt Nam ta."'
+            ),
+        }
+        query_lower = query.lower()
+        for keyword, intro in _KEYWORD_INTROS.items():
+            if keyword in query_lower:
+                answer = intro + "\n\n" + answer
+                intro_added = True
+                break
+
+        # 2) Quốc hiệu intros (checked against resolved places)
+        if not intro_added:
+            _QUOC_HIEU_INTROS = {
+                "đại việt": (
+                    "**Đại Việt** – biểu tượng của ý chí quật cường và tinh thần bất khuất"
+                    " – đã ghi vào lịch sử những chiến tích lẫy lừng;"
+                    " chúng ta cùng nhau xem lại vài nét trong bản hùng ca rạng rỡ ấy nhé :"
+                ),
+                "đại cồ việt": (
+                    "**Đại Cồ Việt** – quốc hiệu đầu tiên khẳng định nền độc lập"
+                    " – đánh dấu bước ngoặt vĩ đại trong hành trình dựng nước;"
+                    " hãy cùng nhìn lại những dấu mốc quan trọng ấy :"
+                ),
+                "đại nam": (
+                    "**Đại Nam** – quốc hiệu thời Nguyễn, biểu trưng cho sự thống nhất"
+                    " – chứa đựng bao thăng trầm của lịch sử cận đại;"
+                    " hãy cùng khám phá những sự kiện nổi bật :"
+                ),
+            }
+            resolved_places = set(p.lower() for p in resolved.get("places", []))
+            for quoc_hieu, intro in _QUOC_HIEU_INTROS.items():
+                if quoc_hieu in resolved_places:
+                    answer = intro + "\n\n" + answer
+                    break
 
     # Prepend same-entity explanation ONLY when user explicitly asks about relationship
     # "Quang Trung và Nguyễn Huệ là gì?" → show same-entity

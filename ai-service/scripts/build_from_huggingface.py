@@ -443,29 +443,84 @@ def humanize_story(text: str, year: int = 0, persons: list[str] = None) -> str:
     return result.strip()
 
 
+# Patterns that indicate a question/prompt (not a real event title)
+# These are detected dynamically — no hardcoded list of specific questions
+_QUESTION_INDICATORS = re.compile(
+    r'(?:'
+    r'kể tên|tóm tắt|vì sao|tại sao|vì lý do gì|'
+    r'ai là|điều gì|hãy cho biết|nêu|giải thích|'
+    r'bối cảnh nào|hậu quả|tác động|vai trò|'
+    r'quan trọng đối với|ý nghĩa|kết quả ra sao|'
+    r'xảy ra khi nào|diễn biến|liệt kê|mô tả|'
+    r'so sánh|phân tích|nhân vật trung tâm|'
+    r'sự kiện nổi bật|có ý nghĩa lịch sử|'
+    r'trong năm \d{3,4}|ở việt nam'
+    r')',
+    re.IGNORECASE,
+)
+
+
+def _is_question_text(text: str) -> bool:
+    """Dynamically detect if text is a question/prompt rather than event content."""
+    if not text:
+        return False
+    text_lower = text.lower().strip()
+    # Ends with '?' is always a question
+    if text_lower.endswith('?'):
+        return True
+    # Check for question indicator patterns
+    return bool(_QUESTION_INDICATORS.search(text_lower))
+
+
 def extract_event_title(question: str, answer: str) -> str:
     """
-    Dynamically extract a short event title from question+answer text.
-    Prefers the question text as it's usually more concise.
+    Dynamically extract a short event title from answer text.
+    
+    Strategy:
+    1. If question looks like a real event title (not a prompt), use it
+    2. Otherwise, extract from answer's first sentence (contains real event name)
+    3. Clean out meta-prefixes dynamically
     """
-    # Try from question first (usually more concise)
-    source = question if question else answer
-    source = clean_text(source)
+    clean_q = clean_text(question) if question else ""
+    clean_a = clean_text(answer) if answer else ""
+
+    # Decide source: prefer answer when question is a prompt
+    if clean_q and not _is_question_text(clean_q):
+        source = clean_q
+    elif clean_a:
+        source = clean_a
+    else:
+        source = clean_q or ""
 
     if not source:
         return ""
 
-    # Take first meaningful sentence/clause
-    parts = re.split(r'[.!?]', source)
+    # Take first meaningful sentence/clause from source
+    parts = re.split(r'[.!?;]', source)
     title = parts[0].strip() if parts else source
 
-    # Limit length
-    if len(title) > 120:
-        # Try splitting by comma
-        comma_parts = title.split(',')
-        title = comma_parts[0].strip()
+    # Remove leading connectors/artifacts that are remnants from clean_text
+    title = re.sub(
+        r'^(?:Đó là|Đây là|Sự kiện này là|diễn ra|ông trong|đã diễn ra)\s+',
+        '', title, flags=re.I,
+    )
 
-    return title[:150]
+    # Remove trailing year+context patterns: "(1858): description..."
+    title = re.sub(r'\s*\(\d{3,4}\)\s*:\s+.*$', '', title)
+
+    # Limit length — split by comma/colon if too long
+    if len(title) > 80:
+        # Try splitting by colon first (e.g., "Event (year): detail...")
+        colon_parts = title.split(':')
+        if len(colon_parts[0].strip()) > 10:
+            title = colon_parts[0].strip()
+        else:
+            comma_parts = title.split(',')
+            title = comma_parts[0].strip()
+
+    # Final trim
+    title = title.strip(' ,.-:;')
+    return title[:100]
 
 
 # ========================
@@ -597,9 +652,11 @@ def load_from_huggingface() -> list[dict]:
         period = extract_period(year)
         title = extract_event_title(clean_q, clean_a)
 
-        # Ensure event is different from title
-        event_text = clean_q[:200]
-        if event_text == title:
+        # Event text: prefer answer (contains actual event content)
+        # Only use question if it's NOT a prompt/question pattern
+        if clean_q and not _is_question_text(clean_q):
+            event_text = clean_q[:200]
+        else:
             event_text = clean_a[:200]
 
         # Humanize text — make it read like natural Vietnamese prose
