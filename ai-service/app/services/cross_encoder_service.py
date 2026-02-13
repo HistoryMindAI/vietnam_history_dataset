@@ -231,6 +231,7 @@ def rerank_events(
     ))
     is_year_range = bool(
         re.search(r'(từ|from|between|giai\s*đoạn).*(đến|to|and|[-–—])', query_lower) or
+        re.search(r'năm\s*\d{1,4}\s*(đến|tới)', query_lower) or
         re.search(r'\d{1,4}\s*[-–—]\s*\d{1,4}', query_lower)
     )
 
@@ -286,12 +287,16 @@ def _fallback_rerank(
     if is_simple_query:
         return [evt for _, evt in scored[:top_k]]
 
-    # Filter low-scoring events
+    # Filter low-scoring events but ALWAYS keep at least top results
+    # When Cross-Encoder is unavailable, keyword scoring may be low
+    # for valid events found by entity scan — don't discard them all
     min_threshold = 5.0
     filtered = [(s, evt) for s, evt in scored if s >= min_threshold]
 
     if not filtered and scored:
-        filtered = [(s, evt) for s, evt in scored[:3] if s > 0]
+        # Fallback: always return at least top 3 events
+        # Entity scan already found these events — they are likely relevant
+        filtered = scored[:3]
 
     return [evt for _, evt in filtered[:top_k]]
 
