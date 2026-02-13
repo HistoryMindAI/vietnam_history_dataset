@@ -1,7 +1,7 @@
 {
   "model": "keepitreal/vietnamese-sbert",
   "dimension": 768,
-  "count": 70,
+  "count": 69,
   "source": "minhxthanh/Vietnam-History-1M-Vi",
   "documents": [
     {
@@ -181,28 +181,6 @@
       ],
       "dynasty": "Hiện đại",
       "period": "Hiện đại"
-    },
-    {
-      "id": "hf_000014",
-      "year": 2010,
-      "title": "Đại lễ 1000 năm Thăng Long – Hà Nội được coi là cột mốc quan trọng",
-      "event": "Đại lễ 1000 năm Thăng Long – Hà Nội. Kỷ niệm nghìn năm Thăng Long – Hà Nội, về lâu dài khẳng định bề dày lịch sử – văn hóa Thủ đô.",
-      "story": "Đại lễ 1000 năm Thăng Long – Hà Nội. Kỷ niệm nghìn năm Thăng Long – Hà Nội, về lâu dài khẳng định bề dày lịch sử – văn hóa Thủ đô.",
-      "tone": "neutral",
-      "nature": [
-        "cultural"
-      ],
-      "persons": [],
-      "places": [
-        "Hà Nội",
-        "Thăng Long"
-      ],
-      "keywords": [
-        "hà_nội",
-        "thăng_long"
-      ],
-      "dynasty": "Tiền Lê",
-      "period": "Phong kiến"
     },
     {
       "id": "hf_000017",

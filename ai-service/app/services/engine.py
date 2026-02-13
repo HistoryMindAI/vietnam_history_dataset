@@ -7,7 +7,7 @@ from app.services.query_understanding import (
     rewrite_query, extract_question_intent,
     generate_search_variations,
 )
-from app.services.context7_service import (
+from app.services.cross_encoder_service import (
     filter_and_rank_events,
     validate_answer_relevance,
 )
@@ -485,10 +485,13 @@ def format_complete_answer(events: list) -> str:
                 clean_story += "."
             
             # Dedup check AFTER normalization so key is consistent
-            dedup_key = clean_story.lower().strip()
+            # Use more aggressive dedup: remove punctuation and extra spaces
+            dedup_key = re.sub(r'[^\w\s]', '', clean_story.lower()).strip()
+            dedup_key = re.sub(r'\s+', ' ', dedup_key)  # Normalize spaces
+            
             if dedup_key in seen_texts:
                 continue
-            seen_texts.add(clean_story.lower())
+            seen_texts.add(dedup_key)
             event_texts.append(clean_story)
         
         if event_texts:

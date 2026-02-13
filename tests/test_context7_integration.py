@@ -75,6 +75,19 @@ MOCK_KHANG_CHIEN_LAN_2 = {
     "title": "Kháng chiến lần 2 chống Nguyên"
 }
 
+MOCK_KHANG_CHIEN_LAN_3 = {
+    "year": 1287,
+    "event": "Kháng chiến lần 3 chống Nguyên",
+    "story": "Quân Nguyên tấn công lần thứ ba, quân dân Đại Việt kiên cường kháng chiến, chuẩn bị cho trận quyết chiến Bạch Đằng.",
+    "tone": "heroic",
+    "persons": [],
+    "persons_all": [],
+    "places": ["Đại Việt"],
+    "dynasty": "Trần",
+    "keywords": ["kháng_chiến", "nguyên", "chiến_tranh"],
+    "title": "Kháng chiến lần 3 chống Nguyên"
+}
+
 MOCK_BACH_DANG = {
     "year": 1288,
     "event": "Trận Bạch Đằng",
@@ -121,6 +134,7 @@ ALL_MOCK_DOCS = [
     MOCK_KHANG_CHIEN_LAN_1,
     MOCK_HICH_TUONG_SI,
     MOCK_KHANG_CHIEN_LAN_2,
+    MOCK_KHANG_CHIEN_LAN_3,
     MOCK_BACH_DANG,
     MOCK_SU_KIEN_KHAC_1255,
     MOCK_LY_THUONG_KIET,
@@ -485,9 +499,18 @@ class TestContext7Integration:
         - KHÔNG trả về năm 1010 (Chiếu dời đô - không có "Đại Việt")
         - Phải có năm 1054 (Đổi quốc hiệu thành Đại Việt)
         """
-        _setup_full_mocks()
-        
         import app.core.startup as startup
+        
+        # Reset DOCUMENTS để chỉ có data cho test này
+        startup.DOCUMENTS = []
+        startup.DOCUMENTS_BY_YEAR = defaultdict(list)
+        startup.PERSONS_INDEX = defaultdict(list)
+        startup.DYNASTY_INDEX = defaultdict(list)
+        startup.KEYWORD_INDEX = defaultdict(list)
+        startup.PLACES_INDEX = defaultdict(list)
+        startup.PERSON_ALIASES = {}
+        startup.DYNASTY_ALIASES = {}
+        startup.TOPIC_SYNONYMS = {}
         
         # Mock data
         mock_chieu_doi_do = {
@@ -543,23 +566,33 @@ class TestContext7Integration:
         }
         
         # Thêm vào DOCUMENTS
-        startup.DOCUMENTS.extend([mock_chieu_doi_do, mock_doi_quoc_hieu, 
-                                  mock_ly_thuong_kiet_1075, mock_nhu_nguyet])
+        startup.DOCUMENTS = [mock_chieu_doi_do, mock_doi_quoc_hieu, 
+                            mock_ly_thuong_kiet_1075, mock_nhu_nguyet]
+        
+        # Cập nhật DOCUMENTS_BY_YEAR
+        for doc in startup.DOCUMENTS:
+            y = doc.get("year")
+            if y is not None:
+                startup.DOCUMENTS_BY_YEAR[y].append(doc)
         
         # Cập nhật indexes
-        base_idx = len(startup.DOCUMENTS) - 4
-        
-        # Index cho places
-        startup.PLACES_INDEX["đại la"].append(base_idx)
-        startup.PLACES_INDEX["đại việt"].extend([base_idx + 1, base_idx + 2, base_idx + 3])
-        startup.PLACES_INDEX["như nguyệt"].append(base_idx + 3)
-        
-        # Index cho persons
-        startup.PERSONS_INDEX["lý thường kiệt"].extend([base_idx + 2, base_idx + 3])
-        
-        # Index cho dynasty
-        for i in range(4):
-            startup.DYNASTY_INDEX["lý"].append(base_idx + i)
+        for idx, doc in enumerate(startup.DOCUMENTS):
+            # Index cho places
+            for place in doc.get("places", []):
+                startup.PLACES_INDEX[place.lower()].append(idx)
+            
+            # Index cho persons
+            for person in doc.get("persons", []) + doc.get("persons_all", []):
+                startup.PERSONS_INDEX[person.lower()].append(idx)
+            
+            # Index cho dynasty
+            dynasty = doc.get("dynasty", "").strip().lower()
+            if dynasty:
+                startup.DYNASTY_INDEX[dynasty].append(idx)
+            
+            # Index cho keywords
+            for kw in doc.get("keywords", []):
+                startup.KEYWORD_INDEX[kw.lower().replace("_", " ")].append(idx)
         
         from app.services.engine import engine_answer
         
