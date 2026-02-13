@@ -62,10 +62,10 @@ def _cross_encoder_score_batch(query: str, documents: List[str]) -> List[float]:
             feed = {k: v for k, v in encoded.items() if k in valid_input_names}
             logits = ce_session.run(None, feed)[0]
 
-            # Extract scores (logits shape: [batch, 1] or [batch])
+            # Extract scores — handle both (batch,) and (batch, 1) shapes
+            flat_scores = logits.flatten()
             for j in range(len(batch_docs)):
-                score = float(logits[j][0]) if len(logits[j].shape) > 0 and logits[j].shape[0] > 1 else float(logits[j])
-                scores.append(score)
+                scores.append(float(flat_scores[j]))
 
         return scores
 

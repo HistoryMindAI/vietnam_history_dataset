@@ -46,9 +46,13 @@
   "cls_token": "<s>",
   "eos_token": "</s>",
   "mask_token": "<mask>",
+  "max_length": 256,
   "model_max_length": 512,
   "pad_token": "<pad>",
   "sep_token": "</s>",
+  "stride": 0,
   "tokenizer_class": "XLMRobertaTokenizer",
+  "truncation_side": "right",
+  "truncation_strategy": "longest_first",
   "unk_token": "<unk>"
 }

@@ -18,6 +18,8 @@ from .config import (
     KNOWLEDGE_BASE_PATH,
     CROSS_ENCODER_MODEL_PATH,
     CROSS_ENCODER_TOKENIZER_PATH,
+    NLI_MODEL_PATH,
+    NLI_TOKENIZER_PATH,
 )
 
 # Global resources (initialized in load_resources)
@@ -31,6 +33,10 @@ LOADING_ERROR = None
 # Cross-Encoder Reranker (ONNX)
 cross_encoder_session = None
 cross_encoder_tokenizer = None
+
+# NLI Answer Validator (ONNX)
+nli_session = None
+nli_tokenizer = None
 
 # Dynamic inverted indexes (auto-built from DOCUMENTS at startup)
 PERSONS_INDEX = defaultdict(list)     # "trần hưng đạo" → [doc_idx, ...]
@@ -166,12 +172,18 @@ def load_resources():
         # ===============================
         _load_cross_encoder()
 
+        # ===============================
+        # LOAD NLI ANSWER VALIDATOR (optional)
+        # ===============================
+        _load_nli_model()
+
         print(
             f"[STARTUP] Ready | docs={len(DOCUMENTS)} | years={len(DOCUMENTS_BY_YEAR)}"
             f" | persons={len(PERSONS_INDEX)} | dynasties={len(DYNASTY_INDEX)}"
             f" | aliases={len(PERSON_ALIASES)} | abbrevs={len(ABBREVIATIONS)}"
             f" | typos={len(TYPO_FIXES)} | phrases={len(HISTORICAL_PHRASES)}"
-            f" | cross_encoder={'✅' if cross_encoder_session else '❌ (fallback)'}",
+            f" | cross_encoder={'✅' if cross_encoder_session else '❌'}"
+            f" | nli={'✅' if nli_session else '❌'}",
             flush=True
         )
 
@@ -389,3 +401,43 @@ def _load_cross_encoder():
         print("[WARN] System will use keyword fallback scoring", flush=True)
         cross_encoder_session = None
         cross_encoder_tokenizer = None
+
+
+def _load_nli_model():
+    """
+    Load NLI ONNX model for answer validation (optional).
+    If model file doesn't exist, system skips NLI validation.
+    """
+    global nli_session, nli_tokenizer
+
+    if not os.path.exists(NLI_MODEL_PATH):
+        print(
+            f"[STARTUP] NLI ONNX not found at {NLI_MODEL_PATH}"
+            f" — NLI validation disabled",
+            flush=True,
+        )
+        return
+
+    try:
+        import onnxruntime as ort
+        from transformers import AutoTokenizer
+
+        print(f"[STARTUP] Loading NLI ONNX from {NLI_MODEL_PATH}...", flush=True)
+
+        nli_tokenizer = AutoTokenizer.from_pretrained(NLI_TOKENIZER_PATH)
+
+        sess_options = ort.SessionOptions()
+        sess_options.intra_op_num_threads = 1
+        sess_options.inter_op_num_threads = 1
+        sess_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+
+        nli_session = ort.InferenceSession(NLI_MODEL_PATH, sess_options)
+
+        print("[STARTUP] NLI ONNX loaded ✅", flush=True)
+        gc.collect()
+
+    except Exception as e:
+        print(f"[WARN] Failed to load NLI ONNX: {e}", flush=True)
+        print("[WARN] NLI answer validation disabled", flush=True)
+        nli_session = None
+        nli_tokenizer = None
