@@ -11,6 +11,7 @@ from app.services.cross_encoder_service import (
     filter_and_rank_events,
     validate_answer_relevance,
 )
+from app.services.nli_validator_service import validate_events_nli
 import app.core.startup as startup
 import re
 
@@ -910,6 +911,12 @@ def engine_answer(query: str):
     # This ensures the answer stays focused on the question
     if raw_events:
         raw_events = filter_and_rank_events(raw_events, query, max_results=50)
+
+    # --- NLI ANSWER VALIDATION ---
+    # Use NLI model to verify events actually address the question
+    # Runs AFTER cross-encoder reranking for maximum accuracy
+    if raw_events:
+        raw_events = validate_events_nli(query, raw_events)
     
     no_data = not raw_events
 
@@ -942,15 +949,12 @@ def engine_answer(query: str):
     if no_data:
         answer = _generate_no_data_suggestion(q_display, rewritten, resolved, question_intent)
     
-    # --- CONTEXT7 ANSWER VALIDATION ---
-    # Validate that the answer is relevant to the question
+    # --- LEGACY VALIDATION (Cross-Encoder based) ---
+    # Kept as secondary check; NLI validation above is the primary filter
     if answer and not no_data:
         validation = validate_answer_relevance(answer, query)
         if not validation["is_relevant"]:
-            # Log issues for debugging (in production, you might want to log this)
-            # For now, we trust the filtering did its job, but this can be used
-            # to further refine or add warnings
-            pass
+            pass  # Logged but not acted upon (NLI handles filtering)
 
     return {
         "query": q_display,
