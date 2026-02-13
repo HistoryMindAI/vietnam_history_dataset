@@ -46,8 +46,15 @@ HIGH_CONFIDENCE_SCORE = float(os.getenv("HIGH_CONFIDENCE_SCORE", 0.55))  # Bypas
 # ===============================
 # CROSS-ENCODER RERANKER CONFIG
 # ===============================
-CROSS_ENCODER_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+CROSS_ENCODER_MODEL = "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1"
 CROSS_ENCODER_MODEL_PATH = os.path.join(BASE_DIR, "onnx_cross_encoder", "model_quantized.onnx")
 CROSS_ENCODER_TOKENIZER_PATH = os.path.join(BASE_DIR, "onnx_cross_encoder")
 RERANKER_TOP_K = int(os.getenv("RERANKER_TOP_K", 10))
 RERANKER_THRESHOLD = float(os.getenv("RERANKER_THRESHOLD", -5.0))
+
+# ===============================
+# NLI ANSWER VALIDATOR CONFIG
+# ===============================
+NLI_MODEL_PATH = os.path.join(BASE_DIR, "onnx_nli", "model_quantized.onnx")
+NLI_TOKENIZER_PATH = os.path.join(BASE_DIR, "onnx_nli")
+NLI_ENTAILMENT_THRESHOLD = float(os.getenv("NLI_ENTAILMENT_THRESHOLD", 0.5))
