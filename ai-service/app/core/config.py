@@ -42,3 +42,12 @@ SIM_THRESHOLD = float(os.getenv("SIM_THRESHOLD", 0.35))
 SIM_THRESHOLD_LOW = float(os.getenv("SIM_THRESHOLD_LOW", 0.25))  # Fallback search
 FUZZY_MATCH_THRESHOLD = float(os.getenv("FUZZY_MATCH_THRESHOLD", 0.75))  # Entity fuzzy match
 HIGH_CONFIDENCE_SCORE = float(os.getenv("HIGH_CONFIDENCE_SCORE", 0.55))  # Bypass keyword check
+
+# ===============================
+# CROSS-ENCODER RERANKER CONFIG
+# ===============================
+CROSS_ENCODER_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+CROSS_ENCODER_MODEL_PATH = os.path.join(BASE_DIR, "onnx_cross_encoder", "model_quantized.onnx")
+CROSS_ENCODER_TOKENIZER_PATH = os.path.join(BASE_DIR, "onnx_cross_encoder")
+RERANKER_TOP_K = int(os.getenv("RERANKER_TOP_K", 10))
+RERANKER_THRESHOLD = float(os.getenv("RERANKER_THRESHOLD", -5.0))

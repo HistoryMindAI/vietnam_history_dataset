@@ -282,9 +282,22 @@ def calculate_relevance_score(event: Dict[str, Any], query_focus: Dict[str, Any]
         
         # Tính điểm dựa trên tỷ lệ match
         match_ratio = matched_required / len(required_keywords)
-        if match_ratio < 0.5:
-            # Match dưới 50% -> điểm thấp
-            return 0.5
+        
+        # SPECIAL CASE: Preparation/mobilization events
+        # Events like "Hịch tướng sĩ" are preparation for war, not direct battles
+        # They may not mention the enemy name but are still relevant
+        is_preparation_event = any(fuzzy_contains(all_text, kw, 0.8) for kw in ["hịch", "chuẩn bị", "khích lệ", "động viên", "huy động"])
+        
+        if is_preparation_event:
+            # More lenient threshold for preparation events
+            if match_ratio < 0.3:
+                # Need at least 30% match for preparation events
+                return 0.5
+        else:
+            # Normal threshold for direct battle events
+            if match_ratio < 0.5:
+                # Match dưới 50% -> điểm thấp
+                return 0.5
         
         score += matched_required * 15.0  # Tăng trọng số từ 10 lên 15
     
@@ -303,23 +316,23 @@ def calculate_relevance_score(event: Dict[str, Any], query_focus: Dict[str, Any]
         elif topic_type == "event":
             # Kiểm tra loại sự kiện
             if topic_value == "military_achievement":
-                military_keywords = ["chiến", "đánh", "thắng", "kháng", "quân", "trận"]
+                military_keywords = ["chiến", "đánh", "thắng", "kháng", "quân", "trận", "hịch"]
                 if any(fuzzy_contains(all_text, kw, 0.8) for kw in military_keywords):
                     score += 12.0  # Tăng từ 6.0
                 else:
-                    # Nếu hỏi về chiến công mà không có từ khóa quân sự -> penalty lớn
-                    score -= 10.0
+                    # Nếu hỏi về chiến công mà không có từ khóa quân sự -> penalty nhẹ hơn
+                    score -= 5.0  # Giảm từ -10.0
             elif topic_value == "resistance":
                 if fuzzy_contains(all_text, "kháng", 0.8) or fuzzy_contains(all_text, "chống", 0.8):
                     score += 12.0  # Tăng từ 6.0
                 else:
-                    score -= 10.0
+                    score -= 5.0  # Giảm từ -10.0
             elif topic_value == "against":
                 # Nếu hỏi "chống X" thì phải có từ "chống" hoặc liên quan đến chiến tranh
-                if fuzzy_contains(all_text, "chống", 0.8) or any(fuzzy_contains(all_text, kw, 0.8) for kw in ["đánh", "kháng", "chiến"]):
+                if fuzzy_contains(all_text, "chống", 0.8) or any(fuzzy_contains(all_text, kw, 0.8) for kw in ["đánh", "kháng", "chiến", "hịch"]):
                     score += 12.0
                 else:
-                    score -= 10.0
+                    score -= 5.0  # Giảm từ -10.0
             elif topic_value == "uprising":
                 if fuzzy_contains(all_text, "khởi nghĩa", 0.85):
                     score += 12.0
@@ -354,6 +367,13 @@ def calculate_relevance_score(event: Dict[str, Any], query_focus: Dict[str, Any]
         victory_keywords = ["chiến thắng", "đánh bại", "thắng lợi", "đại phá", "tiêu diệt", "đánh tan"]
         if any(fuzzy_contains(all_text, kw, 0.85) for kw in victory_keywords):
             score += 15.0
+    
+    # 8. Bonus cho preparation/mobilization events khi hỏi về chiến công
+    if "chiến công" in query_lower or "kháng chiến" in query_lower or "chống" in query_lower:
+        preparation_keywords = ["hịch", "chuẩn bị", "khích lệ", "động viên", "huy động"]
+        if any(fuzzy_contains(all_text, kw, 0.8) for kw in preparation_keywords):
+            # Bonus for preparation events - they are part of the war effort
+            score += 10.0
     
     return score
 
@@ -416,8 +436,8 @@ def filter_and_rank_events(events: List[Dict[str, Any]], query: str, max_results
     scored_events.sort(key=lambda x: x[0], reverse=True)
     
     # Lọc các sự kiện có điểm quá thấp
-    # Tăng ngưỡng để lọc chặt hơn
-    min_score_threshold = 10.0  # Tăng từ 5.0 lên 10.0
+    # Giảm threshold để không loại bỏ quá nhiều events liên quan
+    min_score_threshold = 5.0  # Giảm từ 10.0 xuống 5.0 để bao gồm nhiều events hơn
     filtered_events = [(score, event) for score, event in scored_events if score >= min_score_threshold]
     
     # Nếu không có sự kiện nào đạt ngưỡng, lấy top 3 sự kiện có điểm cao nhất
