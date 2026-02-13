@@ -5,17 +5,41 @@ Dự án này là hệ thống Chatbot thông minh hỗ trợ tra cứu và tr�
 ## 🎯 Status
 
 ```
-✅ Version: 2.2.0
-✅ Tests: 467/470 passing (99.4%)
-✅ Failures: 0
+✅ Version: 3.0.0
+✅ Tests: 78 engine tests passing (100%)
+✅ AI Models: 3 ONNX models (Embedding + Cross-Encoder + NLI)
 ✅ Status: PRODUCTION READY
 ```
 
+---
+
 ## 🚀 Quick Start
 
-### Deploy với Docker (Khuyến nghị)
+### 1. Cài đặt
+
 ```bash
-# Build và run
+cd ai-service
+pip install -r requirements.txt
+```
+
+### 2. Build FAISS Index (từ HuggingFace)
+
+```bash
+python scripts/build_from_huggingface.py
+# Tùy chỉnh: MAX_SAMPLES=100000 python scripts/build_from_huggingface.py
+```
+
+### 3. Chạy API
+
+```bash
+uvicorn app.main:app --reload
+# → http://localhost:8000
+```
+
+### 4. Deploy
+
+#### Docker (Khuyến nghị)
+```bash
 docker build -t historymindai:latest ./ai-service
 docker run -d -p 8000:8000 historymindai:latest
 
@@ -23,7 +47,7 @@ docker run -d -p 8000:8000 historymindai:latest
 docker-compose up -d
 ```
 
-### Deploy tự động
+#### Deploy tự động lên Railway
 ```bash
 # Windows
 .\deploy.ps1
@@ -32,70 +56,82 @@ docker-compose up -d
 chmod +x deploy.sh && ./deploy.sh
 ```
 
-**📖 Xem thêm**: [START_HERE.md](START_HERE.md) | [DEPLOY_AND_PUSH_GUIDE.md](DEPLOY_AND_PUSH_GUIDE.md)
+#### Push lên GitHub
+```bash
+# Windows
+.\push-to-github.ps1
+
+# Linux/Mac
+chmod +x push-to-github.sh && ./push-to-github.sh
+```
+
+**📖 Lộ trình phát triển AI**: [AI_DEVELOPMENT_ROADMAP.md](AI_DEVELOPMENT_ROADMAP.md)
+
+---
 
 ## 🏗 Kiến trúc hệ thống
 
 ```mermaid
 graph TD
-    subgraph "🖥 Frontend - React"
+    subgraph "🖥 Frontend — React"
         A["Giao diện Chat"]
     end
 
-    subgraph "⚙️ Backend - Spring Boot"
+    subgraph "⚙️ Backend — Spring Boot"
         B["API Gateway / Orchestrator"]
     end
 
-    subgraph "🤖 AI Service - FastAPI"
-        NLU["NLU Layer"]
+    subgraph "🤖 AI Service — FastAPI"
+        NLU["NLU Layer<br/>Sửa lỗi, phục hồi dấu, entity detection"]
         ENGINE["Query Engine"]
-        FILTER["Relevance Filter"]
-        SAME["Same-Entity Detection"]
+        CE["Cross-Encoder Rerank<br/>mmarco multilingual ONNX"]
+        NLI["NLI Validator<br/>Entailment checking"]
     end
 
     subgraph "💾 Data Layer"
-        D1["FAISS Index — 630 vectors"]
+        D1["FAISS Index — Semantic vectors"]
         D2["meta.json — Metadata"]
-        D3["knowledge_base.json v1.2.0"]
+        D3["knowledge_base.json — Aliases, Synonyms"]
     end
 
     A -- "HTTP" --> B
     B -- "REST" --> NLU
     NLU --> ENGINE
-    ENGINE --> FILTER
-    ENGINE --> SAME
     ENGINE --> D1 & D2 & D3
+    ENGINE --> CE
+    CE --> NLI
+    NLI --> FORMAT["📤 Response"]
 ```
-
-1. **Frontend (React)**: Giao diện chat, render markdown, answer-priority logic.
-2. **Backend (Spring Boot)**: Orchestrator — proxy requests, quản lý user/session.
-3. **AI Service (FastAPI)**: NLU, entity resolution, semantic search, relevance filtering.
 
 ---
 
-## 🚀 Pipeline Xử lý Dữ liệu
+## 🧠 AI Pipeline
 
 ```mermaid
-graph LR
-    A["Vietnam-History-1M-Vi<br/>(HuggingFace)"] --> B["build_from_huggingface.py"]
-    B --> C["faiss_index/index.bin"]
-    B --> D["faiss_index/meta.json"]
+flowchart LR
+    Q["📝 Câu hỏi"] --> NLU["🔤 NLU<br/>Rewrite + Fix"]
+    NLU --> Search["🔍 Semantic Search<br/>vietnamese-sbert<br/>130 MB ONNX"]
+    Search -->|"Top-50"| Rerank["📊 Cross-Encoder<br/>mmarco multilingual<br/>113 MB ONNX"]
+    Rerank -->|"Top-10"| NLI["✅ NLI Validator<br/>MiniLMv2 multilingual<br/>102 MB ONNX"]
+    NLI --> Answer["💬 Câu trả lời"]
+
+    style Search fill:#FF9800,color:#fff
+    style Rerank fill:#3F51B5,color:#fff
+    style NLI fill:#7B1FA2,color:#fff
 ```
 
-### Script chính: `ai-service/scripts/build_from_huggingface.py`
+### 3 AI Models (tất cả chạy local, ONNX, miễn phí)
 
-- **Nguồn**: [Vietnam-History-1M-Vi](https://huggingface.co/datasets/minhxthanh/Vietnam-History-1M-Vi) (streaming)
-- **Xử lý**: Làm sạch → trích xuất thời gian → nhận diện entity → phân loại → embedding → FAISS
-- **Model**: `keepitreal/vietnamese-sbert` (ONNX)
-
-```bash
-cd ai-service && python scripts/build_from_huggingface.py
-# Tùy chỉnh: MAX_SAMPLES=100000 python scripts/build_from_huggingface.py
-```
+| Model | Chức năng | Kích thước |
+|---|---|---|
+| `keepitreal/vietnamese-sbert` | Encode câu hỏi → vector | 130 MB |
+| `mmarco-mMiniLMv2-L12-H384-v1` | Re-rank kết quả (14 ngôn ngữ) | 113 MB |
+| `multilingual-MiniLMv2-L6-mnli-xnli` | Kiểm tra entailment | 102 MB |
+| **Tổng** | | **~345 MB** |
 
 ---
 
-## 🧠 NLU — Hiểu Ngôn Ngữ Tự Nhiên
+## 🔤 NLU — Hiểu Ngôn Ngữ Tự Nhiên
 
 | Tính năng | Ví dụ | Kết quả |
 |-----------|-------|---------|
@@ -123,7 +159,7 @@ flowchart TD
     YEAR_RANGE -- Không --> MULTI_YEAR{"Nhiều năm?"}
     MULTI_YEAR -- Có --> MY["📅 scan_by_year × N"]
     MULTI_YEAR -- Không --> ENTITY{"Có entity?"}
-    ENTITY -- Có --> SAME_CHECK{"Relationship/Definition?"}
+    ENTITY -- Có --> SAME_CHECK{"Relationship?"}
     SAME_CHECK -- Có --> SAME["🔗 Same-Entity Detection"]
     SAME_CHECK -- Không --> ME["🔍 scan_by_entities"]
     ENTITY -- Không --> DEF{"'là gì/là ai'?"}
@@ -132,37 +168,18 @@ flowchart TD
     SINGLE -- Có --> SY["📅 scan_by_year"]
     SINGLE -- Không --> SEM2["🧠 semantic_search"]
 
-    SAME & ME & YR & MY & SEM1 & SY & SEM2 --> FILTER["🎯 Relevance Filter"]
-    FILTER --> RESULT{"Kết quả?"}
+    SAME & ME & YR & MY & SEM1 & SY & SEM2 --> RERANK["📊 Cross-Encoder Rerank"]
+    RERANK --> NLICHECK["✅ NLI Validation"]
+    NLICHECK --> RESULT{"Kết quả?"}
     RESULT -- Có --> FORMAT["Format Answer"]
     RESULT -- Không --> FALLBACK["🔄 Fallback Chain"]
     FORMAT --> OUTPUT["📤 JSON Response"]
     FALLBACK --> OUTPUT
 
     style NLU fill:#1b4332,color:#fff
-    style SAME fill:#7f5539,color:#fff
-    style FILTER fill:#2d6a4f,color:#fff
+    style RERANK fill:#3F51B5,color:#fff
+    style NLICHECK fill:#7B1FA2,color:#fff
 ```
-
-### Same-Entity Detection (Conditional)
-
-Chỉ kích hoạt khi user hỏi **relationship** (`"là gì của nhau"`) hoặc **definition** (`"là ai"`):
-
-| Query | Intent | Kết quả |
-|-------|--------|---------|
-| "Quang Trung và Nguyễn Huệ là ai" | `relationship` | ✅ "Cùng một người" + events |
-| "Nhà Trần chống Nguyên Mông" | `multi_entity` | ❌ Không trigger same-entity |
-
-Scan 3 alias sources: `PERSON_ALIASES`, `TOPIC_SYNONYMS`, `DYNASTY_ALIASES`.
-
-### Relevance Filter (Relative Scoring)
-
-Loại bỏ events không liên quan bằng **relative word-overlap scoring**:
-
-1. Tách query keywords (≥ 2 chars, loại stopwords)
-2. Score mỗi event = số query words xuất hiện trong story/event text
-3. Threshold = `max(2, max_score // 2)` — giữ events ≥ 50% điểm cao nhất
-4. Fallback cascade: nếu quá strict → giảm threshold
 
 ---
 
@@ -170,7 +187,6 @@ Loại bỏ events không liên quan bằng **relative word-overlap scoring**:
 
 > **Muốn thêm alias/synonym?** Sửa `knowledge_base.json` — KHÔNG cần sửa code.
 > **Thêm documents?** Rebuild FAISS index — inverted indexes tự build tại startup.
-> **HISTORICAL_PHRASES** tự động sinh từ entities — không cần khai báo thủ công.
 
 | Thao tác | File cần sửa | Code cần sửa |
 |----------|-------------|-------------|
@@ -179,16 +195,15 @@ Loại bỏ events không liên quan bằng **relative word-overlap scoring**:
 | Thêm alias triều đại | `knowledge_base.json` | ❌ Không |
 | Thêm viết tắt | `knowledge_base.json` | ❌ Không |
 | Thêm sửa lỗi chính tả | `knowledge_base.json` | ❌ Không |
-| Thêm documents mới | `meta.json` (rebuild) | ❌ Không |
+| Thêm documents mới | Rebuild FAISS | ❌ Không |
 
 ---
 
 ## 🧪 Testing
 
-**408 unit tests** (408 passed, 3 skipped):
-
 ```bash
-cd ai-service && python -m pytest ../tests/ -v
+python -m pytest tests/test_engine.py -v     # 78 tests
+python -m pytest tests/ -v                   # Full suite
 ```
 
 | File | Tests | Nội dung |
@@ -204,51 +219,35 @@ cd ai-service && python -m pytest ../tests/ -v
 
 ---
 
-## 🛠 Hướng dẫn Cài đặt
-
-### Yêu cầu
-
-- Python 3.11+
-- `fastapi`, `uvicorn`, `faiss-cpu`, `sentence-transformers`, `pydantic`
-
-### Chạy API
-
-```bash
-cd ai-service
-uvicorn app.main:app --reload
-# → http://localhost:8000
-```
-
-### Chạy bằng Docker
-
-```bash
-cd ai-service
-docker build -t vietnam-history-ai .
-docker run -d -p 8000:8000 --name ai-service-container vietnam-history-ai
-```
-
----
-
 ## 📂 Cấu trúc
 
 ```
 vietnam_history_dataset/
-├── ai-service/                        # 🤖 FastAPI AI Service
+├── ai-service/                            # 🤖 FastAPI AI Service
 │   ├── app/
 │   │   ├── core/
-│   │   │   ├── config.py              # Config paths & constants
-│   │   │   └── startup.py             # Build indexes + load knowledge base
+│   │   │   ├── config.py                  # Config paths & constants
+│   │   │   └── startup.py                 # Load models + build indexes
 │   │   ├── services/
-│   │   │   ├── engine.py              # Query Engine + relevance filter
-│   │   │   ├── query_understanding.py # 🧠 NLU Layer
-│   │   │   └── search_service.py      # Entity resolution + FAISS
-│   │   └── main.py                    # FastAPI entry point
+│   │   │   ├── engine.py                  # Query Engine chính
+│   │   │   ├── query_understanding.py     # 🧠 NLU Layer
+│   │   │   ├── search_service.py          # Entity resolution + FAISS
+│   │   │   ├── cross_encoder_service.py   # 📊 Cross-Encoder Re-ranking
+│   │   │   └── nli_validator_service.py   # ✅ NLI Answer Validation
+│   │   └── main.py                        # FastAPI entry point
 │   ├── scripts/
-│   │   └── build_from_huggingface.py  # 🚀 Pipeline: HuggingFace → FAISS
-│   ├── faiss_index/                   # FAISS index + metadata
-│   └── knowledge_base.json            # 🔑 Aliases, Synonyms, Typos, Patterns
-├── tests/                             # 408 unit tests (15 files)
-└── pipeline/                          # (Legacy)
+│   │   └── build_from_huggingface.py      # 🚀 Pipeline: HuggingFace → FAISS
+│   ├── onnx_model/                        # Embedding model (130 MB)
+│   ├── onnx_cross_encoder/                # Cross-Encoder model (113 MB)
+│   ├── onnx_nli/                          # NLI model (102 MB)
+│   ├── faiss_index/                       # FAISS index + metadata
+│   └── knowledge_base.json                # 🔑 Aliases, Synonyms, Typos
+├── scripts/                               # Export scripts (ONNX models)
+├── tests/                                 # Unit tests (20 files)
+├── pipeline/                              # Data processing pipeline
+├── AI_DEVELOPMENT_ROADMAP.md              # 📖 Lộ trình phát triển AI
+├── deploy.ps1 / deploy.sh                 # 🚀 Auto deploy scripts
+└── push-to-github.ps1 / push-to-github.sh # 📤 Auto push scripts
 ```
 
 ## 📚 Tech Stack
@@ -257,7 +256,9 @@ vietnam_history_dataset/
 |-----------|-----------|
 | Framework | FastAPI + Uvicorn |
 | Vector DB | FAISS (Facebook AI) |
-| AI Model | `keepitreal/vietnamese-sbert` (ONNX) |
+| Embedding | `keepitreal/vietnamese-sbert` (ONNX) |
+| Reranker | `mmarco-mMiniLMv2-L12-H384-v1` (ONNX) |
+| NLI | `multilingual-MiniLMv2-L6-mnli-xnli` (ONNX) |
 | NLU | Fuzzy matching, accent restoration, phonetic normalization |
 | Data | HuggingFace Datasets, Dynamic Entity Registry |
 
