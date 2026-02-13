@@ -92,15 +92,17 @@ def main():
 
     # 🧠 Load embedding model
     print(f"[INFO] Loading embedding model {EMBED_MODEL}...")
-    embedder = SentenceTransformer(EMBED_MODEL)
+    os.environ['TOKENIZERS_PARALLELISM'] = 'false'  # Avoid warnings
+    embedder = SentenceTransformer(EMBED_MODEL, device='cpu')  # Force CPU to avoid issues
 
     texts = [d["story"] for d in documents]
 
+    print(f"[INFO] Encoding {len(texts)} texts...")
     embeddings = embedder.encode(
         texts,
         convert_to_numpy=True,
         show_progress_bar=True,
-        batch_size=64
+        batch_size=32  # Reduce batch size for stability
     ).astype("float32")
 
     # 📐 Normalize cosine

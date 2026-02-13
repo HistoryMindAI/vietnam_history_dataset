@@ -16,6 +16,8 @@ from .config import (
     EMBED_MODEL_PATH,
     TOKENIZER_PATH,
     KNOWLEDGE_BASE_PATH,
+    CROSS_ENCODER_MODEL_PATH,
+    CROSS_ENCODER_TOKENIZER_PATH,
 )
 
 # Global resources (initialized in load_resources)
@@ -25,6 +27,10 @@ index = None
 DOCUMENTS = []
 DOCUMENTS_BY_YEAR = defaultdict(list)
 LOADING_ERROR = None
+
+# Cross-Encoder Reranker (ONNX)
+cross_encoder_session = None
+cross_encoder_tokenizer = None
 
 # Dynamic inverted indexes (auto-built from DOCUMENTS at startup)
 PERSONS_INDEX = defaultdict(list)     # "trần hưng đạo" → [doc_idx, ...]
@@ -42,6 +48,7 @@ ABBREVIATIONS = {}          # "dbp" → "điện biên phủ"
 TYPO_FIXES = {}             # "quangtrung" → "quang trung"
 QUESTION_PATTERNS = {}      # "person_search" → ["ai đã", ...]
 HISTORICAL_PHRASES = set()  # Auto-generated multi-word phrases
+_knowledge_base_raw = {}    # Raw knowledge_base.json for services to read
 
 def load_resources():
     """
@@ -154,11 +161,17 @@ def load_resources():
         # Build HISTORICAL_PHRASES from knowledge base (auto-generated)
         _build_historical_phrases()
 
+        # ===============================
+        # LOAD CROSS-ENCODER ONNX (optional)
+        # ===============================
+        _load_cross_encoder()
+
         print(
             f"[STARTUP] Ready | docs={len(DOCUMENTS)} | years={len(DOCUMENTS_BY_YEAR)}"
             f" | persons={len(PERSONS_INDEX)} | dynasties={len(DYNASTY_INDEX)}"
             f" | aliases={len(PERSON_ALIASES)} | abbrevs={len(ABBREVIATIONS)}"
-            f" | typos={len(TYPO_FIXES)} | phrases={len(HISTORICAL_PHRASES)}",
+            f" | typos={len(TYPO_FIXES)} | phrases={len(HISTORICAL_PHRASES)}"
+            f" | cross_encoder={'✅' if cross_encoder_session else '❌ (fallback)'}",
             flush=True
         )
 
@@ -221,6 +234,7 @@ def _load_knowledge_base():
     """
     global PERSON_ALIASES, TOPIC_SYNONYMS, DYNASTY_ALIASES
     global ABBREVIATIONS, TYPO_FIXES, QUESTION_PATTERNS
+    global _knowledge_base_raw
 
     PERSON_ALIASES = {}
     TOPIC_SYNONYMS = {}
@@ -236,6 +250,9 @@ def _load_knowledge_base():
     try:
         with open(KNOWLEDGE_BASE_PATH, encoding="utf-8") as f:
             kb = json.load(f)
+
+        # Store raw KB for services (e.g., cross_encoder_service reads reranker_config)
+        _knowledge_base_raw = kb
 
         # Build person alias lookup: alias → canonical name
         for canonical, aliases in kb.get("person_aliases", {}).items():
@@ -328,3 +345,47 @@ def _build_historical_phrases():
 
     HISTORICAL_PHRASES = phrases
     print(f"[STARTUP] Historical phrases auto-generated: {len(HISTORICAL_PHRASES)}", flush=True)
+
+
+def _load_cross_encoder():
+    """
+    Load Cross-Encoder ONNX model for reranking (optional).
+    If model file doesn't exist, system falls back to keyword scoring.
+    """
+    global cross_encoder_session, cross_encoder_tokenizer
+
+    if not os.path.exists(CROSS_ENCODER_MODEL_PATH):
+        print(
+            f"[STARTUP] Cross-Encoder ONNX not found at {CROSS_ENCODER_MODEL_PATH}"
+            f" — using keyword fallback scoring",
+            flush=True,
+        )
+        return
+
+    try:
+        import onnxruntime as ort
+        from transformers import AutoTokenizer
+
+        print(f"[STARTUP] Loading Cross-Encoder ONNX from {CROSS_ENCODER_MODEL_PATH}...", flush=True)
+
+        # Load tokenizer
+        cross_encoder_tokenizer = AutoTokenizer.from_pretrained(CROSS_ENCODER_TOKENIZER_PATH)
+
+        # Load ONNX session (same optimization as bi-encoder)
+        sess_options = ort.SessionOptions()
+        sess_options.intra_op_num_threads = 1
+        sess_options.inter_op_num_threads = 1
+        sess_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+
+        cross_encoder_session = ort.InferenceSession(
+            CROSS_ENCODER_MODEL_PATH, sess_options
+        )
+
+        print("[STARTUP] Cross-Encoder ONNX loaded ✅", flush=True)
+        gc.collect()
+
+    except Exception as e:
+        print(f"[WARN] Failed to load Cross-Encoder ONNX: {e}", flush=True)
+        print("[WARN] System will use keyword fallback scoring", flush=True)
+        cross_encoder_session = None
+        cross_encoder_tokenizer = None

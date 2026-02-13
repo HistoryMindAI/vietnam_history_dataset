@@ -33,6 +33,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # =====================
 COPY onnx_model /app/onnx_model
 
+# =====================
+# Copy Cross-Encoder ONNX (reranker)
+# =====================
+COPY onnx_cross_encoder /app/onnx_cross_encoder
+
 # CRITICAL: Validate ONNX model is real binary, not a Git LFS pointer.
 # LFS pointers are ~130 bytes text. The real model is ~130MB.
 # If LFS pointer detected, download via GitHub Raw URL (auto-resolves LFS).
