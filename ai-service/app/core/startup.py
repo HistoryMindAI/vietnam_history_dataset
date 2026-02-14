@@ -48,6 +48,8 @@ PLACES_INDEX = defaultdict(list)      # "bạch đằng" → [doc_idx, ...]
 PERSON_ALIASES = {}    # "quang trung" → "nguyễn huệ"
 TOPIC_SYNONYMS = {}    # "mông cổ" → "nguyên mông"
 DYNASTY_ALIASES = {}   # "nhà trần" → "trần"
+RESISTANCE_SYNONYMS = {}  # "kháng chiến" → [specific events]
+IMPLICIT_CONTEXT = {}     # vietnam_indicators list
 
 # Dynamic data loaded from knowledge_base.json (replaces hardcoded dicts)
 ABBREVIATIONS = {}          # "dbp" → "điện biên phủ"
@@ -247,6 +249,7 @@ def _load_knowledge_base():
     global PERSON_ALIASES, TOPIC_SYNONYMS, DYNASTY_ALIASES
     global ABBREVIATIONS, TYPO_FIXES, QUESTION_PATTERNS
     global _knowledge_base_raw
+    global RESISTANCE_SYNONYMS, IMPLICIT_CONTEXT
 
     PERSON_ALIASES = {}
     TOPIC_SYNONYMS = {}
@@ -254,6 +257,8 @@ def _load_knowledge_base():
     ABBREVIATIONS = {}
     TYPO_FIXES = {}
     QUESTION_PATTERNS = {}
+    RESISTANCE_SYNONYMS = {}
+    IMPLICIT_CONTEXT = {}
 
     if not os.path.exists(KNOWLEDGE_BASE_PATH):
         print(f"[WARN] Knowledge base not found at {KNOWLEDGE_BASE_PATH}", flush=True)
@@ -304,13 +309,23 @@ def _load_knowledge_base():
         # Load question patterns (supplements regex in extract_question_intent)
         QUESTION_PATTERNS = kb.get("question_patterns", {})
 
+        # Load resistance synonyms (for implicit context expansion)
+        RESISTANCE_SYNONYMS = kb.get("resistance_synonyms", {})
+        # Remove description keys
+        RESISTANCE_SYNONYMS = {k: v for k, v in RESISTANCE_SYNONYMS.items()
+                                if not k.startswith("_") and isinstance(v, list)}
+
+        # Load implicit context config
+        IMPLICIT_CONTEXT = kb.get("implicit_context", {})
+
         print(
             f"[STARTUP] Knowledge base loaded:"
             f" person_aliases={len(PERSON_ALIASES)},"
             f" topic_synonyms={len(TOPIC_SYNONYMS)},"
             f" dynasty_aliases={len(DYNASTY_ALIASES)},"
             f" abbreviations={len(ABBREVIATIONS)},"
-            f" typo_fixes={len(TYPO_FIXES)}",
+            f" typo_fixes={len(TYPO_FIXES)},"
+            f" resistance_synonyms={len(RESISTANCE_SYNONYMS)}",
             flush=True
         )
 
