@@ -890,7 +890,7 @@ class TestImplicitContextEngine:
         r = engine_answer("Lịch sử Việt Nam qua các triều đại")
         # V2: broad_history/dynasty_timeline may not yield events without real data
         # When test mocks include person entities, V2 may route to person intent
-        assert r["intent"] in ("broad_history", "dynasty_timeline", "person")
+        assert r["intent"] in ("broad_history", "dynasty_timeline", "person", "person_query")
 
     @patch("app.services.engine.semantic_search")
     def test_chong_ngoai_xam_expansion(self, mock_search):

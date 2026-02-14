@@ -898,6 +898,10 @@ def engine_answer(query: str):
         if query_analysis.intent == "dynasty_query":
             is_dynasty_query = True
         raw_events = scan_by_entities(resolved)
+        # V2 high-confidence but entity scan empty → fallback to semantic search
+        # (e.g., "Bác Hồ ra đi năm nào" → person resolved but entity index sparse)
+        if not raw_events:
+            raw_events = semantic_search(rewritten)
 
     if not raw_events:
         # Detect intent — priority: year_range > multi_year > relationship > definition > entity > single_year > semantic
@@ -1054,6 +1058,14 @@ def engine_answer(query: str):
             if year:
                 intent = "year"
                 raw_events = scan_by_year(year)
+                # If exact year scan found nothing, try semantic search BUT
+                # filter to only docs whose year field matches
+                if not raw_events:
+                    sem_results = semantic_search(rewritten)
+                    raw_events = [d for d in sem_results if d.get("year") == year]
+                    if not raw_events:
+                        # Still nothing → year not in database
+                        raw_events = []  # Let no_data=true
             else:
                 intent = "semantic"
                 raw_events = semantic_search(rewritten)
@@ -1177,8 +1189,15 @@ def engine_answer(query: str):
     # Deduplicate and enrich events
     unique_events = deduplicate_and_enrich(raw_events, max_events) if not no_data else []
     
-    # Generate complete, comprehensive answer
-    answer = format_complete_answer(unique_events, group_by=semantic_group_by)
+    # --- V2 ANSWER SYNTHESIS ---
+    # Try V2 template-based synthesis first (respects question_type: when/who/list/what)
+    # Falls back to legacy format_complete_answer if synthesis returns None
+    synthesized = synthesize_answer(query_analysis, unique_events)
+    if synthesized:
+        answer = synthesized
+    else:
+        # Legacy: comprehensive answer formatting
+        answer = format_complete_answer(unique_events, group_by=semantic_group_by)
 
     # --- SPECIAL & QUỐC HIỆU INTRO SENTENCES ---
     # Prepend a poetic, engaging intro based on query keywords or quốc hiệu

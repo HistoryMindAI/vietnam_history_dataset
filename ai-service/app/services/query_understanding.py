@@ -344,13 +344,70 @@ def _looks_unaccented(text: str) -> bool:
 def _restore_accents(text: str) -> str:
     """
     Attempt to restore Vietnamese accents by matching against known terms.
-    Uses longest-match-first strategy.
+    Strategy:
+    1. If text looks fully unaccented, try fuzzy match FIRST (catches misspellings
+       like 'nguyen hyue' → 'nguyễn huệ' as a whole phrase)
+    2. Then do exact longest-match-first replacement for remaining fragments
+    Both stages chain: fuzzy output feeds into exact matching.
     """
     result = text
+
+    # Step 1: If text is unaccented, try fuzzy match first for multi-word phrases
+    # This must run BEFORE exact match to prevent partial word-by-word restoration
+    # (e.g., 'nguyen' → 'nguyễn' alone would block fuzzy matching of 'nguyen hyue')
+    if _looks_unaccented(result):
+        result = _fuzzy_restore_accents(result)
+
+    # Step 2: Exact longest-match-first replacement on remaining unaccented parts
     for unaccented in _UNACCENTED_SORTED:
         if unaccented in result:
             result = result.replace(unaccented, UNACCENTED_MAP[unaccented])
+
     return result
+
+
+def _fuzzy_restore_accents(text: str) -> str:
+    """
+    Fuzzy accent restoration for misspelled unaccented Vietnamese.
+    Slides n-gram windows (2→1 words) over the text and matches against
+    UNACCENTED_MAP keys using SequenceMatcher. Dynamic — auto-scales
+    with any entries added to knowledge_base.json at startup.
+    """
+    words = text.split()
+    if not words:
+        return text
+
+    best_replacement = None
+    best_score = 0.0
+    best_span = (0, 0)  # (start_word_idx, end_word_idx)
+    FUZZY_THRESHOLD = 0.80
+
+    # Try multi-word n-grams first (longer matches are more precise)
+    for n in range(min(5, len(words)), 0, -1):
+        for i in range(len(words) - n + 1):
+            candidate = " ".join(words[i:i + n])
+            # Skip if candidate is already accented
+            if not _looks_unaccented(candidate):
+                continue
+
+            for map_key, map_val in UNACCENTED_MAP.items():
+                # Only compare against keys of same word count
+                if len(map_key.split()) != n:
+                    continue
+                sim = SequenceMatcher(None, candidate, map_key).ratio()
+                if sim >= FUZZY_THRESHOLD and sim > best_score:
+                    best_score = sim
+                    best_replacement = map_val
+                    best_span = (i, i + n)
+
+        # If we found a good multi-word match at this n-gram size, apply it
+        if best_replacement:
+            before = " ".join(words[:best_span[0]])
+            after = " ".join(words[best_span[1]:])
+            parts = [p for p in (before, best_replacement, after) if p]
+            return " ".join(parts)
+
+    return text
 
 
 def fuzzy_match_entity(query: str, entity_dict: dict, threshold: float = 0.75) -> list:
