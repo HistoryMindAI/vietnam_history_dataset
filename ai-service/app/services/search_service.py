@@ -85,6 +85,13 @@ def resolve_query_entities(query: str) -> dict:
     # --- 3. Resolve dynasties via aliases ---
     for alias, canonical in startup.DYNASTY_ALIASES.items():
         if alias in q_low and canonical not in seen_dynasties:
+            # GUARD: Prevent false match when dynasty alias is part of
+            # a person name. e.g., "nguyễn" in "nguyễn huệ" ≠ dynasty "nguyễn"
+            is_part_of_person = any(
+                alias in person for person in result["persons"]
+            )
+            if is_part_of_person:
+                continue
             seen_dynasties.add(canonical)
             result["dynasties"].append(canonical)
 
@@ -611,4 +618,154 @@ def scan_by_year_range(start_year: int, end_year: int):
         events = startup.DOCUMENTS_BY_YEAR.get(year, [])
         results.extend(events)
     return results
+
+
+# ===================================================================
+# INTENT-DRIVEN STRUCTURED RETRIEVAL
+# ===================================================================
+
+# Canonical dynasty order for timeline-structured answers
+DYNASTY_ORDER = [
+    "Hùng Vương / An Dương Vương",
+    "Bắc thuộc",
+    "Ngô",
+    "Đinh",
+    "Tiền Lê",
+    "Lý",
+    "Trần",
+    "Hồ",
+    "Minh thuộc",
+    "Lê sơ",
+    "Lê",
+    "Mạc",
+    "Lê trung hưng",
+    "Tây Sơn",
+    "Nguyễn",
+    "Pháp thuộc",
+    "Hiện đại",
+]
+
+# Mapping: dynasty name → sort index (for fast lookups)
+_DYNASTY_SORT_KEY = {d: i for i, d in enumerate(DYNASTY_ORDER)}
+
+
+def _dynasty_sort_key(doc: dict) -> tuple:
+    """Sort key: (dynasty_order, year) for chronological dynasty ordering."""
+    dynasty = doc.get("dynasty", "")
+    order = _DYNASTY_SORT_KEY.get(dynasty, 999)
+    year = doc.get("year", 9999)
+    return (order, year)
+
+
+def scan_by_dynasty_timeline() -> list:
+    """
+    Return events organized by dynasty chronological order.
+    Picks representative events per dynasty, sorted by canonical dynasty order.
+    Used for intent: "dynasty_timeline".
+    """
+    if not startup.DOCUMENTS:
+        return []
+
+    # Group documents by dynasty
+    by_dynasty: dict[str, list] = {}
+    for doc in startup.DOCUMENTS:
+        dynasty = doc.get("dynasty", "Khác")
+        if dynasty not in by_dynasty:
+            by_dynasty[dynasty] = []
+        by_dynasty[dynasty].append(doc)
+
+    # Collect events in dynasty order
+    results = []
+    for dynasty in DYNASTY_ORDER:
+        docs = by_dynasty.get(dynasty, [])
+        if not docs:
+            continue
+        # Sort events within dynasty by year
+        docs_sorted = sorted(docs, key=lambda d: d.get("year", 9999))
+        # Take up to 3 representative events per dynasty (most significant)
+        # Prefer events with heroic/mixed tone (major milestones)
+        significant = [d for d in docs_sorted if d.get("tone") in ("heroic", "mixed")]
+        padding = [d for d in docs_sorted if d.get("tone") not in ("heroic", "mixed")]
+        selected = (significant + padding)[:3]
+        results.extend(selected)
+
+    return results
+
+
+def scan_national_resistance() -> list:
+    """
+    Return events that are NATIONAL resistance wars (defending sovereignty).
+    Filters using enriched metadata: is_resistance=True AND conflict_type=external_conflict.
+    Excludes civil wars and internal conflicts.
+    Used for intent: "resistance_national".
+    """
+    if not startup.DOCUMENTS:
+        return []
+
+    results = []
+    for doc in startup.DOCUMENTS:
+        # Use enriched metadata fields
+        if doc.get("is_resistance") is True and doc.get("conflict_type") == "external_conflict":
+            results.append(doc)
+
+    # Sort chronologically
+    results.sort(key=lambda d: d.get("year", 9999))
+    return results
+
+
+def scan_territorial_conflicts() -> list:
+    """
+    Return all conflicts that occurred on Vietnamese territory,
+    including both external and internal wars.
+    Used for intent: "territorial_event".
+    """
+    if not startup.DOCUMENTS:
+        return []
+
+    results = []
+    for doc in startup.DOCUMENTS:
+        ct = doc.get("conflict_type")
+        if ct in ("external_conflict", "civil_war", "colonial_aggression"):
+            results.append(doc)
+
+    results.sort(key=lambda d: d.get("year", 9999))
+    return results
+
+
+def scan_civil_wars() -> list:
+    """
+    Return internal conflict events (civil wars, power struggles).
+    Used for intent: "civil_war".
+    """
+    if not startup.DOCUMENTS:
+        return []
+
+    results = []
+    for doc in startup.DOCUMENTS:
+        if doc.get("conflict_type") == "civil_war":
+            results.append(doc)
+
+    results.sort(key=lambda d: d.get("year", 9999))
+    return results
+
+
+def scan_broad_history() -> list:
+    """
+    Return a broad overview of Vietnamese history — major milestones across all eras.
+    Picks the most significant events, sorted chronologically.
+    Used for intent: "broad_history".
+    """
+    if not startup.DOCUMENTS:
+        return []
+
+    # Get all national-scope events
+    national = [d for d in startup.DOCUMENTS if d.get("scope") == "national"]
+    if not national:
+        national = list(startup.DOCUMENTS)
+
+    # Sort chronologically
+    national.sort(key=lambda d: d.get("year", 9999))
+
+    # Limit to avoid overwhelming output
+    return national[:25]
 

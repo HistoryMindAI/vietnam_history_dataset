@@ -2,6 +2,9 @@ from app.services.search_service import (
     semantic_search, scan_by_year, scan_by_year_range,
     detect_dynasty_from_query, detect_place_from_query,
     resolve_query_entities, scan_by_entities,
+    scan_by_dynasty_timeline, scan_national_resistance,
+    scan_territorial_conflicts, scan_civil_wars, scan_broad_history,
+    DYNASTY_ORDER,
 )
 from app.services.query_understanding import (
     rewrite_query, extract_question_intent,
@@ -12,6 +15,17 @@ from app.services.cross_encoder_service import (
     validate_answer_relevance,
 )
 from app.services.nli_validator_service import validate_events_nli
+from app.services.semantic_intent import (
+    classify_semantic_intent, SemanticIntent,
+)
+from app.services.implicit_context import (
+    expand_query_with_implicit_context,
+    filter_discriminating_keywords,
+    is_vietnam_scope_query,
+    is_broad_vietnam_query,
+    has_resistance_terms,
+    NON_DISCRIMINATING_KEYWORDS,
+)
 import app.core.startup as startup
 import re
 
@@ -458,79 +472,127 @@ def _is_question_title(title: str) -> bool:
     return bool(_QUESTION_TITLE_RE.search(t))
 
 
-def format_complete_answer(events: list) -> str:
+def format_complete_answer(events: list, group_by: str = "year") -> str:
     """
-    Format events into a concise answer, grouped by year.
+    Format events into a concise answer.
+    Supports two grouping modes:
+      - "year" (default): group by year for chronological output
+      - "dynasty": group by dynasty for dynasty-timeline output
     Avoids duplication and produces natural-sounding Vietnamese text.
     Dynamically detects and skips question-style titles.
     """
     if not events:
         return None
-    
-    # Group by year for cleaner output
+
+    if group_by == "dynasty":
+        return _format_by_dynasty(events)
+
+    return _format_by_year(events)
+
+
+def _format_event_text(e: dict, year=None, seen_texts: set = None) -> str | None:
+    """Format a single event into clean text. Returns None if duplicate."""
+    story = e.get("story", "") or e.get("event", "")
+    clean_story = clean_story_text(story, year)
+
+    if not clean_story:
+        return None
+
+    title = e.get("title", "")
+    clean_title = clean_story_text(title, year) if title else ""
+
+    if clean_title and clean_story and clean_title.lower() != clean_story.lower():
+        if not _is_question_title(clean_title):
+            if clean_title.lower() not in clean_story.lower():
+                clean_story = f"{clean_title}: {clean_story}"
+
+    clean_story = clean_story[0].upper() + clean_story[1:]
+    if not clean_story.endswith(('.', '!', '?')):
+        clean_story += "."
+
+    dedup_key = re.sub(r'[^\w\s]', '', clean_story.lower()).strip()
+    dedup_key = re.sub(r'\s+', ' ', dedup_key)
+
+    if seen_texts is not None:
+        if dedup_key in seen_texts:
+            return None
+        seen_texts.add(dedup_key)
+
+    return clean_story
+
+
+def _format_by_year(events: list) -> str | None:
+    """Group events by year (original behavior)."""
     by_year = {}
     for e in events:
         year = e.get("year")
         if year not in by_year:
             by_year[year] = []
         by_year[year].append(e)
-    
+
     paragraphs = []
-    
-    # Sort years
     sorted_years = sorted(by_year.keys()) if all(isinstance(y, int) for y in by_year.keys() if y) else by_year.keys()
-    
-    seen_texts = set()  # Prevent exact duplicate sentences across years
-    
+    seen_texts = set()
+
     for year in sorted_years:
-        year_events = by_year[year]
         event_texts = []
-        
-        for e in year_events:
-            # Prefer story (longer, more detailed), fallback to event
-            story = e.get("story", "") or e.get("event", "")
-            clean_story = clean_story_text(story, year)
-            
-            # Skip if empty
-            if not clean_story:
-                continue
-            
-            # Extract title for context if available
-            title = e.get("title", "")
-            clean_title = clean_story_text(title, year) if title else ""
-            
-            # Only combine title + story if title is a REAL event title
-            # Skip titles that are question/prompts (detected dynamically)
-            if clean_title and clean_story and clean_title.lower() != clean_story.lower():
-                if not _is_question_title(clean_title):
-                    # Check if title is already part of the story
-                    if clean_title.lower() not in clean_story.lower():
-                        clean_story = f"{clean_title}: {clean_story}"
-            
-            # Capitalize first letter
-            clean_story = clean_story[0].upper() + clean_story[1:]
-            
-            # Ensure ends with punctuation
-            if not clean_story.endswith(('.', '!', '?')):
-                clean_story += "."
-            
-            # Dedup check AFTER normalization so key is consistent
-            # Use more aggressive dedup: remove punctuation and extra spaces
-            dedup_key = re.sub(r'[^\w\s]', '', clean_story.lower()).strip()
-            dedup_key = re.sub(r'\s+', ' ', dedup_key)  # Normalize spaces
-            
-            if dedup_key in seen_texts:
-                continue
-            seen_texts.add(dedup_key)
-            event_texts.append(clean_story)
-        
+        for e in by_year[year]:
+            text = _format_event_text(e, year, seen_texts)
+            if text:
+                event_texts.append(text)
         if event_texts:
-            joined_events = " ".join(event_texts)
+            joined = " ".join(event_texts)
             if year:
-                paragraphs.append(f"**Năm {year}:** {joined_events}")
+                paragraphs.append(f"**Năm {year}:** {joined}")
             else:
-                paragraphs.append(joined_events)
-            
+                paragraphs.append(joined)
+
+    return "\n\n".join(paragraphs) if paragraphs else None
+
+
+def _format_by_dynasty(events: list) -> str | None:
+    """
+    Group events by dynasty in canonical order.
+    Produces output like:
+      **Nhà Ngô (939):** ...
+      **Nhà Đinh (968):** ...
+      **Nhà Lý (1009–1225):** ...
+    """
+    # Build dynasty → events mapping
+    by_dynasty: dict[str, list] = {}
+    for e in events:
+        dynasty = e.get("dynasty", "Khác")
+        if dynasty not in by_dynasty:
+            by_dynasty[dynasty] = []
+        by_dynasty[dynasty].append(e)
+
+    paragraphs = []
+    seen_texts = set()
+
+    for dynasty in DYNASTY_ORDER:
+        dynasty_events = by_dynasty.get(dynasty, [])
+        if not dynasty_events:
+            continue
+
+        # Sort events within dynasty by year
+        dynasty_events.sort(key=lambda d: d.get("year", 9999))
+
+        event_texts = []
+        for e in dynasty_events:
+            text = _format_event_text(e, e.get("year"), seen_texts)
+            if text:
+                event_texts.append(text)
+
+        if event_texts:
+            # Create dynasty header with year range
+            years = [e.get("year") for e in dynasty_events if e.get("year")]
+            if years:
+                year_range = f"{min(years)}–{max(years)}" if min(years) != max(years) else str(min(years))
+                header = f"**{dynasty} ({year_range}):**"
+            else:
+                header = f"**{dynasty}:**"
+            paragraphs.append(f"{header} {' '.join(event_texts)}")
+
     return "\n\n".join(paragraphs) if paragraphs else None
 
 
@@ -563,6 +625,9 @@ def _filter_by_query_keywords(query: str, events: list) -> list:
 
     if len(query_words) < 2:
         return events  # Not enough keywords to filter
+
+    # Remove non-discriminating keywords (e.g., "việt nam" in a VN-history dataset)
+    query_words = filter_discriminating_keywords(query_words)
 
     # Score each event by word overlap with query
     scored = []
@@ -775,10 +840,7 @@ def engine_answer(query: str):
     is_range_query = False
     is_entity_query = False
     same_person_info = None
-
-    # Detect intent — priority: year_range > multi_year > relationship > definition > entity > single_year > semantic
-    year_range = extract_year_range(rewritten)
-    multi_years = extract_multiple_years(rewritten)
+    semantic_group_by = "year"  # Default grouping; "dynasty" for timeline intent
 
     # Dynamic entity resolution (data-driven, no hardcoded patterns)
     # Uses rewritten query for better entity matching
@@ -789,159 +851,230 @@ def engine_answer(query: str):
     has_places = bool(resolved.get("places"))
     has_entities = has_persons or has_topics or has_dynasties or has_places
 
-    # --- SAME-ENTITY DETECTION (Dynamic) ---
-    # Detects if 2+ names in query refer to same entity (person, topic, or dynasty)
-    # E.g.: "Quang Trung và Nguyễn Huệ" → same person
-    # E.g.: "Mông Cổ và Nguyên Mông" → same topic
-    if has_persons or has_topics or has_dynasties:
-        same_person_info = _detect_same_entity(rewritten, resolved)
+    # --- STEP 1.5: SEMANTIC INTENT CLASSIFICATION ---
+    # Classify query BEFORE keyword-based intent chain.
+    # High-confidence semantic intents shortcircuit directly to structured retrieval.
+    semantic_intent = classify_semantic_intent(rewritten, resolved)
 
-    # Detect relationship/definition patterns
-    # Check both rewritten (accented) and original (may be unaccented) queries
-    q_rewritten = rewritten.lower()
-    is_relationship = (any(p in q_rewritten for p in RELATIONSHIP_PATTERNS) or
-                       any(p in q for p in RELATIONSHIP_PATTERNS))
-    is_definition = ("là gì" in q_rewritten or "là ai" in q_rewritten or
-                     "la gi" in q or "la ai" in q)
-
-    if year_range:
-        # Year range query: "từ năm 1225 đến 1400"
-        start_yr, end_yr = year_range
-        intent = "year_range"
-        is_range_query = True
-        raw_events = scan_by_year_range(start_yr, end_yr)
-        # Supplement with semantic search for richer results
-        if len(raw_events) < 3:
-            raw_events.extend(semantic_search(rewritten))
-    elif multi_years:
-        # Multiple years: "năm 938 và năm 1288"
-        intent = "multi_year"
-        is_range_query = True
-        for yr in multi_years:
-            raw_events.extend(scan_by_year(yr))
-        # Also add semantic results for context
-        raw_events.extend(semantic_search(rewritten))
-    elif same_person_info and (is_relationship or is_definition):
-        # Both "là gì của nhau" and "là ai" with both names → same person response
-        intent = "relationship"
-        is_entity_query = True
-        raw_events = scan_by_entities(resolved)
-
-        # --- PERSON-RELEVANCE FILTER ---
-        # Keep only docs where the target person appears in doc's persons metadata
-        # This prevents docs that merely mention the person in story text (e.g.,
-        # "đánh bại Tây Sơn" in Nguyễn dynasty docs) from polluting results
-        if has_persons and raw_events:
-            target_persons = set(p.lower() for p in resolved["persons"])
-            # Also include all aliases for each target person
-            target_with_aliases = set(target_persons)
-            for alias, canonical in startup.PERSON_ALIASES.items():
-                if canonical in target_persons:
-                    target_with_aliases.add(alias)
-            filtered = []
-            for doc in raw_events:
-                doc_persons = set(p.lower() for p in doc.get("persons", []))
-                if doc_persons & target_with_aliases:
-                    filtered.append(doc)
-            if filtered:
-                raw_events = filtered
-
-        if 0 < len(raw_events) < 3:
-            raw_events.extend(semantic_search(rewritten))
-    elif is_definition and has_persons:
-        # "X là ai?" — use semantic search as primary, entity scan as supplement
-        intent = "definition"
-        is_entity_query = True
-        raw_events = scan_by_entities(resolved)
-        if 0 < len(raw_events) < 3:
-            raw_events.extend(semantic_search(rewritten))
-    elif has_entities:
-        # Multi-entity query (data-driven): person, dynasty, topic, place
-        # Determines sub-intent for more specific labeling
-        if has_persons and has_dynasties:
-            intent = "multi_entity"
-        elif has_persons:
-            intent = "person"
-        elif has_dynasties:
-            intent = "dynasty"
+    if semantic_intent.confidence >= 0.8:
+        if semantic_intent.intent == "dynasty_timeline":
+            intent = "dynasty_timeline"
             is_dynasty_query = True
-        elif has_places:
-            intent = "place"
-        elif has_topics:
-            intent = "topic"
-        else:
-            intent = "multi_entity"
-        
-        is_entity_query = True
-        # Use inverted index scan for fast O(1) lookup
-        raw_events = scan_by_entities(resolved)
+            raw_events = scan_by_dynasty_timeline()
+            semantic_group_by = "dynasty"
+        elif semantic_intent.intent == "resistance_national":
+            intent = "resistance_national"
+            is_entity_query = True
+            raw_events = scan_national_resistance()
+        elif semantic_intent.intent == "territorial_event":
+            intent = "territorial_event"
+            is_entity_query = True
+            raw_events = scan_territorial_conflicts()
+        elif semantic_intent.intent == "civil_war":
+            intent = "civil_war"
+            is_entity_query = True
+            raw_events = scan_civil_wars()
+        elif semantic_intent.intent == "broad_history":
+            intent = "broad_history"
+            is_dynasty_query = True
+            raw_events = scan_broad_history()
 
-        # --- PERSON-RELEVANCE FILTER ---
-        # When query specifies persons BUT NOT dynasties, keep only docs where
-        # person appears in doc's persons metadata. Skip when dynasties are present
-        # because dynasty matching is more reliable (person may be misresolved).
-        # E.g., "nhà Trần + chiến công" might misresolve "bà triệu" as person,
-        # but dynasty "trần" correctly finds nhà Trần docs.
-        if has_persons and not has_dynasties and not has_topics and raw_events:
-            target_persons = set(p.lower() for p in resolved["persons"])
-            target_with_aliases = set(target_persons)
-            for alias, canonical in startup.PERSON_ALIASES.items():
-                if canonical in target_persons:
-                    target_with_aliases.add(alias)
-            person_filtered = [
-                doc for doc in raw_events
-                if set(p.lower() for p in doc.get("persons", [])) & target_with_aliases
-            ]
-            # If person filter removed everything, the entity resolution may be wrong
-            # → clear results so no_data=true and UI auto-response kicks in
-            raw_events = person_filtered
+    # If semantic intent resolved with results, skip legacy intent chain
+    # Otherwise, fall through to existing keyword/entity-based logic
+    year_range = None
+    multi_years = None
 
-        # --- DYNASTY-AWARE FILTERING ---
-        # When query specifies a dynasty, filter out docs from unrelated dynasties
-        # Prevents "nhà Nguyễn" docs from leaking into "nhà Trần" queries
-        # EXCEPTION: Skip when query contains quốc hiệu (country names like
-        # "Đại Việt", "Đại Cồ Việt", "Đại Nam") because these span multiple
-        # dynasties and shouldn't be filtered to just one
-        QUOC_HIEU = {"đại việt", "đại cồ việt", "đại nam", "việt nam"}
-        has_quoc_hieu = bool(
-            set(p.lower() for p in resolved.get("places", [])) & QUOC_HIEU
-        )
-        if has_dynasties and raw_events and not has_quoc_hieu:
-            target_dynasties = set(d.lower() for d in resolved["dynasties"])
-            filtered = []
-            for doc in raw_events:
-                doc_dynasty = doc.get("dynasty", "").strip().lower()
-                # Keep if: no dynasty metadata, OR dynasty matches target
-                if not doc_dynasty or any(td in doc_dynasty or doc_dynasty in td for td in target_dynasties):
-                    filtered.append(doc)
-            # Only apply filter if it doesn't remove everything
-            if filtered:
-                raw_events = filtered
+    if not raw_events:
+        # Detect intent — priority: year_range > multi_year > relationship > definition > entity > single_year > semantic
+        year_range = extract_year_range(rewritten)
+        multi_years = extract_multiple_years(rewritten)
 
-        # --- DYNAMIC KEYWORD RELEVANCE FILTER ---
-        # When query has specific action/context keywords, filter events to match
-        # E.g.: "chiến công chống Nguyên Mông" → keep only combat-related events
-        if raw_events:
-            raw_events = _filter_by_query_keywords(rewritten, raw_events)
+        # --- SAME-ENTITY DETECTION (Dynamic) ---
+        # Detects if 2+ names in query refer to same entity (person, topic, or dynasty)
+        # E.g.: "Quang Trung và Nguyễn Huệ" → same person
+        # E.g.: "Mông Cổ và Nguyên Mông" → same topic
+        if has_persons or has_topics or has_dynasties:
+            same_person_info = _detect_same_entity(rewritten, resolved)
 
-        # Only supplement with semantic search when entity scan found SOME results
-        # but fewer than 3. When entity scan found ZERO results for specific
-        # person/entity queries, DON'T fallback — this is a DATA GAP and semantic
-        # search will only return noise. Let no_data=true so the UI can respond.
-        entity_scan_count = len(raw_events)
-        if 0 < entity_scan_count < 3:
+        # Detect relationship/definition patterns
+        # Check both rewritten (accented) and original (may be unaccented) queries
+        q_rewritten = rewritten.lower()
+        is_relationship = (any(p in q_rewritten for p in RELATIONSHIP_PATTERNS) or
+                           any(p in q for p in RELATIONSHIP_PATTERNS))
+        is_definition = ("là gì" in q_rewritten or "là ai" in q_rewritten or
+                         "la gi" in q or "la ai" in q)
+
+        if year_range:
+            # Year range query: "từ năm 1225 đến 1400"
+            start_yr, end_yr = year_range
+            intent = "year_range"
+            is_range_query = True
+            raw_events = scan_by_year_range(start_yr, end_yr)
+            # Supplement with semantic search for richer results
+            if len(raw_events) < 3:
+                raw_events.extend(semantic_search(rewritten))
+        elif multi_years:
+            # Multiple years: "năm 938 và năm 1288"
+            intent = "multi_year"
+            is_range_query = True
+            for yr in multi_years:
+                raw_events.extend(scan_by_year(yr))
+            # Also add semantic results for context
             raw_events.extend(semantic_search(rewritten))
-    elif is_definition:
-        intent = "definition"
-        raw_events = semantic_search(rewritten)
-    else:
-        year = extract_single_year(rewritten)
-        if year:
-            intent = "year"
-            raw_events = scan_by_year(year)
-        else:
-            intent = "semantic"
+        elif same_person_info and (is_relationship or is_definition):
+            # Both "là gì của nhau" and "là ai" with both names → same person response
+            intent = "relationship"
+            is_entity_query = True
+            raw_events = scan_by_entities(resolved)
+
+            # --- PERSON-RELEVANCE FILTER ---
+            # Keep only docs where the target person appears in doc's persons metadata
+            # This prevents docs that merely mention the person in story text (e.g.,
+            # "đánh bại Tây Sơn" in Nguyễn dynasty docs) from polluting results
+            if has_persons and raw_events:
+                target_persons = set(p.lower() for p in resolved["persons"])
+                # Also include all aliases for each target person
+                target_with_aliases = set(target_persons)
+                for alias, canonical in startup.PERSON_ALIASES.items():
+                    if canonical in target_persons:
+                        target_with_aliases.add(alias)
+                filtered = []
+                for doc in raw_events:
+                    doc_persons = set(p.lower() for p in doc.get("persons", []))
+                    if doc_persons & target_with_aliases:
+                        filtered.append(doc)
+                if filtered:
+                    raw_events = filtered
+
+            if 0 < len(raw_events) < 3:
+                raw_events.extend(semantic_search(rewritten))
+        elif is_definition and has_persons:
+            # "X là ai?" — use semantic search as primary, entity scan as supplement
+            intent = "definition"
+            is_entity_query = True
+            raw_events = scan_by_entities(resolved)
+            if 0 < len(raw_events) < 3:
+                raw_events.extend(semantic_search(rewritten))
+        elif has_entities:
+            # Multi-entity query (data-driven): person, dynasty, topic, place
+            # Determines sub-intent for more specific labeling
+            if has_persons and has_dynasties:
+                intent = "multi_entity"
+            elif has_persons:
+                intent = "person"
+            elif has_dynasties:
+                intent = "dynasty"
+                is_dynasty_query = True
+            elif has_places:
+                intent = "place"
+            elif has_topics:
+                intent = "topic"
+            else:
+                intent = "multi_entity"
+            
+            is_entity_query = True
+            # Use inverted index scan for fast O(1) lookup
+            raw_events = scan_by_entities(resolved)
+
+            # --- PERSON-RELEVANCE FILTER ---
+            # When query specifies persons BUT NOT dynasties, keep only docs where
+            # person appears in doc's persons metadata. Skip when dynasties are present
+            # because dynasty matching is more reliable (person may be misresolved).
+            # E.g., "nhà Trần + chiến công" might misresolve "bà triệu" as person,
+            # but dynasty "trần" correctly finds nhà Trần docs.
+            if has_persons and not has_dynasties and not has_topics and raw_events:
+                target_persons = set(p.lower() for p in resolved["persons"])
+                target_with_aliases = set(target_persons)
+                for alias, canonical in startup.PERSON_ALIASES.items():
+                    if canonical in target_persons:
+                        target_with_aliases.add(alias)
+                person_filtered = [
+                    doc for doc in raw_events
+                    if set(p.lower() for p in doc.get("persons", [])) & target_with_aliases
+                ]
+                # If person filter removed everything, the entity resolution may be wrong
+                # → clear results so no_data=true and UI auto-response kicks in
+                raw_events = person_filtered
+
+            # --- DYNASTY-AWARE FILTERING ---
+            # When query specifies a dynasty, filter out docs from unrelated dynasties
+            # Prevents "nhà Nguyễn" docs from leaking into "nhà Trần" queries
+            # EXCEPTION: Skip when query contains quốc hiệu (country names like
+            # "Đại Việt", "Đại Cồ Việt", "Đại Nam") because these span multiple
+            # dynasties and shouldn't be filtered to just one
+            QUOC_HIEU = {"đại việt", "đại cồ việt", "đại nam", "việt nam"}
+            has_quoc_hieu = bool(
+                set(p.lower() for p in resolved.get("places", [])) & QUOC_HIEU
+            )
+            if has_dynasties and raw_events and not has_quoc_hieu:
+                target_dynasties = set(d.lower() for d in resolved["dynasties"])
+                filtered = []
+                for doc in raw_events:
+                    doc_dynasty = doc.get("dynasty", "").strip().lower()
+                    # Keep if: no dynasty metadata, OR dynasty matches target
+                    if not doc_dynasty or any(td in doc_dynasty or doc_dynasty in td for td in target_dynasties):
+                        filtered.append(doc)
+                # Only apply filter if it doesn't remove everything
+                if filtered:
+                    raw_events = filtered
+
+            # --- DYNAMIC KEYWORD RELEVANCE FILTER ---
+            # When query has specific action/context keywords, filter events to match
+            # E.g.: "chiến công chống Nguyên Mông" → keep only combat-related events
+            if raw_events:
+                raw_events = _filter_by_query_keywords(rewritten, raw_events)
+
+            # Only supplement with semantic search when entity scan found SOME results
+            # but fewer than 3. When entity scan found ZERO results for specific
+            # person/entity queries, DON'T fallback — this is a DATA GAP and semantic
+            # search will only return noise. Let no_data=true so the UI can respond.
+            entity_scan_count = len(raw_events)
+            if 0 < entity_scan_count < 3:
+                raw_events.extend(semantic_search(rewritten))
+        elif is_definition:
+            intent = "definition"
             raw_events = semantic_search(rewritten)
+        else:
+            year = extract_single_year(rewritten)
+            if year:
+                intent = "year"
+                raw_events = scan_by_year(year)
+            else:
+                intent = "semantic"
+                raw_events = semantic_search(rewritten)
+
+    # --- IMPLICIT CONTEXT EXPANSION (Semantic-Intent-Aware) ---
+    # Only triggers when semantic intent didn't already resolve the query.
+    # If semantic_intent was high-confidence, we already have structured results.
+    if semantic_intent.confidence < 0.8:
+        implicit_ctx = expand_query_with_implicit_context(rewritten, resolved)
+        if len(raw_events) < 3 and (implicit_ctx["is_vietnam_scope"] or implicit_ctx["has_resistance"]):
+            if implicit_ctx["is_broad"] or implicit_ctx["has_resistance"]:
+                if not raw_events:
+                    intent = "implicit_context"
+
+                # Strategy 1: Search using expanded resistance/event terms
+                for extra_query in implicit_ctx["extra_search_queries"]:
+                    extra_results = semantic_search(extra_query)
+                    raw_events.extend(extra_results)
+
+                # Strategy 2: For very broad queries, scan all documents by dynasty
+                if implicit_ctx["is_broad"] and len(raw_events) < 5:
+                    for dynasty_key in list(startup.DYNASTY_INDEX.keys()):
+                        for idx in startup.DYNASTY_INDEX[dynasty_key][:3]:
+                            if idx < len(startup.DOCUMENTS):
+                                doc = startup.DOCUMENTS[idx]
+                                if doc not in raw_events:
+                                    raw_events.append(doc)
+
+                # Strategy 3: Scan by expanded terms in inverted keyword index
+                for term in implicit_ctx["expanded_terms"]:
+                    term_normalized = term.replace(" ", "_")
+                    for idx in startup.KEYWORD_INDEX.get(term, []) + startup.KEYWORD_INDEX.get(term_normalized, []):
+                        if idx < len(startup.DOCUMENTS):
+                            doc = startup.DOCUMENTS[idx]
+                            if doc not in raw_events:
+                                raw_events.append(doc)
 
     # --- FALLBACK CHAIN ---
     # When primary search finds nothing, try harder
@@ -1030,7 +1163,7 @@ def engine_answer(query: str):
     unique_events = deduplicate_and_enrich(raw_events, max_events) if not no_data else []
     
     # Generate complete, comprehensive answer
-    answer = format_complete_answer(unique_events)
+    answer = format_complete_answer(unique_events, group_by=semantic_group_by)
 
     # --- SPECIAL & QUỐC HIỆU INTRO SENTENCES ---
     # Prepend a poetic, engaging intro based on query keywords or quốc hiệu
