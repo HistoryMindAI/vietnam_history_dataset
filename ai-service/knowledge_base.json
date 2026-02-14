@@ -1,6 +1,6 @@
 {
   "_description": "Knowledge Base for HistoryMindAI - Dynamic aliases & synonyms. Edit this file to extend entity recognition without changing code.",
-  "_version": "1.2.0",
+  "_version": "1.3.0",
 
   "person_aliases": {
     "hai bà trưng": ["trưng trắc", "trưng nhị", "hai bà", "trưng vương"],
@@ -52,7 +52,9 @@
     "kháng chiến chống mỹ": ["chiến tranh việt nam", "kháng mỹ", "chống mỹ cứu nước"],
     "nước vạn xuân": ["vạn xuân", "lý nam đế dựng nước"],
     "ngô quyền": ["trận bạch đằng 938", "đánh quân nam hán"],
-    "lê lợi": ["khởi nghĩa lam sơn", "bình định vương", "lê thái tổ khởi nghĩa"]
+    "lê lợi": ["khởi nghĩa lam sơn", "bình định vương", "lê thái tổ khởi nghĩa"],
+    "chống ngoại xâm": ["kháng chiến", "chống giặc", "đánh giặc ngoại xâm", "bảo vệ tổ quốc"],
+    "chiến tranh việt nam": ["kháng chiến chống mỹ"]
   },
 
   "dynasty_aliases": {
@@ -109,6 +111,46 @@
     "event_search": ["chuyện gì xảy ra", "có sự kiện gì", "điều gì đã xảy ra"],
     "time_search": ["khi nào", "năm nào", "bao giờ", "thời gian nào"],
     "place_search": ["ở đâu", "tại đâu", "nơi nào", "địa điểm nào"]
+  },
+
+  "implicit_context": {
+    "_description": "Terms that implicitly indicate Vietnamese history context. Used to detect scope-qualifier queries.",
+    "vietnam_indicators": [
+      "đại việt", "đại cồ việt", "đại nam", "bắc thuộc", "pháp thuộc",
+      "nhà trần", "nhà lý", "nhà lê", "nhà nguyễn", "nhà đinh",
+      "tây sơn", "tiền lê", "lê sơ", "lê trung hưng",
+      "vạn xuân", "âu lạc", "văn lang"
+    ]
+  },
+
+  "resistance_synonyms": {
+    "_description": "Maps broad resistance/war concepts to specific events and keywords for query expansion.",
+    "kháng chiến": [
+      "kháng chiến chống pháp", "kháng chiến chống mỹ",
+      "chống quân nguyên mông", "chống quân tống", "chống quân thanh",
+      "chống quân minh", "chống quân nam hán",
+      "trận bạch đằng", "chiến thắng đống đa", "chiến thắng điện biên phủ",
+      "khởi nghĩa lam sơn", "khởi nghĩa hai bà trưng"
+    ],
+    "chiến tranh": [
+      "chiến tranh đông dương", "chiến tranh việt nam",
+      "kháng chiến chống pháp", "kháng chiến chống mỹ",
+      "trịnh nguyễn phân tranh"
+    ],
+    "xâm lược": [
+      "nguyên mông xâm lược", "quân tống xâm lược",
+      "pháp xâm lược", "quân minh xâm lược",
+      "quân nam hán xâm lược", "quân thanh xâm lược"
+    ],
+    "ngoại xâm": [
+      "nguyên mông", "quân tống", "thực dân pháp",
+      "quân minh", "quân nam hán", "quân thanh", "quân hán"
+    ],
+    "chống ngoại xâm": [
+      "kháng chiến", "chống giặc",
+      "nguyên mông", "quân tống", "thực dân pháp",
+      "quân minh", "quân nam hán", "quân thanh"
+    ]
   },
 
   "reranker_config": {
