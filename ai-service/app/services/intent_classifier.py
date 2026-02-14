@@ -284,7 +284,8 @@ def classify_intent(
         return analysis
 
     # 6. Person-focused query (when question asks about a specific person)
-    if has_persons and not has_dynasties and not has_topics:
+    #    When user asks "when" about a person, person takes priority over topics
+    if has_persons and not has_dynasties and (not has_topics or qtype == "when"):
         analysis.intent = "person_query"
         analysis.focus = "person"
         analysis.confidence = 0.85

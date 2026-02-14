@@ -41,7 +41,11 @@ YEAR_STANDALONE = re.compile(r"(?<!\d)([1-9]\d{2,3})(?!\d)")
 ANNIVERSARY_PATTERN = re.compile(
     r"(?:kỉ niệm|kỷ niệm|đại lễ|lễ kỷ niệm|lễ kỉ niệm)\s+(\d+)\s+năm"
     r"|(\d+)\s+(?:ngàn|nghìn)\s+năm"
-    r"|(?:ngàn|nghìn)\s+năm",
+    r"|(?:ngàn|nghìn)\s+năm"
+    # Duration phrases: "hơn 150 năm", "kéo dài 150 năm", "suốt 150 năm"
+    # These are durations, NOT event years — must be filtered before year extraction
+    r"|(?:hơn|gần|khoảng|trên|dưới|suốt)\s+(\d+)\s+năm"
+    r"|(?:kéo\s+dài|éo\s+dài)\s+(?:hơn\s+)?(\d+)\s+năm",
     re.IGNORECASE
 )
 

@@ -1,7 +1,7 @@
 {
   "model": "keepitreal/vietnamese-sbert",
   "dimension": 768,
-  "count": 69,
+  "count": 68,
   "source": "minhxthanh/Vietnam-History-1M-Vi",
   "documents": [
     {
@@ -20,10 +20,7 @@
         "hòa_ước"
       ],
       "dynasty": "Pháp thuộc",
-      "period": "Cận đại",
-      "conflict_type": "colonial_aggression",
-      "scope": "national",
-      "is_resistance": false
+      "period": "Cận đại"
     },
     {
       "id": "hf_000003",
@@ -44,10 +41,7 @@
         "trần_hưng_đạo"
       ],
       "dynasty": "Trần",
-      "period": "Phong kiến",
-      "conflict_type": "external_conflict",
-      "scope": "national",
-      "is_resistance": true
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000004",
@@ -74,10 +68,7 @@
         "độc_lập"
       ],
       "dynasty": "Lý",
-      "period": "Phong kiến",
-      "conflict_type": "external_conflict",
-      "scope": "national",
-      "is_resistance": true
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000005",
@@ -97,10 +88,7 @@
         "khmer_đỏ"
       ],
       "dynasty": "Hiện đại",
-      "period": "Hiện đại",
-      "conflict_type": "colonial_aggression",
-      "scope": "national",
-      "is_resistance": false
+      "period": "Hiện đại"
     },
     {
       "id": "hf_000006",
@@ -124,10 +112,7 @@
         "đổi_quốc_hiệu"
       ],
       "dynasty": "Hồ",
-      "period": "Phong kiến",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000009",
@@ -151,10 +136,7 @@
         "độc_lập"
       ],
       "dynasty": "Hiện đại",
-      "period": "Hiện đại",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Hiện đại"
     },
     {
       "id": "hf_000011",
@@ -175,10 +157,7 @@
         "đà_nẵng"
       ],
       "dynasty": "Nguyễn",
-      "period": "Cận đại",
-      "conflict_type": "colonial_aggression",
-      "scope": "national",
-      "is_resistance": false
+      "period": "Cận đại"
     },
     {
       "id": "hf_000013",
@@ -201,10 +180,7 @@
         "điện_biên_phủ"
       ],
       "dynasty": "Hiện đại",
-      "period": "Hiện đại",
-      "conflict_type": "external_conflict",
-      "scope": "national",
-      "is_resistance": true
+      "period": "Hiện đại"
     },
     {
       "id": "hf_000017",
@@ -226,10 +202,7 @@
         "nhà_tiền lê"
       ],
       "dynasty": "Tiền Lê",
-      "period": "Phong kiến",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000021",
@@ -247,10 +220,7 @@
         "hiệp_định"
       ],
       "dynasty": "Hiện đại",
-      "period": "Hiện đại",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Hiện đại"
     },
     {
       "id": "hf_000022",
@@ -273,10 +243,7 @@
         "tống_bình"
       ],
       "dynasty": "Bắc thuộc",
-      "period": "Cổ đại",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Cổ đại"
     },
     {
       "id": "hf_000027",
@@ -298,10 +265,7 @@
         "đại_việt"
       ],
       "dynasty": "Lê sơ",
-      "period": "Phong kiến",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000028",
@@ -327,10 +291,7 @@
         "thống_nhất"
       ],
       "dynasty": "Hiện đại",
-      "period": "Hiện đại",
-      "conflict_type": "external_conflict",
-      "scope": "national",
-      "is_resistance": true
+      "period": "Hiện đại"
     },
     {
       "id": "hf_000031",
@@ -351,10 +312,7 @@
         "đại_la"
       ],
       "dynasty": "Lý",
-      "period": "Phong kiến",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000038",
@@ -381,10 +339,7 @@
         "độc_lập"
       ],
       "dynasty": "Đinh",
-      "period": "Phong kiến",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000039",
@@ -404,10 +359,7 @@
         "lê_thánh_tông"
       ],
       "dynasty": "Lê sơ",
-      "period": "Phong kiến",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000041",
@@ -432,10 +384,7 @@
         "lê_lợi"
       ],
       "dynasty": "Minh thuộc",
-      "period": "Phong kiến",
-      "conflict_type": "external_conflict",
-      "scope": "national",
-      "is_resistance": true
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000042",
@@ -457,10 +406,7 @@
         "thăng_long"
       ],
       "dynasty": "Hiện đại",
-      "period": "Hiện đại",
-      "conflict_type": null,
-      "scope": null,
-      "is_resistance": false
+      "period": "Hiện đại"
     },
     {
       "id": "hf_000045",
@@ -483,10 +429,7 @@
         "thành_lập"
       ],
       "dynasty": "Hiện đại",
-      "period": "Hiện đại",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Hiện đại"
     },
     {
       "id": "hf_000058",
@@ -502,10 +445,7 @@
       "places": [],
       "keywords": [],
       "dynasty": "Hiện đại",
-      "period": "Hiện đại",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Hiện đại"
     },
     {
       "id": "hf_000059",
@@ -529,10 +469,7 @@
         "điện_biên_phủ"
       ],
       "dynasty": "Hiện đại",
-      "period": "Hiện đại",
-      "conflict_type": "external_conflict",
-      "scope": "national",
-      "is_resistance": true
+      "period": "Hiện đại"
     },
     {
       "id": "hf_000061",
@@ -548,10 +485,7 @@
       "places": [],
       "keywords": [],
       "dynasty": "Lê trung hưng",
-      "period": "Phong kiến",
-      "conflict_type": "civil_war",
-      "scope": "national",
-      "is_resistance": false
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000064",
@@ -574,10 +508,7 @@
         "vịnh_bắc_bộ"
       ],
       "dynasty": "Hiện đại",
-      "period": "Hiện đại",
-      "conflict_type": "colonial_aggression",
-      "scope": "national",
-      "is_resistance": false
+      "period": "Hiện đại"
     },
     {
       "id": "hf_000067",
@@ -593,10 +524,7 @@
       "places": [],
       "keywords": [],
       "dynasty": "Hiện đại",
-      "period": "Hiện đại",
-      "conflict_type": null,
-      "scope": null,
-      "is_resistance": false
+      "period": "Hiện đại"
     },
     {
       "id": "hf_000068",
@@ -614,10 +542,7 @@
         "hiệp_định"
       ],
       "dynasty": "Hiện đại",
-      "period": "Hiện đại",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Hiện đại"
     },
     {
       "id": "hf_000070",
@@ -633,10 +558,7 @@
       "places": [],
       "keywords": [],
       "dynasty": "Hiện đại",
-      "period": "Hiện đại",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Hiện đại"
     },
     {
       "id": "hf_000072",
@@ -656,10 +578,7 @@
         "trung_sự"
       ],
       "dynasty": "Hiện đại",
-      "period": "Hiện đại",
-      "conflict_type": null,
-      "scope": null,
-      "is_resistance": false
+      "period": "Hiện đại"
     },
     {
       "id": "hf_000074",
@@ -687,10 +606,7 @@
         "độc_lập"
       ],
       "dynasty": "Tiền Lê",
-      "period": "Phong kiến",
-      "conflict_type": "external_conflict",
-      "scope": "national",
-      "is_resistance": true
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000078",
@@ -718,10 +634,7 @@
         "đàng_ngoài"
       ],
       "dynasty": "Lê trung hưng",
-      "period": "Phong kiến",
-      "conflict_type": "civil_war",
-      "scope": "national",
-      "is_resistance": false
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000081",
@@ -746,10 +659,7 @@
         "đại_việt"
       ],
       "dynasty": "Lý",
-      "period": "Phong kiến",
-      "conflict_type": "external_conflict",
-      "scope": "national",
-      "is_resistance": true
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000086",
@@ -772,10 +682,7 @@
         "đàng_trong"
       ],
       "dynasty": "Lê",
-      "period": "Phong kiến",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000089",
@@ -799,10 +706,7 @@
         "độc_lập"
       ],
       "dynasty": "Lý",
-      "period": "Phong kiến",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000091",
@@ -820,10 +724,7 @@
         "kháng_chiến"
       ],
       "dynasty": "Hiện đại",
-      "period": "Hiện đại",
-      "conflict_type": "external_conflict",
-      "scope": "national",
-      "is_resistance": true
+      "period": "Hiện đại"
     },
     {
       "id": "hf_000098",
@@ -842,10 +743,7 @@
         "hiến_pháp"
       ],
       "dynasty": "Hiện đại",
-      "period": "Hiện đại",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Hiện đại"
     },
     {
       "id": "hf_000099",
@@ -867,10 +765,7 @@
         "nam_hán"
       ],
       "dynasty": "Bắc thuộc",
-      "period": "Cổ đại",
-      "conflict_type": "external_conflict",
-      "scope": "national",
-      "is_resistance": true
+      "period": "Cổ đại"
     },
     {
       "id": "hf_000102",
@@ -888,10 +783,7 @@
         "thành_lập"
       ],
       "dynasty": "Hiện đại",
-      "period": "Hiện đại",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Hiện đại"
     },
     {
       "id": "hf_000105",
@@ -919,10 +811,7 @@
         "tây_sơn"
       ],
       "dynasty": "Nguyễn",
-      "period": "Phong kiến",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000115",
@@ -942,10 +831,7 @@
         "độc_lập"
       ],
       "dynasty": "Pháp thuộc",
-      "period": "Cận đại",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Cận đại"
     },
     {
       "id": "hf_000121",
@@ -961,10 +847,7 @@
       "places": [],
       "keywords": [],
       "dynasty": "Hiện đại",
-      "period": "Hiện đại",
-      "conflict_type": "external_conflict",
-      "scope": "national",
-      "is_resistance": true
+      "period": "Hiện đại"
     },
     {
       "id": "hf_000126",
@@ -990,10 +873,7 @@
         "độc_lập"
       ],
       "dynasty": "Lê trung hưng",
-      "period": "Phong kiến",
-      "conflict_type": "external_conflict",
-      "scope": "national",
-      "is_resistance": true
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000135",
@@ -1014,10 +894,7 @@
         "nhà_mạc"
       ],
       "dynasty": "Mạc",
-      "period": "Phong kiến",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000146",
@@ -1038,10 +915,7 @@
         "hồ_chí_minh"
       ],
       "dynasty": "Pháp thuộc",
-      "period": "Cận đại",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Cận đại"
     },
     {
       "id": "hf_000148",
@@ -1062,10 +936,7 @@
         "tết_mậu_thân"
       ],
       "dynasty": "Hiện đại",
-      "period": "Hiện đại",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Hiện đại"
     },
     {
       "id": "hf_000149",
@@ -1081,10 +952,7 @@
       "places": [],
       "keywords": [],
       "dynasty": "Hiện đại",
-      "period": "Hiện đại",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Hiện đại"
     },
     {
       "id": "hf_000155",
@@ -1114,10 +982,7 @@
         "đại_la"
       ],
       "dynasty": "Lý",
-      "period": "Phong kiến",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000156",
@@ -1140,10 +1005,7 @@
         "tây_sơn"
       ],
       "dynasty": "Tây Sơn",
-      "period": "Phong kiến",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000157",
@@ -1167,10 +1029,7 @@
         "lê_thánh_tông"
       ],
       "dynasty": "Lê sơ",
-      "period": "Phong kiến",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000173",
@@ -1191,10 +1050,7 @@
         "vua_hàm_nghi"
       ],
       "dynasty": "Pháp thuộc",
-      "period": "Cận đại",
-      "conflict_type": "external_conflict",
-      "scope": "national",
-      "is_resistance": true
+      "period": "Cận đại"
     },
     {
       "id": "hf_000178",
@@ -1218,10 +1074,7 @@
         "trần_cảnh"
       ],
       "dynasty": "Trần",
-      "period": "Phong kiến",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000180",
@@ -1248,10 +1101,7 @@
         "độc_lập"
       ],
       "dynasty": "Trần",
-      "period": "Phong kiến",
-      "conflict_type": "external_conflict",
-      "scope": "national",
-      "is_resistance": true
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000206",
@@ -1276,10 +1126,7 @@
         "đổi_quốc_hiệu"
       ],
       "dynasty": "Nguyễn",
-      "period": "Phong kiến",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000207",
@@ -1300,10 +1147,7 @@
         "yên_bái"
       ],
       "dynasty": "Pháp thuộc",
-      "period": "Cận đại",
-      "conflict_type": "external_conflict",
-      "scope": "national",
-      "is_resistance": true
+      "period": "Cận đại"
     },
     {
       "id": "hf_000215",
@@ -1326,10 +1170,7 @@
         "sài_gòn"
       ],
       "dynasty": "Nguyễn",
-      "period": "Cận đại",
-      "conflict_type": "colonial_aggression",
-      "scope": "national",
-      "is_resistance": false
+      "period": "Cận đại"
     },
     {
       "id": "hf_000225",
@@ -1349,10 +1190,7 @@
         "nam_kỳ"
       ],
       "dynasty": "Nguyễn",
-      "period": "Cận đại",
-      "conflict_type": "colonial_aggression",
-      "scope": "national",
-      "is_resistance": false
+      "period": "Cận đại"
     },
     {
       "id": "hf_000245",
@@ -1383,10 +1221,7 @@
         "độc_lập"
       ],
       "dynasty": "Minh thuộc",
-      "period": "Phong kiến",
-      "conflict_type": "external_conflict",
-      "scope": "national",
-      "is_resistance": true
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000259",
@@ -1417,10 +1252,7 @@
         "tây_sơn"
       ],
       "dynasty": "Tây Sơn",
-      "period": "Phong kiến",
-      "conflict_type": "external_conflict",
-      "scope": "national",
-      "is_resistance": true
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000272",
@@ -1449,10 +1281,7 @@
         "độc_lập"
       ],
       "dynasty": "Ngô",
-      "period": "Phong kiến",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000281",
@@ -1479,10 +1308,7 @@
         "độc_lập"
       ],
       "dynasty": "Bắc thuộc",
-      "period": "Cổ đại",
-      "conflict_type": "external_conflict",
-      "scope": "national",
-      "is_resistance": true
+      "period": "Cổ đại"
     },
     {
       "id": "hf_000285",
@@ -1503,10 +1329,7 @@
         "thái_bình_dương"
       ],
       "dynasty": "Hiện đại",
-      "period": "Hiện đại",
-      "conflict_type": null,
-      "scope": null,
-      "is_resistance": false
+      "period": "Hiện đại"
     },
     {
       "id": "hf_000290",
@@ -1526,10 +1349,7 @@
         "phan_bội_châu"
       ],
       "dynasty": "Pháp thuộc",
-      "period": "Cận đại",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Cận đại"
     },
     {
       "id": "hf_000331",
@@ -1553,10 +1373,7 @@
         "tiền_lê"
       ],
       "dynasty": "Tiền Lê",
-      "period": "Phong kiến",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000349",
@@ -1581,10 +1398,7 @@
         "xâm_lược"
       ],
       "dynasty": "Trần",
-      "period": "Phong kiến",
-      "conflict_type": "external_conflict",
-      "scope": "national",
-      "is_resistance": true
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000350",
@@ -1602,10 +1416,7 @@
         "thống_nhất"
       ],
       "dynasty": "Hiện đại",
-      "period": "Hiện đại",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Hiện đại"
     },
     {
       "id": "hf_000358",
@@ -1627,10 +1438,7 @@
         "đại_việt"
       ],
       "dynasty": "Hồ",
-      "period": "Phong kiến",
-      "conflict_type": "colonial_aggression",
-      "scope": "national",
-      "is_resistance": false
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000392",
@@ -1646,10 +1454,7 @@
       "places": [],
       "keywords": [],
       "dynasty": "Hiện đại",
-      "period": "Hiện đại",
-      "conflict_type": null,
-      "scope": null,
-      "is_resistance": false
+      "period": "Hiện đại"
     },
     {
       "id": "hf_000469",
@@ -1678,10 +1483,7 @@
         "độc_lập"
       ],
       "dynasty": "Lê sơ",
-      "period": "Phong kiến",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
+      "period": "Phong kiến"
     },
     {
       "id": "hf_000487",
@@ -1708,41 +1510,7 @@
         "độc_lập"
       ],
       "dynasty": "Pháp thuộc",
-      "period": "Cận đại",
-      "conflict_type": null,
-      "scope": "national",
-      "is_resistance": false
-    },
-    {
-      "id": "hf_000512",
-      "year": 150,
-      "title": "Khởi đầu Trịnh–Nguyễn phân tranh",
-      "event": "Khởi đầu Trịnh–Nguyễn phân tranh. Chiến tranh kéo dài giữa Chúa Trịnh (Đàng Ngoài) và Chúa Nguyễn (Đàng Trong), mang ý nghĩa đất nước chia cắt hơn 150 năm, ranh giới sông Gianh.",
-      "story": "Khởi đầu Trịnh–Nguyễn phân tranh. Chiến tranh kéo dài giữa Chúa Trịnh (Đàng Ngoài) và Chúa Nguyễn (Đàng Trong), mang ý nghĩa đất nước chia cắt hơn 150 năm, ranh giới sông Gianh.",
-      "tone": "somber",
-      "nature": [
-        "general"
-      ],
-      "persons": [
-        "Chúa Nguyễn",
-        "Chúa Trịnh",
-        "Đàng Ngoài",
-        "Đàng Trong"
-      ],
-      "places": [
-        "Gianh"
-      ],
-      "keywords": [
-        "chúa_nguyễn",
-        "chúa_trịnh",
-        "gianh",
-        "đàng_ngoài"
-      ],
-      "dynasty": "Hùng Vương / An Dương Vương",
-      "period": "Cổ đại",
-      "conflict_type": "civil_war",
-      "scope": "national",
-      "is_resistance": false
+      "period": "Cận đại"
     },
     {
       "id": "hf_000620",
@@ -1768,10 +1536,7 @@
         "đại_việt"
       ],
       "dynasty": "Trần",
-      "period": "Phong kiến",
-      "conflict_type": "external_conflict",
-      "scope": "national",
-      "is_resistance": true
+      "period": "Phong kiến"
     }
   ]
 }
