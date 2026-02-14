@@ -15,9 +15,10 @@ from app.services.cross_encoder_service import (
     validate_answer_relevance,
 )
 from app.services.nli_validator_service import validate_events_nli
-from app.services.semantic_intent import (
-    classify_semantic_intent, SemanticIntent,
+from app.services.intent_classifier import (
+    classify_intent, QueryAnalysis, detect_duration_guard,
 )
+from app.services.answer_synthesis import synthesize_answer
 from app.services.implicit_context import (
     expand_query_with_implicit_context,
     filter_discriminating_keywords,
@@ -851,43 +852,56 @@ def engine_answer(query: str):
     has_places = bool(resolved.get("places"))
     has_entities = has_persons or has_topics or has_dynasties or has_places
 
-    # --- STEP 1.5: SEMANTIC INTENT CLASSIFICATION ---
-    # Classify query BEFORE keyword-based intent chain.
-    # High-confidence semantic intents shortcircuit directly to structured retrieval.
-    semantic_intent = classify_semantic_intent(rewritten, resolved)
+    # --- STEP 1.5: INTENT CLASSIFICATION V2 ---
+    # Structured query analysis with 10 intents, duration guard, question-type detection.
+    year_range = extract_year_range(rewritten)
+    multi_years = extract_multiple_years(rewritten)
+    single_year = extract_single_year(rewritten)
 
-    if semantic_intent.confidence >= 0.8:
-        if semantic_intent.intent == "dynasty_timeline":
-            intent = "dynasty_timeline"
-            is_dynasty_query = True
-            raw_events = scan_by_dynasty_timeline()
-            semantic_group_by = "dynasty"
-        elif semantic_intent.intent == "resistance_national":
-            intent = "resistance_national"
-            is_entity_query = True
-            raw_events = scan_national_resistance()
-        elif semantic_intent.intent == "territorial_event":
-            intent = "territorial_event"
-            is_entity_query = True
-            raw_events = scan_territorial_conflicts()
-        elif semantic_intent.intent == "civil_war":
-            intent = "civil_war"
-            is_entity_query = True
-            raw_events = scan_civil_wars()
-        elif semantic_intent.intent == "broad_history":
-            intent = "broad_history"
-            is_dynasty_query = True
-            raw_events = scan_broad_history()
+    # Apply duration guard: "kỉ niệm 1000 năm" → duration_guard=True → year=None
+    query_analysis = classify_intent(
+        query=rewritten,
+        resolved_entities=resolved,
+        year=single_year,
+        year_range=year_range,
+        multi_years=multi_years,
+    )
 
-    # If semantic intent resolved with results, skip legacy intent chain
-    # Otherwise, fall through to existing keyword/entity-based logic
-    year_range = None
-    multi_years = None
+    # Data scope query — immediate return, no retrieval needed
+    if query_analysis.intent == "data_scope":
+        answer = synthesize_answer(query_analysis, [])
+        return {
+            "query": q_display,
+            "intent": "data_scope",
+            "answer": answer,
+            "events": [],
+            "no_data": False
+        }
+
+    # Map new intents to legacy dispatch flags
+    if query_analysis.intent == "dynasty_timeline":
+        intent = "dynasty_timeline"
+        is_dynasty_query = True
+        raw_events = scan_by_dynasty_timeline()
+        semantic_group_by = "dynasty"
+    elif query_analysis.intent == "broad_history":
+        intent = "broad_history"
+        is_dynasty_query = True
+        raw_events = scan_broad_history()
+    elif query_analysis.confidence >= 0.8 and query_analysis.intent in (
+        "person_query", "event_query", "dynasty_query",
+        "definition", "relationship"
+    ):
+        # High-confidence entity-based intents use entity scan
+        intent = query_analysis.intent
+        is_entity_query = True
+        if query_analysis.intent == "dynasty_query":
+            is_dynasty_query = True
+        raw_events = scan_by_entities(resolved)
 
     if not raw_events:
         # Detect intent — priority: year_range > multi_year > relationship > definition > entity > single_year > semantic
-        year_range = extract_year_range(rewritten)
-        multi_years = extract_multiple_years(rewritten)
+        # NOTE: year_range, multi_years already extracted above (before classify_intent)
 
         # --- SAME-ENTITY DETECTION (Dynamic) ---
         # Detects if 2+ names in query refer to same entity (person, topic, or dynasty)
@@ -1035,7 +1049,8 @@ def engine_answer(query: str):
             intent = "definition"
             raw_events = semantic_search(rewritten)
         else:
-            year = extract_single_year(rewritten)
+            # Use pre-extracted year (with duration guard already applied)
+            year = query_analysis.year  # None if duration_guard is True
             if year:
                 intent = "year"
                 raw_events = scan_by_year(year)
@@ -1043,10 +1058,10 @@ def engine_answer(query: str):
                 intent = "semantic"
                 raw_events = semantic_search(rewritten)
 
-    # --- IMPLICIT CONTEXT EXPANSION (Semantic-Intent-Aware) ---
-    # Only triggers when semantic intent didn't already resolve the query.
-    # If semantic_intent was high-confidence, we already have structured results.
-    if semantic_intent.confidence < 0.8:
+    # --- IMPLICIT CONTEXT EXPANSION (Intent-Aware) ---
+    # Only triggers when intent classifier didn't already resolve the query.
+    # If query_analysis was high-confidence, we already have structured results.
+    if query_analysis.confidence < 0.8:
         implicit_ctx = expand_query_with_implicit_context(rewritten, resolved)
         if len(raw_events) < 3 and (implicit_ctx["is_vietnam_scope"] or implicit_ctx["has_resistance"]):
             if implicit_ctx["is_broad"] or implicit_ctx["has_resistance"]:

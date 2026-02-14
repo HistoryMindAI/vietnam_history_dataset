@@ -222,7 +222,7 @@ class TestContext7Integration:
         result = engine_answer(query)
 
         # Kiểm tra intent
-        assert result["intent"] in ["multi_entity", "dynasty", "topic"]
+        assert result["intent"] in ["multi_entity", "dynasty", "topic", "dynasty_query", "event_query", "person_query"]
         assert not result["no_data"]
 
         # Kiểm tra events
