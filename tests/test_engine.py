@@ -776,3 +776,334 @@ class TestFormatOutput:
         cleaned = clean_story_text("Năm 1288, Trần Hưng Đạo đại phá quân Nguyên")
         assert not cleaned.startswith("Năm 1288")
         assert "Trần Hưng Đạo" in cleaned
+
+
+# ===================================================================
+# M. IMPLICIT CONTEXT DETECTION (7 tests)
+# ===================================================================
+
+class TestImplicitContextDetection:
+    """Test that broad Vietnamese history queries are correctly detected."""
+
+    def test_vietnam_scope_detected(self):
+        from app.services.implicit_context import is_vietnam_scope_query
+        assert is_vietnam_scope_query("Các cuộc kháng chiến của Việt Nam")
+        assert is_vietnam_scope_query("Lịch sử Việt Nam")
+        assert is_vietnam_scope_query("sự kiện lịch sử nước ta")
+
+    def test_vietnam_scope_not_detected(self):
+        from app.services.implicit_context import is_vietnam_scope_query
+        assert not is_vietnam_scope_query("Trận Bạch Đằng năm 938")
+        assert not is_vietnam_scope_query("Trần Hưng Đạo là ai?")
+
+    def test_broad_query_detected(self):
+        from app.services.implicit_context import is_broad_vietnam_query
+        assert is_broad_vietnam_query("Lịch sử Việt Nam qua các triều đại")
+        assert is_broad_vietnam_query("Các cuộc kháng chiến của Việt Nam")
+        assert is_broad_vietnam_query("Những sự kiện lịch sử Việt Nam")
+
+    def test_broad_query_not_detected(self):
+        from app.services.implicit_context import is_broad_vietnam_query
+        # Specific queries with VN scope term should NOT be broad
+        assert not is_broad_vietnam_query("Trần Hưng Đạo ở Việt Nam")
+
+    def test_resistance_terms_detected(self):
+        from app.services.implicit_context import has_resistance_terms
+        assert has_resistance_terms("Các cuộc kháng chiến")
+        assert has_resistance_terms("Chiến tranh ở Việt Nam")
+        assert has_resistance_terms("Chống ngoại xâm")
+
+    def test_resistance_expansion(self):
+        from app.services.implicit_context import expand_resistance_terms
+        expanded = expand_resistance_terms("kháng chiến")
+        assert len(expanded) > 0
+        assert any("pháp" in t for t in expanded)
+        assert any("mỹ" in t for t in expanded)
+
+    def test_expand_query_context(self):
+        from app.services.implicit_context import expand_query_with_implicit_context
+        ctx = expand_query_with_implicit_context(
+            "Các cuộc kháng chiến của Việt Nam",
+            {"persons": [], "dynasties": [], "topics": [], "places": []}
+        )
+        assert ctx["is_vietnam_scope"] is True
+        assert ctx["has_resistance"] is True
+        assert ctx["skip_vietnam_keyword_filter"] is True
+        assert len(ctx["extra_search_queries"]) > 0
+
+
+# ===================================================================
+# N. NON-DISCRIMINATING KEYWORD FILTER (3 tests)
+# ===================================================================
+
+class TestNonDiscriminatingKeywords:
+    """Test that 'việt nam' is excluded from keyword scoring."""
+
+    def test_filter_removes_vietnam(self):
+        from app.services.implicit_context import filter_discriminating_keywords
+        keywords = {"việt nam", "kháng chiến", "chiến thắng"}
+        filtered = filter_discriminating_keywords(keywords)
+        assert "việt nam" not in filtered
+        assert "kháng chiến" in filtered
+        assert "chiến thắng" in filtered
+
+    def test_filter_removes_all_scope_terms(self):
+        from app.services.implicit_context import filter_discriminating_keywords
+        keywords = {"lịch sử", "sự kiện", "nước ta", "kháng chiến"}
+        filtered = filter_discriminating_keywords(keywords)
+        assert "lịch sử" not in filtered
+        assert "sự kiện" not in filtered
+        assert "nước ta" not in filtered
+        assert "kháng chiến" in filtered
+
+    def test_filter_preserves_real_keywords(self):
+        from app.services.implicit_context import filter_discriminating_keywords
+        keywords = {"trần hưng đạo", "bạch đằng", "quân nguyên"}
+        filtered = filter_discriminating_keywords(keywords)
+        assert filtered == keywords  # Nothing removed
+
+
+# ===================================================================
+# O. ENGINE WITH IMPLICIT CONTEXT (3 tests)
+# ===================================================================
+
+class TestImplicitContextEngine:
+    """Test that engine handles broad Vietnam queries using implicit context expansion."""
+
+    @patch("app.services.engine.semantic_search")
+    def test_khang_chien_viet_nam(self, mock_search):
+        """'Các cuộc kháng chiến của Việt Nam' should find resistance events."""
+        _setup_full_mocks()
+        # Semantic search returns war-related events
+        mock_search.return_value = [MOCK_TRAN_HUNG_DAO, MOCK_DBP, MOCK_QUANG_TRUNG]
+        from app.services.engine import engine_answer
+        r = engine_answer("Các cuộc kháng chiến của Việt Nam")
+        assert not r["no_data"]
+        assert len(r["events"]) > 0
+
+    @patch("app.services.engine.semantic_search")
+    def test_lich_su_viet_nam_broad(self, mock_search):
+        """'Lịch sử Việt Nam' should trigger broad coverage."""
+        _setup_full_mocks()
+        mock_search.return_value = [MOCK_HCM, MOCK_NGO_QUYEN]
+        from app.services.engine import engine_answer
+        r = engine_answer("Lịch sử Việt Nam qua các triều đại")
+        assert not r["no_data"]
+        assert len(r["events"]) > 0
+
+    @patch("app.services.engine.semantic_search")
+    def test_chong_ngoai_xam_expansion(self, mock_search):
+        """'Sự kiện kháng chiến chống ngoại xâm' — resistance expansion."""
+        _setup_full_mocks()
+        mock_search.return_value = [MOCK_TRAN_HUNG_DAO, MOCK_QUANG_TRUNG, MOCK_DBP]
+        from app.services.engine import engine_answer
+        r = engine_answer("Sự kiện kháng chiến chống ngoại xâm")
+        assert not r["no_data"]
+        assert len(r["events"]) > 0
+
+
+# ===================================================================
+# SEMANTIC INTENT CLASSIFICATION TESTS
+# ===================================================================
+
+class TestSemanticIntentClassification:
+    """Test semantic_intent.py — intent classification, entity boundary, structure detection."""
+
+    def test_detect_vietnam_nation(self):
+        """'kháng chiến CỦA Việt Nam' → nation scope."""
+        from app.services.semantic_intent import detect_vietnam_entity_type
+        assert detect_vietnam_entity_type("Các cuộc kháng chiến của Việt Nam") == "nation"
+
+    def test_detect_vietnam_territory(self):
+        """'chiến tranh Ở Việt Nam' → territory scope."""
+        from app.services.semantic_intent import detect_vietnam_entity_type
+        assert detect_vietnam_entity_type("chiến tranh ở Việt Nam") == "territory"
+
+    def test_detect_vietnam_ethnic(self):
+        """'người Việt' → ethnic scope."""
+        from app.services.semantic_intent import detect_vietnam_entity_type
+        assert detect_vietnam_entity_type("văn hóa người Việt qua các thời kỳ") == "ethnic"
+
+    def test_detect_vietnam_default_nation(self):
+        """'Việt Nam' without markers → defaults to nation."""
+        from app.services.semantic_intent import detect_vietnam_entity_type
+        assert detect_vietnam_entity_type("Việt Nam có bao nhiêu triều đại") == "nation"
+
+    def test_detect_no_vietnam(self):
+        """Query without VN mention → None."""
+        from app.services.semantic_intent import detect_vietnam_entity_type
+        assert detect_vietnam_entity_type("Trần Hưng Đạo là ai") is None
+
+    def test_structure_dynasty_timeline(self):
+        """'qua các triều đại' → dynasty_timeline structure."""
+        from app.services.semantic_intent import detect_structure_request
+        assert detect_structure_request("Lịch sử Việt Nam qua các triều đại") == "dynasty_timeline"
+
+    def test_structure_chronological(self):
+        """'theo thời gian' → chronological."""
+        from app.services.semantic_intent import detect_structure_request
+        assert detect_structure_request("Sự kiện theo thứ tự thời gian") == "chronological"
+
+    def test_structure_thematic(self):
+        """'các cuộc / các mặt' → thematic."""
+        from app.services.semantic_intent import detect_structure_request
+        assert detect_structure_request("Các mặt phát triển kinh tế") == "thematic"
+
+    def test_intent_dynasty_timeline(self):
+        """Full classify: dynasty_timeline intent."""
+        from app.services.semantic_intent import classify_semantic_intent
+        si = classify_semantic_intent("Lịch sử Việt Nam qua các triều đại")
+        assert si.intent == "dynasty_timeline"
+        assert si.confidence >= 0.8
+        assert si.retrieval_strategy == "dynasty_scan_all"
+
+    def test_intent_resistance_national(self):
+        """Full classify: resistance_national intent."""
+        from app.services.semantic_intent import classify_semantic_intent
+        si = classify_semantic_intent("Các cuộc kháng chiến của Việt Nam")
+        assert si.intent == "resistance_national"
+        assert si.vietnam_scope == "nation"
+        assert si.confidence >= 0.8
+
+    def test_intent_civil_war(self):
+        """Full classify: civil_war intent."""
+        from app.services.semantic_intent import classify_semantic_intent
+        si = classify_semantic_intent("Nội chiến Việt Nam trong lịch sử")
+        assert si.intent == "civil_war"
+
+    def test_intent_generic_specific_entity(self):
+        """Specific person query → generic (not resistance)."""
+        from app.services.semantic_intent import classify_semantic_intent
+        si = classify_semantic_intent("Trần Hưng Đạo là ai", {"persons": ["Trần Hưng Đạo"]})
+        assert si.intent == "generic"
+        assert si.confidence < 0.8
+
+    def test_intent_broad_history(self):
+        """'Lịch sử Việt Nam' without structure → broad_history."""
+        from app.services.semantic_intent import classify_semantic_intent
+        si = classify_semantic_intent("Lịch sử Việt Nam")
+        assert si.intent == "broad_history"
+        assert si.confidence >= 0.8
+
+
+# ===================================================================
+# STRUCTURED RETRIEVAL TESTS (using enriched mock data)
+# ===================================================================
+
+class TestStructuredRetrieval:
+    """Test scan functions with enriched metadata fields."""
+
+    def _setup_enriched_mocks(self):
+        """Add conflict_type, scope, is_resistance to mock data."""
+        _setup_full_mocks()
+        import app.core.startup as startup
+        # Enrich mock docs with semantic metadata
+        for doc in startup.DOCUMENTS:
+            doc["conflict_type"] = None
+            doc["scope"] = "national"
+            doc["is_resistance"] = False
+
+        # Mark resistance events
+        for doc in startup.DOCUMENTS:
+            if doc.get("event") in (
+                "Chiến thắng Bạch Đằng", "Trận Bạch Đằng",
+                "Phòng tuyến Như Nguyệt", "Khởi nghĩa Lam Sơn bùng nổ",
+                "Chiến thắng Điện Biên Phủ", "Quang Trung đại phá quân Thanh",
+            ):
+                doc["conflict_type"] = "external_conflict"
+                doc["is_resistance"] = True
+
+    @patch("app.services.engine.semantic_search")
+    def test_scan_national_resistance(self, mock_search):
+        """scan_national_resistance returns only external_conflict + is_resistance docs."""
+        self._setup_enriched_mocks()
+        mock_search.return_value = []
+        from app.services.search_service import scan_national_resistance
+        results = scan_national_resistance()
+        assert len(results) > 0
+        for doc in results:
+            assert doc["is_resistance"] is True
+            assert doc["conflict_type"] == "external_conflict"
+
+    @patch("app.services.engine.semantic_search")
+    def test_scan_by_dynasty_timeline(self, mock_search):
+        """scan_by_dynasty_timeline returns events grouped correctly."""
+        self._setup_enriched_mocks()
+        mock_search.return_value = []
+        from app.services.search_service import scan_by_dynasty_timeline
+        results = scan_by_dynasty_timeline()
+        assert len(results) > 0
+        # Verify chronological dynasty ordering
+        years = [d.get("year", 9999) for d in results]
+        # Should be broadly ascending (some overlap within dynasty groups is ok)
+        assert years[0] < years[-1]  # first event before last
+
+    @patch("app.services.engine.semantic_search")
+    def test_engine_resistance_intent(self, mock_search):
+        """Engine properly routes 'kháng chiến của VN' through semantic intent."""
+        self._setup_enriched_mocks()
+        mock_search.return_value = []
+        from app.services.engine import engine_answer
+        r = engine_answer("Các cuộc kháng chiến của Việt Nam")
+        assert not r["no_data"]
+        assert r["intent"] == "resistance_national"
+        # Should only contain resistance events
+        for e in r["events"]:
+            assert e.get("is_resistance") is True
+
+    @patch("app.services.engine.semantic_search")
+    def test_engine_dynasty_timeline_intent(self, mock_search):
+        """Engine properly routes 'qua các triều đại' through semantic intent."""
+        self._setup_enriched_mocks()
+        mock_search.return_value = []
+        from app.services.engine import engine_answer
+        r = engine_answer("Lịch sử Việt Nam qua các triều đại")
+        assert not r["no_data"]
+        assert r["intent"] == "dynasty_timeline"
+        assert len(r["events"]) > 0
+
+
+# ===================================================================
+# PERSON-DYNASTY COLLISION REGRESSION TEST
+# ===================================================================
+
+class TestPersonDynastyCollision:
+    """Regression: 'Nguyen Huye'/'Nguyễn Huệ' must resolve as person, not dynasty."""
+
+    @patch("app.services.engine.semantic_search")
+    def test_nguyen_hue_resolves_as_person(self, mock_search):
+        """'Nguyễn Huệ' should find person events, not nhà Nguyễn dynasty."""
+        _setup_full_mocks()
+        mock_search.return_value = [MOCK_QUANG_TRUNG]
+        from app.services.engine import engine_answer
+        r = engine_answer("Nguyễn Huệ")
+        assert not r["no_data"]
+        assert r["intent"] == "person"
+
+    @patch("app.services.engine.semantic_search")
+    def test_nguyen_hue_unaccented(self, mock_search):
+        """'nguyen hue' should also resolve as person via rewrite."""
+        _setup_full_mocks()
+        mock_search.return_value = [MOCK_QUANG_TRUNG]
+        from app.services.engine import engine_answer
+        r = engine_answer("nguyen hue")
+        assert r["intent"] == "person"
+
+    def test_entity_resolution_no_dynasty_collision(self):
+        """resolve_query_entities('nguyễn huệ') must NOT include dynasty 'nguyễn'."""
+        _setup_full_mocks()
+        from app.services.search_service import resolve_query_entities
+        resolved = resolve_query_entities("nguyễn huệ")
+        assert "nguyễn huệ" in resolved["persons"]
+        assert "nguyễn" not in resolved["dynasties"]
+
+    @patch("app.services.engine.semantic_search")
+    def test_nha_nguyen_still_works(self, mock_search):
+        """'nhà Nguyễn' must still resolve as dynasty (not person)."""
+        _setup_full_mocks()
+        mock_search.return_value = []
+        from app.services.engine import engine_answer
+        r = engine_answer("nhà Nguyễn")
+        assert r["intent"] == "dynasty"
+
+
