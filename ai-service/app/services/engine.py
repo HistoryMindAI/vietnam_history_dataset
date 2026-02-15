@@ -1021,24 +1021,37 @@ def engine_answer(query: str):
         if not raw_events:
             raw_events = semantic_search(rewritten)
 
+    # --- SAME-ENTITY DETECTION (Dynamic, ALWAYS runs) ---
+    # Detects if 2+ names in query refer to same entity (person, topic, or dynasty)
+    # E.g.: "Quang Trung và Nguyễn Huệ" → same person
+    # E.g.: "Mông Cổ và Nguyên Mông" → same topic
+    # Must run BEFORE event retrieval to prepend explanation regardless of data availability
+    if has_persons or has_topics or has_dynasties:
+        same_person_info = _detect_same_entity(rewritten, resolved)
+
+    # Detect relationship/definition patterns
+    # Check both rewritten (accented) and original (may be unaccented) queries
+    q_rewritten = rewritten.lower()
+    is_relationship = (any(p in q_rewritten for p in RELATIONSHIP_PATTERNS) or
+                       any(p in q for p in RELATIONSHIP_PATTERNS))
+    is_definition = ("là gì" in q_rewritten or "là ai" in q_rewritten or
+                     "la gi" in q or "la ai" in q)
+
+    # Detect if query is IMPLICITLY asking about entity relationship
+    # "X và Y" / "X với Y" / "X hay Y" without further context → likely comparing/relating
+    _CONNECTOR_PATTERNS = [
+        re.compile(r'\bvà\b', re.I),
+        re.compile(r'\bvới\b', re.I),
+        re.compile(r'\bhay\b', re.I),
+        re.compile(r'\bvs\.?\b', re.I),
+        re.compile(r'\bvoi\b', re.I),    # unaccented "với"
+    ]
+    is_implicit_relationship = (
+        same_person_info is not None
+        and any(p.search(q_rewritten) or p.search(q) for p in _CONNECTOR_PATTERNS)
+    )
+
     if not raw_events:
-        # Detect intent — priority: year_range > multi_year > relationship > definition > entity > single_year > semantic
-        # NOTE: year_range, multi_years already extracted above (before classify_intent)
-
-        # --- SAME-ENTITY DETECTION (Dynamic) ---
-        # Detects if 2+ names in query refer to same entity (person, topic, or dynasty)
-        # E.g.: "Quang Trung và Nguyễn Huệ" → same person
-        # E.g.: "Mông Cổ và Nguyên Mông" → same topic
-        if has_persons or has_topics or has_dynasties:
-            same_person_info = _detect_same_entity(rewritten, resolved)
-
-        # Detect relationship/definition patterns
-        # Check both rewritten (accented) and original (may be unaccented) queries
-        q_rewritten = rewritten.lower()
-        is_relationship = (any(p in q_rewritten for p in RELATIONSHIP_PATTERNS) or
-                           any(p in q for p in RELATIONSHIP_PATTERNS))
-        is_definition = ("là gì" in q_rewritten or "là ai" in q_rewritten or
-                         "la gi" in q or "la ai" in q)
 
         if year_range:
             # Year range query: "từ năm 1225 đến 1400"
@@ -1382,14 +1395,16 @@ def engine_answer(query: str):
                     answer = intro + "\n\n" + answer
                     break
 
-    # Prepend same-entity explanation ONLY when user explicitly asks about relationship
-    # "Quang Trung và Nguyễn Huệ là gì?" → show same-entity
-    # "Kể tên chiến công chống quân Nguyên Mông" → DON'T show same-entity
-    if same_person_info and (is_relationship or is_definition) and answer:
+    # Prepend same-entity explanation when:
+    # 1. User explicitly asks: "X và Y là gì?" (is_relationship or is_definition)
+    # 2. User mentions 2+ alias names with connector: "X và Y", "X với Y"
+    # 3. Works with reversed order too: "Nguyễn Huệ và Quang Trung"
+    if same_person_info and (is_relationship or is_definition or is_implicit_relationship):
         same_entity_response = _generate_same_entity_response(same_person_info)
-        answer = same_entity_response + "\n\n" + answer
-    elif same_person_info and (is_relationship or is_definition) and not answer:
-        answer = _generate_same_entity_response(same_person_info)
+        if answer:
+            answer = same_entity_response + "\n\n" + answer
+        else:
+            answer = same_entity_response
 
     # Smart no_data response — suggest alternative phrasing
     if no_data:
