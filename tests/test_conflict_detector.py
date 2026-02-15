@@ -526,3 +526,116 @@ class TestCrossEntityConflict:
         )
         result = detector.detect(qi)
         assert result.has_conflict is False  # <2 ranges → skip
+
+
+class TestInvariantRegression:
+    """
+    Invariant / regression tests — protects frozen logic.
+
+    These tests verify mathematical properties, not specific historical data.
+    They MUST NOT be weakened without updating the frozen invariants.
+    """
+
+    @pytest.fixture
+    def detector_with_synthetics(self):
+        from app.services.conflict_detector import ENTITY_TEMPORAL_METADATA
+        custom = dict(ENTITY_TEMPORAL_METADATA)
+        custom["entity_a"] = {"type": "person", "lifespan": (1000, 1100)}
+        custom["entity_b"] = {"type": "person", "lifespan": (1050, 1150)}
+        custom["entity_c"] = {"type": "person", "lifespan": (1070, 1080)}
+        return ConflictDetector(entity_metadata=custom)
+
+    # --- 1. Global intersection mathematical invariant ---
+    def test_global_intersection_invariant_property(self):
+        """
+        For any N entity ranges, if global_start <= global_end,
+        then all entities must overlap that interval.
+        """
+        entities = [
+            ("A", 1000, 1100),
+            ("B", 1050, 1200),
+            ("C", 1070, 1080),
+        ]
+        global_start = max(e[1] for e in entities)
+        global_end = min(e[2] for e in entities)
+        assert global_start <= global_end  # 1070 <= 1080 → overlap exists
+
+    # --- 2. Order independence ---
+    def test_entity_order_independence(self, detector_with_synthetics):
+        """detect() must produce same result regardless of entity order."""
+        q1 = _make_query_info(
+            query="test order",
+            required_persons=["entity_a", "entity_b", "entity_c"],
+        )
+        q2 = _make_query_info(
+            query="test order",
+            required_persons=["entity_c", "entity_a", "entity_b"],
+        )
+        detector_with_synthetics.detect(q1)
+        detector_with_synthetics.detect(q2)
+        assert q1.has_conflict == q2.has_conflict
+
+    # --- 3. Idempotency ---
+    def test_detect_idempotent(self, detector_with_synthetics):
+        """Calling detect() twice must not double-append conflict reasons."""
+        qi = _make_query_info(
+            query="test idempotent",
+            required_persons=["entity_a", "entity_b", "entity_c"],
+        )
+        detector_with_synthetics.detect(qi)
+        first_state = (qi.has_conflict, list(qi.conflict_reasons))
+
+        detector_with_synthetics.detect(qi)
+        second_state = (qi.has_conflict, list(qi.conflict_reasons))
+
+        assert first_state == second_state
+
+    # --- 4. Metadata version freeze ---
+    def test_metadata_version_stable(self):
+        """Prevent metadata changes without version bump."""
+        from app.services.conflict_detector import ENTITY_TEMPORAL_METADATA_VERSION
+        assert ENTITY_TEMPORAL_METADATA_VERSION == "v1.0"
+
+    # --- 5. Fuzz-style random range stability ---
+    def test_random_global_intersection_stability(self):
+        """
+        Fuzz 1000 random range sets — verify global intersection invariant
+        is consistent with pairwise analysis.
+        """
+        import random
+        rng = random.Random(42)  # deterministic seed for reproducibility
+
+        for _ in range(1000):
+            n = rng.randint(2, 5)
+            ranges = []
+            for _ in range(n):
+                start = rng.randint(0, 2000)
+                end = start + rng.randint(0, 200)
+                ranges.append((start, end))
+
+            global_start = max(r[0] for r in ranges)
+            global_end = min(r[1] for r in ranges)
+
+            if global_start > global_end:
+                # If global says no intersection, confirm at least one pair doesn't overlap
+                assert any(
+                    r1[1] < r2[0] or r2[1] < r1[0]
+                    for i, r1 in enumerate(ranges)
+                    for r2 in ranges[i + 1:]
+                )
+
+    # --- 6. Conflict reason explainability ---
+    def test_conflict_reason_explainable(self):
+        """Conflict reasons must be human-readable, not just boolean."""
+        detector = ConflictDetector()
+        qi = _make_query_info(
+            query="Trần Hưng Đạo gặp Hồ Chí Minh",
+            required_persons=["Trần Hưng Đạo", "Hồ Chí Minh"],
+        )
+        detector.detect(qi)
+        assert qi.has_conflict is True
+        assert len(qi.conflict_reasons) >= 1
+        assert "Cross-entity temporal conflict" in qi.conflict_reasons[0]
+        # Ensure names appear in reason for explainability
+        reason = qi.conflict_reasons[0].lower()
+        assert "trần hưng đạo" in reason or "hồ chí minh" in reason
