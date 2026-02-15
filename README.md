@@ -1,13 +1,15 @@
 # Vietnam History AI — Hệ thống Chatbot Lịch sử Việt Nam
 
-Dự án này là hệ thống Chatbot thông minh hỗ trợ tra cứu và trả lời các câu hỏi về lịch sử Việt Nam, sử dụng kỹ thuật **RAG (Retrieval-Augmented Generation)** kết hợp **NLU (Natural Language Understanding)**.
+Dự án này là hệ thống Chatbot thông minh hỗ trợ tra cứu và trả lời các câu hỏi về lịch sử Việt Nam, sử dụng kỹ thuật **RAG (Retrieval-Augmented Generation)** kết hợp **NLU (Natural Language Understanding)** và kiến trúc **Data-Driven** (dữ liệu động từ `knowledge_base.json`).
 
 ## 🎯 Status
 
 ```
-✅ Version: 3.0.0
-✅ Tests: 78 engine tests passing (100%)
+✅ Version: 4.0.0
+✅ Tests: 629+ tests passing (24 test files)
 ✅ AI Models: 3 ONNX models (Embedding + Cross-Encoder + NLI)
+✅ Architecture: Intent Classifier + Answer Synthesis + Implicit Context
+✅ Data: HuggingFace Dataset (500K+ samples) → FAISS Index
 ✅ Status: PRODUCTION READY
 ```
 
@@ -25,6 +27,7 @@ pip install -r requirements.txt
 ### 2. Build FAISS Index (từ HuggingFace)
 
 ```bash
+cd ai-service
 python scripts/build_from_huggingface.py
 # Tùy chỉnh: MAX_SAMPLES=100000 python scripts/build_from_huggingface.py
 ```
@@ -32,8 +35,10 @@ python scripts/build_from_huggingface.py
 ### 3. Chạy API
 
 ```bash
+cd ai-service
 uvicorn app.main:app --reload
 # → http://localhost:8000
+# → Swagger UI: http://localhost:8000/docs
 ```
 
 ### 4. Deploy
@@ -83,24 +88,30 @@ graph TD
 
     subgraph "🤖 AI Service — FastAPI"
         NLU["NLU Layer<br/>Sửa lỗi, phục hồi dấu, entity detection"]
-        ENGINE["Query Engine"]
+        IC["Intent Classifier<br/>10 intent types, duration guard"]
+        ENGINE["Query Engine<br/>Multi-strategy search routing"]
         CE["Cross-Encoder Rerank<br/>mmarco multilingual ONNX"]
         NLI["NLI Validator<br/>Entailment checking"]
+        AS["Answer Synthesis<br/>Template-based, question-type aware"]
+        CTX["Implicit Context<br/>Vietnam scope detection"]
     end
 
     subgraph "💾 Data Layer"
         D1["FAISS Index — Semantic vectors"]
-        D2["meta.json — Metadata"]
-        D3["knowledge_base.json — Aliases, Synonyms"]
+        D2["meta.json — Metadata + Inverted Indexes"]
+        D3["knowledge_base.json — Aliases, Synonyms, Typos"]
     end
 
     A -- "HTTP" --> B
     B -- "REST" --> NLU
-    NLU --> ENGINE
+    NLU --> IC
+    IC --> ENGINE
     ENGINE --> D1 & D2 & D3
     ENGINE --> CE
     CE --> NLI
-    NLI --> FORMAT["📤 Response"]
+    NLI --> AS
+    AS --> CTX
+    CTX --> FORMAT["📤 Response"]
 ```
 
 ---
@@ -110,14 +121,17 @@ graph TD
 ```mermaid
 flowchart LR
     Q["📝 Câu hỏi"] --> NLU["🔤 NLU<br/>Rewrite + Fix"]
-    NLU --> Search["🔍 Semantic Search<br/>vietnamese-sbert<br/>130 MB ONNX"]
+    NLU --> IC["🎯 Intent<br/>Classifier"]
+    IC --> Search["🔍 Semantic Search<br/>vietnamese-sbert<br/>130 MB ONNX"]
     Search -->|"Top-50"| Rerank["📊 Cross-Encoder<br/>mmarco multilingual<br/>113 MB ONNX"]
     Rerank -->|"Top-10"| NLI["✅ NLI Validator<br/>MiniLMv2 multilingual<br/>102 MB ONNX"]
-    NLI --> Answer["💬 Câu trả lời"]
+    NLI --> Synth["📄 Answer<br/>Synthesis"]
+    Synth --> Answer["💬 Câu trả lời"]
 
     style Search fill:#FF9800,color:#fff
     style Rerank fill:#3F51B5,color:#fff
     style NLI fill:#7B1FA2,color:#fff
+    style IC fill:#1b4332,color:#fff
 ```
 
 ### 3 AI Models (tất cả chạy local, ONNX, miễn phí)
@@ -134,7 +148,7 @@ flowchart LR
 ## 🔤 NLU — Hiểu Ngôn Ngữ Tự Nhiên
 
 | Tính năng | Ví dụ | Kết quả |
-|-----------|-------|---------|
+|-----------|-------|---------  |
 | **Sửa lỗi chính tả** | `nguyen huye` | → `nguyễn huệ` |
 | **Mở rộng viết tắt** | `VN độc lập` | → `Việt Nam độc lập` |
 | **Phục hồi dấu** | `tran hung dao` | → `trần hưng đạo` |
@@ -145,16 +159,38 @@ flowchart LR
 
 ---
 
+## 🎯 Intent Classifier — Phân loại câu hỏi
+
+| Intent | Mô tả | Ví dụ |
+|--------|-------|-------|
+| `year_range` | Truy vấn khoảng năm | "Từ 1945 đến 1975 có sự kiện gì?" |
+| `year_specific` | Năm cụ thể | "Năm 1945 có sự kiện gì?" |
+| `person_query` | Nhân vật lịch sử | "Trần Hưng Đạo đánh quân gì?" |
+| `dynasty_query` | Triều đại | "Nhà Trần tồn tại bao lâu?" |
+| `event_query` | Sự kiện / chủ đề | "Trận Bạch Đằng 938 diễn ra thế nào?" |
+| `definition` | Định nghĩa | "Trần Quốc Tuấn là ai?" |
+| `relationship` | Mối quan hệ | "Trần Hưng Đạo và Trần Quốc Tuấn là gì?" |
+| `broad_history` | Lịch sử tổng quan | "Lịch sử Việt Nam qua các triều đại" |
+| `data_scope` | Phạm vi dữ liệu | "Bạn có dữ liệu đến năm nào?" |
+| `semantic` | Fallback tìm kiếm ngữ nghĩa | Query chung |
+
+> **Duration Guard**: Tự động phát hiện "1000 năm Thăng Long" = kỷ niệm, KHÔNG phải năm 1000. Xử lý thông minh "hơn 150 năm chia cắt", "kỷ niệm 1000 năm".
+
+---
+
 ## 🤖 Query Engine — Luồng xử lý
 
 ```mermaid
 flowchart TD
     INPUT["📝 Câu hỏi"] --> NLU["🧠 NLU: Rewrite + Fix"]
-    NLU --> CREATOR{"Tác giả?"}
+    NLU --> INTENT["🎯 Intent Classifier"]
+    INTENT --> CREATOR{"Tác giả?"}
     CREATOR -- Có --> CR["🤖 Creator Response"]
     CREATOR -- Không --> IDENTITY{"Bạn là ai?"}
     IDENTITY -- Có --> ID["🤖 Identity"]
-    IDENTITY -- Không --> YEAR_RANGE{"Khoảng năm?"}
+    IDENTITY -- Không --> SCOPE{"Data scope?"}
+    SCOPE -- Có --> DS["📊 Data Scope Stats"]
+    SCOPE -- Không --> YEAR_RANGE{"Khoảng năm?"}
     YEAR_RANGE -- Có --> YR["📅 scan_by_year_range"]
     YEAR_RANGE -- Không --> MULTI_YEAR{"Nhiều năm?"}
     MULTI_YEAR -- Có --> MY["📅 scan_by_year × N"]
@@ -170,15 +206,18 @@ flowchart TD
 
     SAME & ME & YR & MY & SEM1 & SY & SEM2 --> RERANK["📊 Cross-Encoder Rerank"]
     RERANK --> NLICHECK["✅ NLI Validation"]
-    NLICHECK --> RESULT{"Kết quả?"}
+    NLICHECK --> SYNTH["📄 Answer Synthesis"]
+    SYNTH --> RESULT{"Kết quả?"}
     RESULT -- Có --> FORMAT["Format Answer"]
     RESULT -- Không --> FALLBACK["🔄 Fallback Chain"]
     FORMAT --> OUTPUT["📤 JSON Response"]
     FALLBACK --> OUTPUT
 
     style NLU fill:#1b4332,color:#fff
+    style INTENT fill:#1b4332,color:#fff
     style RERANK fill:#3F51B5,color:#fff
     style NLICHECK fill:#7B1FA2,color:#fff
+    style SYNTH fill:#FF6F00,color:#fff
 ```
 
 ---
@@ -197,25 +236,45 @@ flowchart TD
 | Thêm sửa lỗi chính tả | `knowledge_base.json` | ❌ Không |
 | Thêm documents mới | Rebuild FAISS | ❌ Không |
 
+### Knowledge Base (`knowledge_base.json` v1.2.0)
+
+| Section | Mô tả | Ví dụ |
+|---|---|---|
+| `person_aliases` | Biệt danh nhân vật lịch sử | Trần Quốc Tuấn → Trần Hưng Đạo |
+| `topic_synonyms` | Từ đồng nghĩa chủ đề | Mông Cổ → Nguyên Mông |
+| `dynasty_aliases` | Alias triều đại | Nhà Trần → Trần |
+| `abbreviations` | Viết tắt | HCM → Hồ Chí Minh |
+| `typo_fixes` | Sửa lỗi chính tả | quangtrung → quang trung |
+| `question_patterns` | Mẫu câu hỏi tìm kiếm | ai đã, khi nào, ở đâu |
+| `resistance_synonyms` | Mở rộng kháng chiến | kháng chiến → các cuộc chiến cụ thể |
+
+> **Lưu ý**: `HISTORICAL_PHRASES` (cụm từ lịch sử đa từ) và inverted indexes (PERSON, DYNASTY, KEYWORD) được **tự động sinh** tại startup từ dữ liệu — không cần khai báo thủ công.
+
 ---
 
 ## 🧪 Testing
 
 ```bash
-python -m pytest tests/test_engine.py -v     # 78 tests
-python -m pytest tests/ -v                   # Full suite
+# Chạy từ thư mục ai-service
+cd ai-service
+
+python -m pytest ../tests/test_engine.py -v         # Engine tests
+python -m pytest ../tests/test_nlu.py -v             # NLU tests
+python -m pytest ../tests/ -v                        # Full suite (629+ tests)
 ```
 
 | File | Tests | Nội dung |
-|------|-------|---------|
+|------|-------|---------  |
 | `test_engine.py` | 78 | Engine: intent, entity, year, multi-entity |
+| `test_comprehensive.py` | 74 | Integration tests: accuracy, relevance |
 | `test_nlu.py` | 55 | NLU: rewriting, fuzzy, accents, phonetic |
-| `test_comprehensive.py` | 74 | Integration tests |
 | `test_search_utils.py` | 53 | Search, indexing, relevance |
+| `test_edge_cases.py` | 35 | Edge cases: malformed data, boundary |
 | `test_pipeline.py` | 30 | Data pipeline |
 | `test_year_extraction.py` | 30 | Year extraction |
 | `test_text_cleaning.py` | 20 | Text normalization |
-| *+ 8 more files* | 68 | API, schema, performance, dedup |
+| `test_bug_fixes.py` | 16 | Critical bug regression tests |
+| *+ 15 more files* | 238+ | API, schema, performance, dedup, etc. |
 
 ---
 
@@ -229,11 +288,17 @@ vietnam_history_dataset/
 │   │   │   ├── config.py                  # Config paths & constants
 │   │   │   └── startup.py                 # Load models + build indexes
 │   │   ├── services/
-│   │   │   ├── engine.py                  # Query Engine chính
-│   │   │   ├── query_understanding.py     # 🧠 NLU Layer
-│   │   │   ├── search_service.py          # Entity resolution + FAISS
+│   │   │   ├── engine.py                  # 🧠 Query Engine chính (~1300 LOC)
+│   │   │   ├── query_understanding.py     # 🔤 NLU Layer
+│   │   │   ├── search_service.py          # 🔍 Entity resolution + FAISS
 │   │   │   ├── cross_encoder_service.py   # 📊 Cross-Encoder Re-ranking
-│   │   │   └── nli_validator_service.py   # ✅ NLI Answer Validation
+│   │   │   ├── nli_validator_service.py   # ✅ NLI Answer Validation
+│   │   │   ├── intent_classifier.py       # 🎯 Intent Classification (10 types)
+│   │   │   ├── answer_synthesis.py        # 📄 Template-Based Answer Synthesis
+│   │   │   ├── implicit_context.py        # 🌍 Implicit Vietnam Context
+│   │   │   ├── semantic_intent.py         # Legacy semantic intent
+│   │   │   ├── prompt_templates.py        # Prompt templates
+│   │   │   └── context7_service.py        # Context7 integration
 │   │   └── main.py                        # FastAPI entry point
 │   ├── scripts/
 │   │   └── build_from_huggingface.py      # 🚀 Pipeline: HuggingFace → FAISS
@@ -241,13 +306,17 @@ vietnam_history_dataset/
 │   ├── onnx_cross_encoder/                # Cross-Encoder model (113 MB)
 │   ├── onnx_nli/                          # NLI model (102 MB)
 │   ├── faiss_index/                       # FAISS index + metadata
-│   └── knowledge_base.json                # 🔑 Aliases, Synonyms, Typos
-├── scripts/                               # Export scripts (ONNX models)
-├── tests/                                 # Unit tests (20 files)
+│   ├── knowledge_base.json                # 🔑 Aliases, Synonyms, Typos
+│   └── Dockerfile                         # Docker build config
 ├── pipeline/                              # Data processing pipeline
-├── AI_DEVELOPMENT_ROADMAP.md              # 📖 Lộ trình phát triển AI
+│   ├── storyteller.py                     # HuggingFace → structured data
+│   ├── clean_structured_data.py           # Data cleaning
+│   └── index_docs.py                      # FAISS index builder
+├── tests/                                 # Unit tests (24 files, 629+ tests)
 ├── deploy.ps1 / deploy.sh                 # 🚀 Auto deploy scripts
-└── push-to-github.ps1 / push-to-github.sh # 📤 Auto push scripts
+├── push-to-github.ps1 / push-to-github.sh # 📤 Auto push scripts
+├── docker-compose.yml                     # Docker Compose config
+└── AI_DEVELOPMENT_ROADMAP.md              # 📖 Lộ trình phát triển AI
 ```
 
 ## 📚 Tech Stack
@@ -260,7 +329,10 @@ vietnam_history_dataset/
 | Reranker | `mmarco-mMiniLMv2-L12-H384-v1` (ONNX) |
 | NLI | `multilingual-MiniLMv2-L6-mnli-xnli` (ONNX) |
 | NLU | Fuzzy matching, accent restoration, phonetic normalization |
+| Intent | Custom rule-based classifier (10 intent types) |
+| Synthesis | Template-based, question-type aware |
 | Data | HuggingFace Datasets, Dynamic Entity Registry |
+| Deploy | Docker, Railway, GitHub Actions |
 
 ---
 

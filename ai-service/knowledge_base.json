@@ -3,7 +3,8 @@
   "_version": "1.3.0",
 
   "person_aliases": {
-    "hai bà trưng": ["trưng trắc", "trưng nhị", "hai bà", "trưng vương"],
+    "hùng vương": ["vua hùng", "hung vuong", "vua hung", "hung king", "kinh dương vương", "lạc long quân", "hùng i", "hùng ii", "hùng iii", "hùng iv", "hùng v", "hùng vi", "hùng vii", "hùng viii", "hùng ix", "hùng x", "hùng xi", "hùng xii", "hùng xiii", "hùng xiv", "hùng xv", "hùng xvi", "hùng xvii", "hùng xviii", "18 đời hùng vương", "các vua hùng"],
+    "hai bà trưng": ["trưng trắc", "trưng nhị", "hai bà", "trưng vương", "hai ba trung", "ba trung", "trung trac", "trung nhi", "2 bà trưng", "nữ vương"],
     "trần hưng đạo": ["trần quốc tuấn", "hưng đạo vương", "hưng đạo đại vương", "quốc công tiết chế"],
     "nguyễn huệ": ["quang trung", "bắc bình vương", "vua quang trung"],
     "hồ chí minh": ["nguyễn tất thành", "nguyễn ái quốc", "bác hồ", "nguyễn sinh cung", "anh ba"],
@@ -25,16 +26,23 @@
     "khúc thừa dụ": [],
     "lý thánh tông": [],
     "trần nhân tông": ["phật hoàng", "phật hoàng trần nhân tông"],
-    "bà triệu": ["triệu thị trinh", "triệu ẩu"],
+    "bà triệu": ["triệu thị trinh", "triệu ẩu", "ba trieu", "triệu ẩu", "triều ẩu", "bà triệu âu"],
     "lý nam đế": ["lý bí", "lý bôn"],
     "mai thúc loan": ["mai hắc đế"],
     "phùng hưng": ["bố cái đại vương"],
     "trần quốc toản": [],
     "nguyễn nhạc": [],
-    "nguyễn lữ": []
+    "nguyễn lữ": [],
+    "lạc long quân": ["thủy tổ", "âu cơ", "cha vua hùng"],
+    "âu cơ": ["mẹ vua hùng", "tiên nữ"],
+    "an dương vương": ["thục phán", "vua an dương"],
+    "triệu đà": ["nam việt vương", "triệu võ đế"]
   },
 
   "topic_synonyms": {
+    "văn lang": ["nước văn lang", "thời văn lang", "vương quốc văn lang", "18 đời hùng vương", "thời hùng vương"],
+    "âu lạc": ["nước âu lạc", "thời âu lạc", "an dương vương"],
+    "hùng vương": ["vua hùng", "18 đời hùng vương", "các vua hùng", "thời hùng vương", "thời văn lang"],
     "nguyên mông": ["mông cổ", "mông nguyên", "quân nguyên", "quân mông", "đế quốc mông cổ"],
     "pháp thuộc": ["thực dân pháp", "xâm lược pháp", "đô hộ pháp", "pháp xâm lược"],
     "bắc thuộc": ["đô hộ trung quốc", "phương bắc đô hộ", "ngàn năm bắc thuộc"],
@@ -91,6 +99,14 @@
   },
 
   "typo_fixes": {
+    "hung vuong": "hùng vương",
+    "vua hung": "vua hùng",
+    "hun vuong": "hùng vương",
+    "hungg vuong": "hùng vương",
+    "hung king": "hùng vương",
+    "ba trieu": "bà triệu",
+    "trieu au": "triệu ẩu",
+    "hai ba trung": "hai bà trưng",
     "nguyen huye": "nguyễn huệ",
     "nguyen huee": "nguyễn huệ",
     "nguyen huej": "nguyễn huệ",
