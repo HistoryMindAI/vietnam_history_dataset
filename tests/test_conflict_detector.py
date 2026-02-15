@@ -594,7 +594,7 @@ class TestInvariantRegression:
     def test_metadata_version_stable(self):
         """Prevent metadata changes without version bump."""
         from app.services.conflict_detector import ENTITY_TEMPORAL_METADATA_VERSION
-        assert ENTITY_TEMPORAL_METADATA_VERSION == "v1.0"
+        assert ENTITY_TEMPORAL_METADATA_VERSION == "v2.0"
 
     # --- 5. Fuzz-style random range stability ---
     def test_random_global_intersection_stability(self):
@@ -639,3 +639,151 @@ class TestInvariantRegression:
         # Ensure names appear in reason for explainability
         reason = qi.conflict_reasons[0].lower()
         assert "trần hưng đạo" in reason or "hồ chí minh" in reason
+
+
+class TestEraMembership:
+    """Phase 3: Era-membership consistency tests."""
+
+    @pytest.fixture
+    def detector(self):
+        return ConflictDetector()
+
+    # --- 1. Valid membership ---
+    def test_valid_membership(self, detector):
+        """THĐ belongs to nhà Trần → no conflict."""
+        qi = _make_query_info(
+            query="Trần Hưng Đạo thời nhà Trần",
+            required_persons=["Trần Hưng Đạo", "nhà Trần"],
+        )
+        result = detector.detect(qi)
+        assert result.has_conflict is False
+
+    # --- 2. Invalid membership ---
+    def test_invalid_membership(self, detector):
+        """Nguyễn Trãi belongs to lê sơ, NOT nhà trần → conflict."""
+        qi = _make_query_info(
+            query="Nguyễn Trãi thời nhà Trần",
+            required_persons=["Nguyễn Trãi", "nhà Trần"],
+        )
+        result = detector.detect(qi)
+        assert result.has_conflict is True
+        assert "Era-membership conflict" in result.conflict_reasons[0]
+
+    # --- 3. Multiple persons (one wrong) ---
+    def test_multiple_persons_one_wrong(self, detector):
+        """HQL (era=[nhà trần, nhà hồ]) OK + Nguyễn Trãi (era=[lê sơ]) wrong → conflict.
+        
+        HQL(1336-1407) and NT(1380-1442) overlap temporally (1380-1400),
+        so Phase 2 won't fire. But NT ∉ nhà trần → Phase 3 catches it.
+        """
+        qi = _make_query_info(
+            query="Hồ Quý Ly và Nguyễn Trãi thời nhà Trần",
+            required_persons=["Hồ Quý Ly", "Nguyễn Trãi", "nhà Trần"],
+        )
+        result = detector.detect(qi)
+        assert result.has_conflict is True
+        assert "Era-membership conflict" in result.conflict_reasons[0]
+        assert "nguyễn trãi" in result.conflict_reasons[0].lower()
+
+    # --- 4. Person without era field → safe skip ---
+    def test_no_era_field_safe_skip(self, detector):
+        """Person without era field → skip era check → no conflict."""
+        custom = {"mythical_hero": {"type": "person", "lifespan": (100, 200)}}
+        det = ConflictDetector(entity_metadata={
+            **custom,
+            "nhà trần": {"type": "dynasty", "year_range": (1225, 1400)},
+        })
+        qi = _make_query_info(
+            query="mythical_hero thời nhà Trần",
+            required_persons=["mythical_hero", "nhà Trần"],
+        )
+        result = det.detect(qi)
+        # No era field → not checked → no era-membership conflict
+        # (may have cross-entity temporal conflict instead)
+        assert "Era-membership conflict" not in str(result.conflict_reasons)
+
+    # --- 5. No dynasty in query → skip ---
+    def test_no_dynasty_in_query(self, detector):
+        """Only person, no dynasty → skip era check."""
+        qi = _make_query_info(
+            query="Nguyễn Trãi",
+            required_persons=["Nguyễn Trãi"],
+        )
+        result = detector.detect(qi)
+        assert result.has_conflict is False
+
+    # --- 6. Multi-era person valid ---
+    def test_multi_era_person_valid(self, detector):
+        """HCM era=[pháp thuộc] + pháp thuộc dynasty → no conflict."""
+        qi = _make_query_info(
+            query="Hồ Chí Minh thời pháp thuộc",
+            required_persons=["Hồ Chí Minh", "pháp thuộc"],
+        )
+        result = detector.detect(qi)
+        assert result.has_conflict is False
+
+    # --- 7. Shorthand normalization ---
+    def test_shorthand_normalization(self, detector):
+        """'trần' normalizes to 'nhà trần'. Lê Lợi era=[lê sơ] ≠ nhà trần → conflict."""
+        qi = _make_query_info(
+            query="Lê Lợi thời trần",
+            required_persons=["Lê Lợi", "nhà Trần"],
+        )
+        result = detector.detect(qi)
+        assert result.has_conflict is True
+        assert "Era-membership conflict" in result.conflict_reasons[0]
+
+    # --- 8. Metadata version guard ---
+    def test_metadata_version_v2(self):
+        """Version must be v2.0 after Phase 3."""
+        from app.services.conflict_detector import ENTITY_TEMPORAL_METADATA_VERSION
+        assert ENTITY_TEMPORAL_METADATA_VERSION == "v2.0"
+
+    # --- 9. Era schema validation (all eras are List[str]) ---
+    def test_all_era_fields_are_lists(self):
+        """Every person with era field must have List[str], never bare str."""
+        from app.services.conflict_detector import ENTITY_TEMPORAL_METADATA
+        for name, meta in ENTITY_TEMPORAL_METADATA.items():
+            if meta.get("type") == "person" and "era" in meta:
+                assert isinstance(meta["era"], list), (
+                    f"{name}: era must be List[str], got {type(meta['era'])}"
+                )
+                for era_val in meta["era"]:
+                    assert isinstance(era_val, str), (
+                        f"{name}: era values must be str, got {type(era_val)}"
+                    )
+
+    # --- 10. Fuzz: 100 synthetic queries ---
+    def test_fuzz_synthetic_queries_stability(self):
+        """
+        Generate 100 random person+dynasty combinations.
+        Ensure: no crash, no duplicate conflict, no inconsistent state.
+        """
+        import random
+        from app.services.conflict_detector import ENTITY_TEMPORAL_METADATA
+
+        rng = random.Random(99)
+        persons = [k for k, v in ENTITY_TEMPORAL_METADATA.items() if v.get("type") == "person"]
+        dynasties = [k for k, v in ENTITY_TEMPORAL_METADATA.items() if v.get("type") == "dynasty"]
+        detector = ConflictDetector()
+
+        for _ in range(100):
+            n_persons = rng.randint(1, 3)
+            n_dynasties = rng.randint(0, 2)
+            chosen_persons = [rng.choice(persons) for _ in range(n_persons)]
+            chosen_dynasties = [rng.choice(dynasties) for _ in range(n_dynasties)]
+
+            qi = _make_query_info(
+                query="fuzz test",
+                required_persons=chosen_persons + chosen_dynasties,
+            )
+            result = detector.detect(qi)
+
+            # Invariant: no duplicate conflict reasons
+            assert len(result.conflict_reasons) == len(set(result.conflict_reasons)), (
+                f"Duplicate conflict reasons: {result.conflict_reasons}"
+            )
+            # Invariant: has_conflict ↔ non-empty reasons
+            if result.has_conflict:
+                assert len(result.conflict_reasons) >= 1
+            # Invariant: no crash (reaching here = pass)
