@@ -160,12 +160,23 @@ _NATIONAL_RESISTANCE_PATTERNS = [
     re.compile(r"\b(?:cuộc\s+chiến|chiến\s+đấu)\s+giữ\s+nước\b", re.I),
     # "chống ngoại xâm"
     re.compile(r"\bchống\s+ngoại\s+xâm\b", re.I),
+    # "chiến tranh Việt Nam" (colloquial — refers to all wars ON Vietnamese soil)
+    re.compile(r"\bchiến\s+tranh\s+(?:việt\s*nam|viet\s*nam)\b", re.I),
+    # "kháng chiến (ở) Việt Nam" — generic resistance in Vietnam
+    re.compile(r"\bkháng\s+chiến\s+(?:ở\s+|tại\s+)?(?:việt\s*nam|viet\s*nam|nước\s+ta)\b", re.I),
+    # "kháng chiến chống giặc ngoại xâm ở Việt Nam"
+    re.compile(r"\bkháng\s+chiến\s+chống\s+giặc\s+ngoại\s+xâm\b", re.I),
+    # Unaccented: "chien tranh viet nam", "khang chien viet nam"
+    re.compile(r"\bchien\s+tranh\s+viet\s*nam\b", re.I),
+    re.compile(r"\bkhang\s+chien\s+(?:o\s+|tai\s+)?viet\s*nam\b", re.I),
 ]
 
 _TERRITORIAL_WAR_PATTERNS = [
     re.compile(r"\bchiến\s+tranh\s+(?:ở|tại|trên)\b", re.I),
     re.compile(r"\bxung\s+đột\s+(?:vũ\s+trang\s+)?(?:ở|tại|trên)\b", re.I),
     re.compile(r"\btrận\s+(?:chiến|đánh)\s+(?:ở|tại)\b", re.I),
+    # Unaccented: "chien tranh o/tai viet nam"
+    re.compile(r"\bchien\s+tranh\s+(?:o|tai|tren)\s+viet\s*nam\b", re.I),
 ]
 
 _CIVIL_WAR_PATTERNS = [
