@@ -445,3 +445,84 @@ class TestTopicSeparation:
         assert validator.validate_candidate(qi, event) is False  # Person not found
 
 
+class TestCrossEntityConflict:
+    """Phase 2: Cross-entity global temporal intersection tests."""
+
+    @pytest.fixture
+    def detector(self):
+        return ConflictDetector()
+
+    @pytest.fixture
+    def detector_with_synthetics(self):
+        """Detector with synthetic entities for 3-entity and boundary tests."""
+        from app.services.conflict_detector import ENTITY_TEMPORAL_METADATA
+        custom = dict(ENTITY_TEMPORAL_METADATA)
+        custom["entitya"] = {"type": "person", "lifespan": (1000, 1100)}
+        custom["entityb"] = {"type": "person", "lifespan": (1050, 1150)}
+        custom["entityc"] = {"type": "person", "lifespan": (1120, 1200)}
+        custom["boundarya"] = {"type": "person", "lifespan": (1000, 1100)}
+        custom["boundaryb"] = {"type": "person", "lifespan": (1100, 1200)}
+        return ConflictDetector(entity_metadata=custom)
+
+    # --- 1. Basic conflict: no overlap ---
+    def test_cross_entity_conflict_no_overlap(self, detector):
+        """THĐ (1228–1300) and HCM (1890–1969) → no overlap → conflict."""
+        qi = _make_query_info(
+            query="Trần Hưng Đạo gặp Hồ Chí Minh",
+            required_persons=["Trần Hưng Đạo", "Hồ Chí Minh"],
+        )
+        result = detector.detect(qi)
+        assert result.has_conflict is True
+        assert "Cross-entity temporal conflict" in result.conflict_reasons[0]
+
+    # --- 2. Valid overlap ---
+    def test_cross_entity_overlap_valid(self, detector):
+        """THĐ (1228–1300) and TNT (1258–1308) → overlap 1258–1300 → ok."""
+        qi = _make_query_info(
+            query="Trần Hưng Đạo và Trần Nhân Tông",
+            required_persons=["Trần Hưng Đạo", "Trần Nhân Tông"],
+        )
+        result = detector.detect(qi)
+        assert result.has_conflict is False
+
+    # --- 3. Person + Dynasty conflict ---
+    def test_person_dynasty_no_overlap(self, detector):
+        """LTK (1019–1105) and nhà Trần (1225–1400) → no overlap → conflict."""
+        qi = _make_query_info(
+            query="Lý Thường Kiệt thời nhà Trần",
+            required_persons=["Lý Thường Kiệt", "nhà trần"],
+        )
+        result = detector.detect(qi)
+        assert result.has_conflict is True
+        assert "Cross-entity temporal conflict" in result.conflict_reasons[0]
+
+    # --- 4. Three entities: partial pairwise but no global intersection ---
+    def test_three_entities_no_global_intersection(self, detector_with_synthetics):
+        """A(1000–1100), B(1050–1150), C(1120–1200) → global max=1120 > min=1100 → conflict."""
+        qi = _make_query_info(
+            query="EntityA EntityB EntityC",
+            required_persons=["entitya", "entityb", "entityc"],
+        )
+        result = detector_with_synthetics.detect(qi)
+        assert result.has_conflict is True
+        assert "Cross-entity temporal conflict" in result.conflict_reasons[0]
+
+    # --- 5. Boundary overlap (end == start) → inclusive → no conflict ---
+    def test_boundary_overlap_inclusive(self, detector_with_synthetics):
+        """A(1000–1100), B(1100–1200) → overlap at year 1100 → no conflict."""
+        qi = _make_query_info(
+            query="BoundaryA BoundaryB",
+            required_persons=["boundarya", "boundaryb"],
+        )
+        result = detector_with_synthetics.detect(qi)
+        assert result.has_conflict is False  # 1100 is shared
+
+    # --- 6. Missing metadata → safe skip ---
+    def test_missing_metadata_safe_skip(self, detector):
+        """Only 1 entity has metadata → skip cross-entity check → no conflict."""
+        qi = _make_query_info(
+            query="UnknownEntity and Trần Hưng Đạo",
+            required_persons=["UnknownEntity", "Trần Hưng Đạo"],
+        )
+        result = detector.detect(qi)
+        assert result.has_conflict is False  # <2 ranges → skip
