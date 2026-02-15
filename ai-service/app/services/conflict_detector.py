@@ -1,16 +1,19 @@
 """
-conflict_detector.py — Temporal Conflict Detector (Phase 1)
+conflict_detector.py — Temporal Conflict Detector (Phase 1 + 2)
 
 PURPOSE:
     Phát hiện mâu thuẫn thời gian trong câu hỏi TRƯỚC KHI search.
     VD: "Năm 1945 Trần Hưng Đạo làm gì?" → Trần Hưng Đạo mất năm 1300 → CONFLICT.
 
-DESIGN:
-    - Chỉ detect 3 loại deterministic conflict:
-      A. Person lifespan vs required_year
-      B. Dynasty range vs required_year
-      C. Entity range vs required_year_range (non-intersecting)
-    - KHÔNG detect: ngữ nghĩa phức tạp, logic sâu, fact-check.
+TEMPORAL CONSISTENCY INVARIANTS (FROZEN):
+    1. Query self-consistency:
+       required_year must lie within required_year_range.
+    2. Entity vs Query consistency:
+       Every entity must overlap required_year / required_year_range.
+    3. Cross-entity consistency (Phase 2):
+       All entities must share a non-empty global temporal intersection.
+
+    These rules MUST NOT be relaxed without updating benchmark tests.
 
 INTEGRATION:
     Intent Classify → Constraint Extract → 🔥 Conflict Detect → Search
@@ -28,6 +31,8 @@ from app.core.query_schema import QueryInfo
 
 logger = logging.getLogger(__name__)
 
+
+ENTITY_TEMPORAL_METADATA_VERSION = "v1.0"
 
 # ===================================================================
 # ENTITY TEMPORAL METADATA
@@ -256,22 +261,31 @@ class ConflictDetector:
     """
     Phát hiện mâu thuẫn thời gian (temporal conflict) trong câu hỏi.
 
-    Chỉ detect: thời gian không giao nhau (deterministic).
+    Phase 1: Entity vs query year (single entity check)
+    Phase 2: Cross-entity global temporal intersection
     KHÔNG detect: ngữ nghĩa phức tạp, logic sâu.
     """
 
     def __init__(self, entity_metadata: Optional[Dict[str, dict]] = None):
         self.entity_metadata = entity_metadata or ENTITY_TEMPORAL_METADATA
 
+    def _lookup_metadata(self, entity_name: str) -> Optional[dict]:
+        """Lookup entity temporal metadata with short dynasty name fallback."""
+        entity_lower = entity_name.lower().strip()
+        meta = self.entity_metadata.get(entity_lower)
+        if not meta and entity_lower in _DYNASTY_SHORT_NAMES:
+            full_name = _DYNASTY_SHORT_NAMES[entity_lower]
+            meta = self.entity_metadata.get(full_name)
+        return meta
+
     def detect(self, query_info: QueryInfo) -> QueryInfo:
         """
         Check query constraints for temporal conflicts.
 
-        Checks:
-            0. Self-conflict: required_year vs required_year_range
-            A. Person lifespan vs required_year
-            B. Dynasty range vs required_year
-            C. Entity range vs required_year_range (non-intersecting)
+        Invariants (FROZEN):
+            0. Self-consistency: required_year ∈ required_year_range
+            1. Entity vs query: each entity overlaps required_year / required_year_range
+            2. Cross-entity: all entities share non-empty global temporal intersection
 
         Mutates query_info in-place:
           - query_info.has_conflict = True if conflict found
@@ -294,52 +308,95 @@ class ConflictDetector:
                 )
                 return query_info  # No need to check entities
 
-        # No temporal constraint → no temporal conflict possible
-        if query_info.required_year is None and query_info.required_year_range is None:
-            return query_info
-
-        # Check each required person/dynasty against temporal metadata
+        # 1️⃣ Entity vs query year/range (Phase 1)
         # NOTE: Only required_persons (hard entities) — topics are soft, no temporal check
-        for entity in query_info.required_persons:
-            entity_lower = entity.lower().strip()
+        has_temporal = (
+            query_info.required_year is not None
+            or query_info.required_year_range is not None
+        )
 
-            # Try direct lookup
-            meta = self.entity_metadata.get(entity_lower)
+        if has_temporal:
+            for entity in query_info.required_persons:
+                meta = self._lookup_metadata(entity)
+                if not meta:
+                    continue  # Unknown entity → no conflict (safe default)
 
-            # Try short dynasty name fallback
-            if not meta and entity_lower in _DYNASTY_SHORT_NAMES:
-                full_name = _DYNASTY_SHORT_NAMES[entity_lower]
-                meta = self.entity_metadata.get(full_name)
+                entity_range = self._extract_entity_range(meta)
+                if not entity_range:
+                    continue
 
+                if not self._has_intersection(query_info, entity_range):
+                    query_info.has_conflict = True
+                    entity_type = meta.get("type", "entity")
+                    range_str = f"{entity_range[0]}–{entity_range[1]}"
+                    if query_info.required_year is not None:
+                        query_info.conflict_reasons.append(
+                            f"Temporal conflict: {entity_type} '{entity}' "
+                            f"({range_str}) does not include year {query_info.required_year}"
+                        )
+                    else:
+                        yr = query_info.required_year_range
+                        query_info.conflict_reasons.append(
+                            f"Temporal conflict: {entity_type} '{entity}' "
+                            f"({range_str}) does not intersect with year range {yr[0]}–{yr[1]}"
+                        )
+
+                    logger.warning(
+                        f"[CONFLICT] {query_info.conflict_reasons[-1]} "
+                        f"(query='{query_info.original_query}')"
+                    )
+
+        # 2️⃣ Cross-entity global temporal intersection (Phase 2)
+        if not query_info.has_conflict:
+            self._detect_cross_entity_conflicts(query_info)
+
+        return query_info
+
+    def _detect_cross_entity_conflicts(self, query_info: QueryInfo) -> None:
+        """
+        Phase 2: Global temporal intersection check.
+
+        Rule:
+            If >= 2 entities have temporal metadata,
+            all must share at least one overlapping year.
+
+        Invariant:
+            ∃ t such that every entity existed at time t.
+
+        Complexity: O(n) — single pass max/min.
+        """
+        entity_ranges = []
+
+        for name in query_info.required_persons:
+            meta = self._lookup_metadata(name)
             if not meta:
-                continue  # Unknown entity → no conflict (safe default)
+                continue  # safe default: skip unknown metadata
 
             entity_range = self._extract_entity_range(meta)
             if not entity_range:
                 continue
 
-            if not self._has_intersection(query_info, entity_range):
-                query_info.has_conflict = True
-                entity_type = meta.get("type", "entity")
-                range_str = f"{entity_range[0]}–{entity_range[1]}"
-                if query_info.required_year is not None:
-                    query_info.conflict_reasons.append(
-                        f"Temporal conflict: {entity_type} '{entity}' "
-                        f"({range_str}) does not include year {query_info.required_year}"
-                    )
-                else:
-                    yr = query_info.required_year_range
-                    query_info.conflict_reasons.append(
-                        f"Temporal conflict: {entity_type} '{entity}' "
-                        f"({range_str}) does not intersect with year range {yr[0]}–{yr[1]}"
-                    )
+            entity_ranges.append((name, entity_range[0], entity_range[1]))
 
-                logger.warning(
-                    f"[CONFLICT] {query_info.conflict_reasons[-1]} "
-                    f"(query='{query_info.original_query}')"
-                )
+        # Need at least 2 valid ranges to check intersection
+        if len(entity_ranges) < 2:
+            return
 
-        return query_info
+        # Global intersection: ∃ t ∈ [global_start, global_end]
+        global_start = max(start for _, start, _ in entity_ranges)
+        global_end = min(end for _, _, end in entity_ranges)
+
+        if global_start > global_end:
+            names = [name for name, _, _ in entity_ranges]
+            query_info.has_conflict = True
+            query_info.conflict_reasons.append(
+                f"Cross-entity temporal conflict: "
+                f"{', '.join(names)} share no overlapping lifespan/era."
+            )
+            logger.warning(
+                f"[CONFLICT] {query_info.conflict_reasons[-1]} "
+                f"(query='{query_info.original_query}')"
+            )
 
     def _extract_entity_range(self, meta: dict) -> Optional[Tuple[int, int]]:
         """Extract temporal range from metadata entry."""
