@@ -1,17 +1,20 @@
 """
-conflict_detector.py — Temporal Conflict Detector (Phase 1 + 2)
+conflict_detector.py — Temporal Conflict Detector (Phase 1 + 2 + 3)
 
 PURPOSE:
     Phát hiện mâu thuẫn thời gian trong câu hỏi TRƯỚC KHI search.
     VD: "Năm 1945 Trần Hưng Đạo làm gì?" → Trần Hưng Đạo mất năm 1300 → CONFLICT.
 
 TEMPORAL CONSISTENCY INVARIANTS (FROZEN):
-    1. Query self-consistency:
+    0. Query self-consistency:
        required_year must lie within required_year_range.
-    2. Entity vs Query consistency:
+    1. Entity vs Query consistency:
        Every entity must overlap required_year / required_year_range.
-    3. Cross-entity consistency (Phase 2):
+    2. Cross-entity consistency (Phase 2):
        All entities must share a non-empty global temporal intersection.
+    3. Era-membership consistency (Phase 3):
+       If query contains ≥1 person with era AND ≥1 dynasty,
+       then dynasty ∈ person.era.
 
     These rules MUST NOT be relaxed without updating benchmark tests.
 
@@ -32,7 +35,7 @@ from app.core.query_schema import QueryInfo
 logger = logging.getLogger(__name__)
 
 
-ENTITY_TEMPORAL_METADATA_VERSION = "v1.0"
+ENTITY_TEMPORAL_METADATA_VERSION = "v2.0"
 
 # ===================================================================
 # ENTITY TEMPORAL METADATA
@@ -44,134 +47,167 @@ ENTITY_TEMPORAL_METADATA_VERSION = "v1.0"
 ENTITY_TEMPORAL_METADATA: Dict[str, dict] = {
     # ========================
     # PERSONS — (birth_year, death_year)
+    # era: list of dynasty/era canonical names person ACTUALLY served
     # ========================
     "hùng vương": {
         "type": "person",
-        "lifespan": (-2879, -258),  # Legendary period
+        "lifespan": (-2879, -258),
+        "era": ["hùng vương / an dương vương"],
     },
     "an dương vương": {
         "type": "person",
         "lifespan": (-257, -207),
+        "era": ["hùng vương / an dương vương"],
     },
     "hai bà trưng": {
         "type": "person",
         "lifespan": (14, 43),
+        "era": ["bắc thuộc"],
     },
     "trưng trắc": {
         "type": "person",
         "lifespan": (14, 43),
+        "era": ["bắc thuộc"],
     },
     "trưng nhị": {
         "type": "person",
         "lifespan": (14, 43),
+        "era": ["bắc thuộc"],
     },
     "lý bí": {
         "type": "person",
         "lifespan": (503, 548),
+        "era": ["bắc thuộc"],
     },
     "ngô quyền": {
         "type": "person",
         "lifespan": (898, 944),
+        "era": ["nhà ngô"],
     },
     "đinh bộ lĩnh": {
         "type": "person",
         "lifespan": (924, 979),
+        "era": ["nhà đinh"],
     },
     "đinh tiên hoàng": {
         "type": "person",
         "lifespan": (924, 979),
+        "era": ["nhà đinh"],
     },
     "lê hoàn": {
         "type": "person",
         "lifespan": (941, 1005),
+        "era": ["tiền lê"],
     },
     "lý thái tổ": {
         "type": "person",
         "lifespan": (974, 1028),
+        "era": ["nhà lý"],
     },
     "lý công uẩn": {
         "type": "person",
         "lifespan": (974, 1028),
+        "era": ["nhà lý"],
     },
     "lý thường kiệt": {
         "type": "person",
         "lifespan": (1019, 1105),
+        "era": ["nhà lý"],
     },
     "trần hưng đạo": {
         "type": "person",
         "lifespan": (1228, 1300),
+        "era": ["nhà trần"],
     },
     "trần quốc tuấn": {
         "type": "person",
         "lifespan": (1228, 1300),
+        "era": ["nhà trần"],
     },
     "trần nhân tông": {
         "type": "person",
         "lifespan": (1258, 1308),
+        "era": ["nhà trần"],
     },
     "hồ quý ly": {
         "type": "person",
         "lifespan": (1336, 1407),
+        "era": ["nhà trần", "nhà hồ"],
     },
     "lê lợi": {
         "type": "person",
         "lifespan": (1385, 1433),
+        "era": ["lê sơ"],
     },
     "lê thái tổ": {
         "type": "person",
         "lifespan": (1385, 1433),
+        "era": ["lê sơ"],
     },
     "nguyễn trãi": {
         "type": "person",
         "lifespan": (1380, 1442),
+        "era": ["lê sơ"],
     },
     "lê thánh tông": {
         "type": "person",
         "lifespan": (1442, 1497),
+        "era": ["lê sơ"],
     },
     "nguyễn huệ": {
         "type": "person",
         "lifespan": (1753, 1792),
+        "era": ["tây sơn"],
     },
     "quang trung": {
         "type": "person",
         "lifespan": (1753, 1792),
+        "era": ["tây sơn"],
     },
     "nguyễn ánh": {
         "type": "person",
         "lifespan": (1762, 1820),
+        "era": ["nhà nguyễn"],
     },
     "gia long": {
         "type": "person",
         "lifespan": (1762, 1820),
+        "era": ["nhà nguyễn"],
     },
     "phan bội châu": {
         "type": "person",
         "lifespan": (1867, 1940),
+        "era": ["pháp thuộc"],
     },
     "phan châu trinh": {
         "type": "person",
         "lifespan": (1872, 1926),
+        "era": ["pháp thuộc"],
     },
     "hồ chí minh": {
         "type": "person",
         "lifespan": (1890, 1969),
+        "era": ["pháp thuộc"],
     },
     "nguyễn ái quốc": {
         "type": "person",
         "lifespan": (1890, 1969),
+        "era": ["pháp thuộc"],
     },
     "nguyễn tất thành": {
         "type": "person",
         "lifespan": (1890, 1969),
+        "era": ["pháp thuộc"],
     },
     "bác hồ": {
         "type": "person",
         "lifespan": (1890, 1969),
+        "era": ["pháp thuộc"],
     },
     "võ nguyên giáp": {
         "type": "person",
         "lifespan": (1911, 2013),
+        "era": ["pháp thuộc"],
     },
 
     # ========================
@@ -256,6 +292,40 @@ _DYNASTY_SHORT_NAMES = {
     "ngô": "nhà ngô",
 }
 
+# Dynasty normalization for era-membership check (Phase 3)
+# Rule: normalize ONCE, canonical names must match era field values exactly.
+# Fallback: if not in map, name passes through unchanged.
+_DYNASTY_NORMALIZATION_MAP = {
+    # Short names → canonical
+    "trần": "nhà trần",
+    "lý": "nhà lý",
+    "lê": "lê sơ",
+    "nguyễn": "nhà nguyễn",
+    "mạc": "nhà mạc",
+    "hồ": "nhà hồ",
+    "đinh": "nhà đinh",
+    "ngô": "nhà ngô",
+    # Full names → canonical (identity or disambiguation)
+    "nhà trần": "nhà trần",
+    "nhà lý": "nhà lý",
+    "nhà lê": "lê sơ",       # Ambiguous: default to Lê sơ
+    "lê sơ": "lê sơ",
+    "lê trung hưng": "lê trung hưng",
+    "hậu lê": "lê trung hưng",
+    "nhà nguyễn": "nhà nguyễn",
+    "triều nguyễn": "nhà nguyễn",
+    "nhà mạc": "nhà mạc",
+    "nhà hồ": "nhà hồ",
+    "nhà đinh": "nhà đinh",
+    "nhà ngô": "nhà ngô",
+    "tây sơn": "tây sơn",
+    "pháp thuộc": "pháp thuộc",
+    "bắc thuộc": "bắc thuộc",
+    "tiền lê": "tiền lê",
+    "minh thuộc": "minh thuộc",
+    "hùng vương / an dương vương": "hùng vương / an dương vương",
+}
+
 
 class ConflictDetector:
     """
@@ -263,6 +333,7 @@ class ConflictDetector:
 
     Phase 1: Entity vs query year (single entity check)
     Phase 2: Cross-entity global temporal intersection
+    Phase 3: Era-membership consistency (person ∈ dynasty?)
     KHÔNG detect: ngữ nghĩa phức tạp, logic sâu.
     """
 
@@ -350,6 +421,10 @@ class ConflictDetector:
         if not query_info.has_conflict:
             self._detect_cross_entity_conflicts(query_info)
 
+        # 3️⃣ Era-membership consistency (Phase 3)
+        if not query_info.has_conflict:
+            self._detect_era_membership_conflicts(query_info)
+
         return query_info
 
     def _detect_cross_entity_conflicts(self, query_info: QueryInfo) -> None:
@@ -420,3 +495,56 @@ class ConflictDetector:
             return not (q_end < start or q_start > end)
 
         return True  # No temporal constraint → no conflict
+
+    def _detect_era_membership_conflicts(self, query_info: QueryInfo) -> None:
+        """
+        Phase 3: Era-membership consistency — HARD rule.
+
+        Reject when:
+        - Query contains ≥1 person with era metadata
+        - Query contains ≥1 dynasty
+        - Person.era does NOT include dynasty
+
+        Complexity: O(p × d), typically constant.
+        """
+        if query_info.has_conflict:
+            return  # short-circuit safety
+
+        persons_with_era = []
+        dynasties = []
+
+        for name in query_info.required_persons:
+            meta = self._lookup_metadata(name)
+            if not meta:
+                continue
+
+            entity_type = meta.get("type")
+
+            if entity_type == "person" and "era" in meta:
+                persons_with_era.append((name, meta["era"]))
+            elif entity_type in ("dynasty", "era"):
+                dynasties.append(self._normalize_dynasty_name(name))
+
+        # Need both sides
+        if not persons_with_era or not dynasties:
+            return
+
+        # HARD RULE: each person must match each dynasty
+        for person_name, person_eras in persons_with_era:
+            for dynasty in dynasties:
+                if dynasty not in person_eras:
+                    query_info.has_conflict = True
+                    query_info.conflict_reasons.append(
+                        f"Era-membership conflict: "
+                        f"'{person_name}' belongs to {person_eras}, not '{dynasty}'."
+                    )
+                    logger.warning(
+                        f"[CONFLICT] {query_info.conflict_reasons[-1]} "
+                        f"(query='{query_info.original_query}')"
+                    )
+                    return  # early exit (deterministic reject)
+
+    def _normalize_dynasty_name(self, name: str) -> str:
+        """Normalize dynasty name to canonical form for era-membership lookup."""
+        normalized = name.lower().strip()
+        return _DYNASTY_NORMALIZATION_MAP.get(normalized, normalized)
