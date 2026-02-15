@@ -1,87 +1,326 @@
 {
   "_description": "Knowledge Base for HistoryMindAI - Dynamic aliases & synonyms. Edit this file to extend entity recognition without changing code.",
   "_version": "1.3.0",
-
   "person_aliases": {
-    "hùng vương": ["vua hùng", "hung vuong", "vua hung", "hung king", "kinh dương vương", "lạc long quân", "hùng i", "hùng ii", "hùng iii", "hùng iv", "hùng v", "hùng vi", "hùng vii", "hùng viii", "hùng ix", "hùng x", "hùng xi", "hùng xii", "hùng xiii", "hùng xiv", "hùng xv", "hùng xvi", "hùng xvii", "hùng xviii", "18 đời hùng vương", "các vua hùng"],
-    "hai bà trưng": ["trưng trắc", "trưng nhị", "hai bà", "trưng vương", "hai ba trung", "ba trung", "trung trac", "trung nhi", "2 bà trưng", "nữ vương"],
-    "trần hưng đạo": ["trần quốc tuấn", "hưng đạo vương", "hưng đạo đại vương", "quốc công tiết chế"],
-    "nguyễn huệ": ["quang trung", "bắc bình vương", "vua quang trung"],
-    "hồ chí minh": ["nguyễn tất thành", "nguyễn ái quốc", "bác hồ", "nguyễn sinh cung", "anh ba"],
-    "lý thường kiệt": ["thái úy lý thường kiệt"],
-    "ngô quyền": ["ngô vương"],
-    "lê lợi": ["lê thái tổ", "bình định vương"],
-    "đinh bộ lĩnh": ["đinh tiên hoàng", "vạn thắng vương"],
-    "lê thánh tông": ["lê tư thành"],
-    "trần thái tông": ["trần cảnh"],
-    "lý thái tổ": ["lý công uẩn"],
-    "nguyễn trãi": ["ức trai"],
-    "võ nguyên giáp": ["đại tướng võ nguyên giáp", "tướng giáp", "anh văn"],
+    "hùng vương": [
+      "vua hùng",
+      "hung vuong",
+      "vua hung",
+      "hung king",
+      "kinh dương vương",
+      "hùng i",
+      "hùng ii",
+      "hùng iii",
+      "hùng iv",
+      "hùng v",
+      "hùng vi",
+      "hùng vii",
+      "hùng viii",
+      "hùng ix",
+      "hùng x",
+      "hùng xi",
+      "hùng xii",
+      "hùng xiii",
+      "hùng xiv",
+      "hùng xv",
+      "hùng xvi",
+      "hùng xvii",
+      "hùng xviii",
+      "18 đời hùng vương",
+      "các vua hùng"
+    ],
+    "hai bà trưng": [
+      "trưng trắc",
+      "trưng nhị",
+      "hai bà",
+      "trưng vương",
+      "hai ba trung",
+      "ba trung",
+      "trung trac",
+      "trung nhi",
+      "2 bà trưng",
+      "nữ vương"
+    ],
+    "trần hưng đạo": [
+      "trần quốc tuấn",
+      "hưng đạo vương",
+      "hưng đạo đại vương",
+      "quốc công tiết chế"
+    ],
+    "nguyễn huệ": [
+      "quang trung",
+      "bắc bình vương",
+      "vua quang trung"
+    ],
+    "hồ chí minh": [
+      "nguyễn tất thành",
+      "nguyễn ái quốc",
+      "bác hồ",
+      "nguyễn sinh cung",
+      "anh ba"
+    ],
+    "lý thường kiệt": [
+      "thái úy lý thường kiệt"
+    ],
+    "ngô quyền": [
+      "ngô vương"
+    ],
+    "lê lợi": [
+      "lê thái tổ",
+      "bình định vương"
+    ],
+    "đinh bộ lĩnh": [
+      "đinh tiên hoàng",
+      "vạn thắng vương"
+    ],
+    "lê thánh tông": [
+      "lê tư thành"
+    ],
+    "trần thái tông": [
+      "trần cảnh"
+    ],
+    "lý thái tổ": [
+      "lý công uẩn"
+    ],
+    "nguyễn trãi": [
+      "ức trai"
+    ],
+    "võ nguyên giáp": [
+      "đại tướng võ nguyên giáp",
+      "tướng giáp",
+      "anh văn"
+    ],
     "phan bội châu": [],
-    "phan châu trinh": ["phan chu trinh"],
-    "lê hoàn": ["lê đại hành"],
+    "phan châu trinh": [
+      "phan chu trinh"
+    ],
+    "lê hoàn": [
+      "lê đại hành"
+    ],
     "hồ quý ly": [],
-    "nguyễn ánh": ["gia long"],
+    "nguyễn ánh": [
+      "gia long"
+    ],
     "dương đình nghệ": [],
     "khúc thừa dụ": [],
     "lý thánh tông": [],
-    "trần nhân tông": ["phật hoàng", "phật hoàng trần nhân tông"],
-    "bà triệu": ["triệu thị trinh", "triệu ẩu", "ba trieu", "triệu ẩu", "triều ẩu", "bà triệu âu"],
-    "lý nam đế": ["lý bí", "lý bôn"],
-    "mai thúc loan": ["mai hắc đế"],
-    "phùng hưng": ["bố cái đại vương"],
+    "trần nhân tông": [
+      "phật hoàng",
+      "phật hoàng trần nhân tông"
+    ],
+    "bà triệu": [
+      "triệu thị trinh",
+      "triệu ẩu",
+      "ba trieu",
+      "triệu ẩu",
+      "triều ẩu",
+      "bà triệu âu"
+    ],
+    "lý nam đế": [
+      "lý bí",
+      "lý bôn"
+    ],
+    "mai thúc loan": [
+      "mai hắc đế"
+    ],
+    "phùng hưng": [
+      "bố cái đại vương"
+    ],
     "trần quốc toản": [],
     "nguyễn nhạc": [],
     "nguyễn lữ": [],
-    "lạc long quân": ["thủy tổ", "âu cơ", "cha vua hùng"],
-    "âu cơ": ["mẹ vua hùng", "tiên nữ"],
-    "an dương vương": ["thục phán", "vua an dương"],
-    "triệu đà": ["nam việt vương", "triệu võ đế"]
+    "lạc long quân": [
+      "lạc long quân"
+    ],
+    "âu cơ": [
+      "mẹ vua hùng",
+      "tiên nữ"
+    ],
+    "an dương vương": [
+      "thục phán",
+      "vua an dương"
+    ],
+    "triệu đà": [
+      "nam việt vương",
+      "triệu võ đế"
+    ]
   },
-
   "topic_synonyms": {
-    "văn lang": ["nước văn lang", "thời văn lang", "vương quốc văn lang", "18 đời hùng vương", "thời hùng vương"],
-    "âu lạc": ["nước âu lạc", "thời âu lạc", "an dương vương"],
-    "hùng vương": ["vua hùng", "18 đời hùng vương", "các vua hùng", "thời hùng vương", "thời văn lang"],
-    "nguyên mông": ["mông cổ", "mông nguyên", "quân nguyên", "quân mông", "đế quốc mông cổ"],
-    "pháp thuộc": ["thực dân pháp", "xâm lược pháp", "đô hộ pháp", "pháp xâm lược"],
-    "bắc thuộc": ["đô hộ trung quốc", "phương bắc đô hộ", "ngàn năm bắc thuộc"],
-    "giáo dục": ["văn miếu", "quốc tử giám", "khoa cử", "nho học", "thi cử"],
-    "tây sơn": ["phong trào tây sơn", "khởi nghĩa tây sơn", "nhà tây sơn"],
-    "cách mạng tháng tám": ["tổng khởi nghĩa", "cách mạng 1945"],
-    "điện biên phủ": ["chiến dịch điện biên", "trận điện biên phủ"],
-    "khởi nghĩa lam sơn": ["lam sơn khởi nghĩa"],
-    "trịnh nguyễn": ["trịnh nguyễn phân tranh", "chúa trịnh chúa nguyễn", "đàng trong đàng ngoài"],
-    "nam quốc sơn hà": ["bài thơ thần"],
-    "trận bạch đằng": ["bạch đằng", "sông bạch đằng", "chiến thắng bạch đằng", "cọc bạch đằng"],
-    "hai bà trưng": ["khởi nghĩa hai bà trưng", "nữ vương"],
-    "văn miếu": ["quốc tử giám", "văn miếu quốc tử giám", "trường đại học đầu tiên"],
-    "kháng chiến chống pháp": ["chiến tranh đông dương", "kháng pháp"],
-    "kháng chiến chống mỹ": ["chiến tranh việt nam", "kháng mỹ", "chống mỹ cứu nước"],
-    "nước vạn xuân": ["vạn xuân", "lý nam đế dựng nước"],
-    "ngô quyền": ["trận bạch đằng 938", "đánh quân nam hán"],
-    "lê lợi": ["khởi nghĩa lam sơn", "bình định vương", "lê thái tổ khởi nghĩa"],
-    "chống ngoại xâm": ["kháng chiến", "chống giặc", "đánh giặc ngoại xâm", "bảo vệ tổ quốc"],
-    "chiến tranh việt nam": ["kháng chiến chống mỹ"]
+    "văn lang": [
+      "nước văn lang",
+      "thời văn lang",
+      "vương quốc văn lang",
+      "18 đời hùng vương",
+      "thời hùng vương"
+    ],
+    "âu lạc": [
+      "nước âu lạc",
+      "thời âu lạc",
+      "an dương vương"
+    ],
+    "hùng vương": [
+      "vua hùng",
+      "các vua hùng"
+    ],
+    "nguyên mông": [
+      "mông cổ",
+      "mông nguyên",
+      "quân nguyên",
+      "quân mông",
+      "đế quốc mông cổ"
+    ],
+    "pháp thuộc": [
+      "thực dân pháp",
+      "xâm lược pháp",
+      "đô hộ pháp",
+      "pháp xâm lược"
+    ],
+    "bắc thuộc": [
+      "đô hộ trung quốc",
+      "phương bắc đô hộ",
+      "ngàn năm bắc thuộc"
+    ],
+    "giáo dục": [
+      "văn miếu",
+      "quốc tử giám",
+      "khoa cử",
+      "nho học",
+      "thi cử"
+    ],
+    "tây sơn": [
+      "phong trào tây sơn",
+      "khởi nghĩa tây sơn",
+      "nhà tây sơn"
+    ],
+    "cách mạng tháng tám": [
+      "tổng khởi nghĩa",
+      "cách mạng 1945"
+    ],
+    "điện biên phủ": [
+      "chiến dịch điện biên",
+      "trận điện biên phủ"
+    ],
+    "khởi nghĩa lam sơn": [
+      "lam sơn khởi nghĩa"
+    ],
+    "trịnh nguyễn": [
+      "trịnh nguyễn phân tranh",
+      "chúa trịnh chúa nguyễn",
+      "đàng trong đàng ngoài"
+    ],
+    "nam quốc sơn hà": [
+      "bài thơ thần"
+    ],
+    "trận bạch đằng": [
+      "bạch đằng",
+      "sông bạch đằng",
+      "chiến thắng bạch đằng",
+      "cọc bạch đằng"
+    ],
+    "hai bà trưng": [
+      "khởi nghĩa hai bà trưng",
+      "nữ vương"
+    ],
+    "văn miếu": [
+      "quốc tử giám",
+      "văn miếu quốc tử giám",
+      "trường đại học đầu tiên"
+    ],
+    "kháng chiến chống pháp": [
+      "chiến tranh đông dương",
+      "kháng pháp"
+    ],
+    "kháng chiến chống mỹ": [
+      "chiến tranh việt nam",
+      "kháng mỹ",
+      "chống mỹ cứu nước"
+    ],
+    "nước vạn xuân": [
+      "vạn xuân",
+      "lý nam đế dựng nước"
+    ],
+    "ngô quyền": [
+      "trận bạch đằng 938",
+      "đánh quân nam hán"
+    ],
+    "lê lợi": [
+      "khởi nghĩa lam sơn",
+      "bình định vương",
+      "lê thái tổ khởi nghĩa"
+    ],
+    "chống ngoại xâm": [
+      "kháng chiến",
+      "chống giặc",
+      "đánh giặc ngoại xâm",
+      "bảo vệ tổ quốc"
+    ],
+    "chiến tranh việt nam": [
+      "kháng chiến chống mỹ"
+    ]
   },
-
   "dynasty_aliases": {
-    "trần": ["nhà trần", "triều trần", "thời trần"],
-    "lý": ["nhà lý", "triều lý", "thời lý"],
-    "lê": ["nhà lê", "triều lê", "thời lê"],
-    "nguyễn": ["nhà nguyễn", "triều nguyễn", "thời nguyễn"],
-    "đinh": ["nhà đinh", "triều đinh", "thời đinh"],
-    "hồ": ["nhà hồ", "triều hồ", "thời hồ"],
-    "mạc": ["nhà mạc", "triều mạc", "thời mạc"],
-    "ngô": ["nhà ngô", "triều ngô", "thời ngô"],
-    "tây sơn": ["nhà tây sơn", "triều tây sơn", "thời tây sơn"],
-    "tiền lê": ["nhà tiền lê"],
-    "lê sơ": ["nhà lê sơ", "thời lê sơ"],
-    "lê trung hưng": ["nhà lê trung hưng"],
-    "bắc thuộc": ["thời bắc thuộc"],
-    "tự chủ": ["thời tự chủ"]
+    "trần": [
+      "nhà trần",
+      "triều trần",
+      "thời trần"
+    ],
+    "lý": [
+      "nhà lý",
+      "triều lý",
+      "thời lý"
+    ],
+    "lê": [
+      "nhà lê",
+      "triều lê",
+      "thời lê"
+    ],
+    "nguyễn": [
+      "nhà nguyễn",
+      "triều nguyễn",
+      "thời nguyễn"
+    ],
+    "đinh": [
+      "nhà đinh",
+      "triều đinh",
+      "thời đinh"
+    ],
+    "hồ": [
+      "nhà hồ",
+      "triều hồ",
+      "thời hồ"
+    ],
+    "mạc": [
+      "nhà mạc",
+      "triều mạc",
+      "thời mạc"
+    ],
+    "ngô": [
+      "nhà ngô",
+      "triều ngô",
+      "thời ngô"
+    ],
+    "tây sơn": [
+      "nhà tây sơn",
+      "triều tây sơn",
+      "thời tây sơn"
+    ],
+    "tiền lê": [
+      "nhà tiền lê"
+    ],
+    "lê sơ": [
+      "nhà lê sơ",
+      "thời lê sơ"
+    ],
+    "lê trung hưng": [
+      "nhà lê trung hưng"
+    ],
+    "bắc thuộc": [
+      "thời bắc thuộc"
+    ],
+    "tự chủ": [
+      "thời tự chủ"
+    ]
   },
-
   "abbreviations": {
     "vn": "việt nam",
     "tq": "trung quốc",
@@ -97,7 +336,6 @@
     "ltk": "lý thường kiệt",
     "vng": "võ nguyên giáp"
   },
-
   "typo_fixes": {
     "hung vuong": "hùng vương",
     "vua hung": "vua hùng",
@@ -120,62 +358,148 @@
     "dienbienphu": "điện biên phủ",
     "dongda": "đống đa"
   },
-
   "question_patterns": {
     "_description": "Common Vietnamese question patterns that indicate search intent",
-    "person_search": ["ai đã", "vị tướng nào", "nhân vật nào", "ai là người"],
-    "event_search": ["chuyện gì xảy ra", "có sự kiện gì", "điều gì đã xảy ra"],
-    "time_search": ["khi nào", "năm nào", "bao giờ", "thời gian nào"],
-    "place_search": ["ở đâu", "tại đâu", "nơi nào", "địa điểm nào"]
+    "person_search": [
+      "ai đã",
+      "vị tướng nào",
+      "nhân vật nào",
+      "ai là người"
+    ],
+    "event_search": [
+      "chuyện gì xảy ra",
+      "có sự kiện gì",
+      "điều gì đã xảy ra"
+    ],
+    "time_search": [
+      "khi nào",
+      "năm nào",
+      "bao giờ",
+      "thời gian nào"
+    ],
+    "place_search": [
+      "ở đâu",
+      "tại đâu",
+      "nơi nào",
+      "địa điểm nào"
+    ]
   },
-
   "implicit_context": {
     "_description": "Terms that implicitly indicate Vietnamese history context. Used to detect scope-qualifier queries.",
     "vietnam_indicators": [
-      "đại việt", "đại cồ việt", "đại nam", "bắc thuộc", "pháp thuộc",
-      "nhà trần", "nhà lý", "nhà lê", "nhà nguyễn", "nhà đinh",
-      "tây sơn", "tiền lê", "lê sơ", "lê trung hưng",
-      "vạn xuân", "âu lạc", "văn lang"
+      "đại việt",
+      "đại cồ việt",
+      "đại nam",
+      "bắc thuộc",
+      "pháp thuộc",
+      "nhà trần",
+      "nhà lý",
+      "nhà lê",
+      "nhà nguyễn",
+      "nhà đinh",
+      "tây sơn",
+      "tiền lê",
+      "lê sơ",
+      "lê trung hưng",
+      "vạn xuân",
+      "âu lạc",
+      "văn lang"
     ]
   },
-
   "resistance_synonyms": {
     "_description": "Maps broad resistance/war concepts to specific events and keywords for query expansion.",
     "kháng chiến": [
-      "kháng chiến chống pháp", "kháng chiến chống mỹ",
-      "chống quân nguyên mông", "chống quân tống", "chống quân thanh",
-      "chống quân minh", "chống quân nam hán",
-      "trận bạch đằng", "chiến thắng đống đa", "chiến thắng điện biên phủ",
-      "khởi nghĩa lam sơn", "khởi nghĩa hai bà trưng"
+      "kháng chiến chống pháp",
+      "kháng chiến chống mỹ",
+      "chống quân nguyên mông",
+      "chống quân tống",
+      "chống quân thanh",
+      "chống quân minh",
+      "chống quân nam hán",
+      "trận bạch đằng",
+      "chiến thắng đống đa",
+      "chiến thắng điện biên phủ",
+      "khởi nghĩa lam sơn",
+      "khởi nghĩa hai bà trưng"
     ],
     "chiến tranh": [
-      "chiến tranh đông dương", "chiến tranh việt nam",
-      "kháng chiến chống pháp", "kháng chiến chống mỹ",
+      "chiến tranh đông dương",
+      "chiến tranh việt nam",
+      "kháng chiến chống pháp",
+      "kháng chiến chống mỹ",
       "trịnh nguyễn phân tranh"
     ],
     "xâm lược": [
-      "nguyên mông xâm lược", "quân tống xâm lược",
-      "pháp xâm lược", "quân minh xâm lược",
-      "quân nam hán xâm lược", "quân thanh xâm lược"
+      "nguyên mông xâm lược",
+      "quân tống xâm lược",
+      "pháp xâm lược",
+      "quân minh xâm lược",
+      "quân nam hán xâm lược",
+      "quân thanh xâm lược"
     ],
     "ngoại xâm": [
-      "nguyên mông", "quân tống", "thực dân pháp",
-      "quân minh", "quân nam hán", "quân thanh", "quân hán"
+      "nguyên mông",
+      "quân tống",
+      "thực dân pháp",
+      "quân minh",
+      "quân nam hán",
+      "quân thanh",
+      "quân hán"
     ],
     "chống ngoại xâm": [
-      "kháng chiến", "chống giặc",
-      "nguyên mông", "quân tống", "thực dân pháp",
-      "quân minh", "quân nam hán", "quân thanh"
+      "kháng chiến",
+      "chống giặc",
+      "nguyên mông",
+      "quân tống",
+      "thực dân pháp",
+      "quân minh",
+      "quân nam hán",
+      "quân thanh"
     ]
   },
-
   "reranker_config": {
     "_description": "Config for cross_encoder_service fallback scoring. Edit keywords here, not in code.",
-    "military_keywords": ["chiến", "đánh", "thắng", "kháng", "quân", "trận", "hịch", "xâm", "phá", "diệt"],
-    "victory_keywords": ["chiến thắng", "đánh bại", "thắng lợi", "đại phá", "tiêu diệt", "giải phóng"],
-    "preparation_keywords": ["hịch", "chuẩn bị", "khích lệ", "động viên", "huy động", "tập trận"],
-    "formation_keywords": ["thành lập", "lập", "dựng nước", "lên ngôi", "đổi quốc hiệu", "khai quốc"],
-    "reform_keywords": ["cải cách", "đổi mới", "canh tân", "chấn hưng"]
+    "military_keywords": [
+      "chiến",
+      "đánh",
+      "thắng",
+      "kháng",
+      "quân",
+      "trận",
+      "hịch",
+      "xâm",
+      "phá",
+      "diệt"
+    ],
+    "victory_keywords": [
+      "chiến thắng",
+      "đánh bại",
+      "thắng lợi",
+      "đại phá",
+      "tiêu diệt",
+      "giải phóng"
+    ],
+    "preparation_keywords": [
+      "hịch",
+      "chuẩn bị",
+      "khích lệ",
+      "động viên",
+      "huy động",
+      "tập trận"
+    ],
+    "formation_keywords": [
+      "thành lập",
+      "lập",
+      "dựng nước",
+      "lên ngôi",
+      "đổi quốc hiệu",
+      "khai quốc"
+    ],
+    "reform_keywords": [
+      "cải cách",
+      "đổi mới",
+      "canh tân",
+      "chấn hưng"
+    ]
   }
 }
-
