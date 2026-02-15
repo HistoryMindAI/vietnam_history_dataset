@@ -579,10 +579,13 @@ class TestEngineIntentRouting:
         r = engine_answer("Chiến thắng Điện Biên Phủ")
         assert r["intent"] in ("place", "topic", "multi_entity", "event_query", "person_query")
 
+    @patch("app.services.engine._looks_like_entity_query", return_value=False)
     @patch("app.services.engine.semantic_search")
-    def test_definition_intent(self, mock_search):
+    def test_definition_intent(self, mock_search, mock_entity_check):
         """'là gì' query without entity matches should use definition intent."""
         # Use empty indexes so entity detection doesn't interfere
+        # Also bypass grounding check (_looks_like_entity_query) which would
+        # force no_data when query looks entity-specific but no entities resolved
         import app.core.startup as startup
         startup.PERSONS_INDEX = defaultdict(list)
         startup.DYNASTY_INDEX = defaultdict(list)
