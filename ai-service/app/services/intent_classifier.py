@@ -18,7 +18,7 @@ from typing import Optional
 @dataclass
 class QueryAnalysis:
     """Result of intent classification."""
-    intent: str                          # One of 10 intents
+    intent: str                          # One of 10+ intents
     focus: str = "event"                 # "year" | "event" | "person" | "scope" | "composite"
     entities: dict = field(default_factory=dict)  # Resolved entities
     duration_guard: bool = False         # True if "X năm" is duration, NOT year
@@ -27,6 +27,9 @@ class QueryAnalysis:
     question_type: str = "what"          # "when" | "what" | "who" | "list" | "scope"
     confidence: float = 0.0
     explanation: str = ""
+    # Fact-check fields — user claims a fact and asks for confirmation
+    is_fact_check: bool = False          # True if "phải không?", "đúng không?"
+    fact_check_year: Optional[int] = None  # Year claimed by user (may be wrong)
 
 
 # ===================================================================
@@ -65,6 +68,89 @@ def detect_duration_guard(query: str) -> bool:
         if pattern.search(q):
             return True
     return False
+
+
+# ===================================================================
+# 1b. FACT-CHECK DETECTION  (user claims a fact → confirm/correct)
+# ===================================================================
+# Detects queries where user states a claim and asks for confirmation.
+# Examples:
+#   "Bác Hồ ra đi năm 1991 phải không?"  → fact_check, year=1991
+#   "Có phải trận Bạch Đằng năm 900 không?"  → fact_check, year=900
+#   "1911 đúng là năm Bác Hồ ra đi chứ?"  → fact_check, year=1911
+
+_FACT_CHECK_PATTERNS = [
+    # "có phải ... năm 1991 không"
+    re.compile(r"có\s+phải\s+.+?\s+năm\s+(\d{2,4})\s+không", re.I),
+    # "... năm 1991 phải không" / "... phải không?"
+    re.compile(r".+\s+năm\s+(\d{2,4})\s+phải\s+không", re.I),
+    # "... năm 1991 đúng không" / "... đúng không?"
+    re.compile(r".+\s+năm\s+(\d{2,4})\s+đúng\s+không", re.I),
+    # "đúng là ... năm 1991 chứ"
+    re.compile(r"đúng\s+là\s+.+?\s+năm\s+(\d{2,4})", re.I),
+    # "1911 đúng là năm ... chứ"
+    re.compile(r"(\d{2,4})\s+đúng\s+là\s+năm", re.I),
+    # "... năm 1991 hả" / "... à" / "... chứ" (casual Vietnamese confirmation)
+    re.compile(r".+\s+năm\s+(\d{2,4})\s+(?:hả|à|chứ|nhỉ|hả bạn|sao)", re.I),
+    # "có đúng là ... năm 1991"
+    re.compile(r"có\s+đúng\s+(?:là\s+)?.+?\s+năm\s+(\d{2,4})", re.I),
+    # "... năm 1991 có đúng không"
+    re.compile(r".+\s+năm\s+(\d{2,4})\s+có\s+đúng\s+không", re.I),
+    # "... diễn ra năm 1991 phải không"
+    re.compile(r".+\s+diễn\s+ra\s+năm\s+(\d{2,4})\s+phải\s+không", re.I),
+    # "... xảy ra năm 1991 đúng không"
+    re.compile(r".+\s+xảy\s+ra\s+năm\s+(\d{2,4})\s+đúng\s+không", re.I),
+    # "... vào năm 1991 phải không"
+    re.compile(r".+\s+vào\s+năm\s+(\d{2,4})\s+(?:phải|đúng)\s+không", re.I),
+]
+
+# Broader confirmation suffix patterns (no year captured — uses year from query)
+_CONFIRMATION_SUFFIX = re.compile(
+    r"(?:phải\s+không|đúng\s+không|có\s+đúng\s+không|đúng\s+chứ|phải\s+hông"
+    r"|hả\s*\??|nhỉ\s*\??|chứ\s*\??|à\s*\??)"
+    r"\s*[?!.]?\s*$",
+    re.I,
+)
+
+
+def detect_fact_check(query: str) -> tuple[bool, Optional[int]]:
+    """
+    Detect if user is asking the chatbot to confirm/deny a factual claim.
+
+    Returns:
+        (is_fact_check, claimed_year)
+        - is_fact_check: True if query is a confirmation question
+        - claimed_year: The year user claims (may be wrong), or None
+
+    Examples:
+        "Bác Hồ ra đi năm 1991 phải không?" → (True, 1991)
+        "Có phải trận Bạch Đằng năm 900 không?" → (True, 900)
+        "Trận Bạch Đằng năm nào?" → (False, None)
+    """
+    q = query.strip()
+
+    # Try specific patterns with year capture
+    for pattern in _FACT_CHECK_PATTERNS:
+        m = pattern.search(q)
+        if m:
+            try:
+                year = int(m.group(1))
+                if 1 <= year <= 2100:  # Sanity check
+                    return True, year
+            except (ValueError, IndexError):
+                continue
+
+    # Fallback: check if query has a confirmation suffix + any year in text
+    if _CONFIRMATION_SUFFIX.search(q):
+        year_match = re.search(r'\b(\d{2,4})\b', q)
+        if year_match:
+            year = int(year_match.group(1))
+            if 1 <= year <= 2100:
+                return True, year
+        # Confirmation without year — still a fact-check but no year to verify
+        return True, None
+
+    return False, None
 
 
 # ===================================================================
@@ -223,6 +309,9 @@ def classify_intent(
     duration = detect_duration_guard(query)
     qtype = detect_question_type(query)
 
+    # --- Fact-check detection (before standard classification) ---
+    is_fc, fc_year = detect_fact_check(query)
+
     # Base analysis
     analysis = QueryAnalysis(
         intent="semantic",
@@ -231,9 +320,19 @@ def classify_intent(
         question_type=qtype,
         year=year if not duration else None,       # Guard: don't use year if duration
         year_range=year_range,
+        is_fact_check=is_fc,
+        fact_check_year=fc_year,
     )
 
     # --- Intent classification (priority order) ---
+
+    # 0. Fact-check query (highest priority — user wants confirmation)
+    if is_fc and has_entities:
+        analysis.intent = "fact_check"
+        analysis.focus = "event"
+        analysis.confidence = 0.95
+        analysis.explanation = f"Fact-check: user claims year={fc_year}, verifying"
+        return analysis
 
     # 1. Data scope query (Principle 5)
     if is_data_scope_query(query):

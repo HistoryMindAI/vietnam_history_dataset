@@ -276,6 +276,61 @@ def _build_what_answer(events: list, analysis: QueryAnalysis) -> str | None:
 
 
 # ===================================================================
+# FACT-CHECK ANSWER BUILDER
+# ===================================================================
+
+def _build_fact_check_answer(events: list, analysis: QueryAnalysis) -> str | None:
+    """
+    Build fact-check response: confirm or correct user's factual claim.
+
+    Logic:
+    1. User claims an event happened in year X
+    2. We find the actual event → get actual year
+    3. If X == actual → confirm ("Đúng rồi!")
+    4. If X != actual → correct ("Không, sự kiện này diễn ra năm Y, không phải X")
+
+    Examples:
+        "Bác Hồ ra đi năm 1991 phải không?" → "Không phải, ... năm 1911 ..."
+        "Bác Hồ đọc tuyên ngôn năm 1945 đúng không?" → "Đúng rồi! ..."
+    """
+    if not events:
+        return None
+
+    best = events[0]
+    actual_year = best.get("year")
+    claimed_year = analysis.fact_check_year
+    story = (best.get("story") or best.get("event") or "").strip()
+
+    # Coerce actual_year to int for comparison (may be stored as str in some events)
+    if actual_year is not None:
+        try:
+            actual_year = int(actual_year)
+        except (ValueError, TypeError):
+            actual_year = None
+
+    if not actual_year or not story:
+        return None
+
+    if claimed_year is None:
+        # User asked for confirmation but didn't specify a year → just answer
+        return f"Theo dữ liệu lịch sử, sự kiện này diễn ra vào năm **{actual_year}**.\n\n{story}"
+
+    if actual_year == claimed_year:
+        # User's claim is CORRECT → confirm enthusiastically
+        return (
+            f"✅ **Đúng rồi!** Sự kiện này diễn ra vào năm **{actual_year}**.\n\n"
+            f"{story}"
+        )
+    else:
+        # User's claim is WRONG → correct politely with actual year
+        return (
+            f"❌ **Không phải năm {claimed_year}**, sự kiện này thực tế diễn ra "
+            f"vào năm **{actual_year}**.\n\n"
+            f"{story}"
+        )
+
+
+# ===================================================================
 # CORE SYNTHESIS FUNCTION
 # ===================================================================
 
@@ -285,13 +340,18 @@ def synthesize_answer(analysis: QueryAnalysis, events: list) -> str | None:
 
     Internal logic (Principle 7 — NOT printed):
     1. Check for data_scope intent → direct meta-answer
-    2. Route by question_type → focused builder
-    3. Apply duration guard warnings
-    4. GROUNDING CHECK: Validate events are relevant to query entities
+    2. Check for fact_check intent → confirm/correct user's claim
+    3. Route by question_type → focused builder
+    4. Apply duration guard warnings
+    5. GROUNDING CHECK: Validate events are relevant to query entities
     """
     # Data scope → no events needed
     if analysis.intent == "data_scope":
         return _handle_data_scope()
+
+    # Fact-check → confirm or correct user's factual claim
+    if analysis.intent == "fact_check" or analysis.is_fact_check:
+        return _build_fact_check_answer(events, analysis)
 
     if not events:
         return None
