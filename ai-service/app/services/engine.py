@@ -28,6 +28,17 @@ from app.services.implicit_context import (
     has_resistance_terms,
     NON_DISCRIMINATING_KEYWORDS,
 )
+# --- Phase 1 / Giai đoạn 11: Protection Layers ---
+from app.services.constraint_extractor import ConstraintExtractor
+from app.services.answer_validator import AnswerValidator
+from app.services.conflict_detector import ConflictDetector
+from app.services import confidence_scorer
+from app.services import answer_builder
+from app.services import answer_formatter
+from app.services.rewrite_engine import RewriteEngine
+from app.core.config import (
+    CONFIDENCE_THRESHOLD, RERANK_WEIGHT, ENTAILMENT_WEIGHT, USE_LLM_REWRITE,
+)
 import app.core.startup as startup
 import re
 
@@ -937,6 +948,35 @@ def engine_answer(query: str):
         multi_years=multi_years,
     )
 
+    # --- STEP 1.7: CONSTRAINT EXTRACTION (Phase 1 / Giai đoạn 11) ---
+    # Build QueryInfo from QueryAnalysis + resolved entities
+    # This consolidates all hard constraints into 1 object for downstream filtering
+    _constraint_extractor = ConstraintExtractor()
+    query_info = _constraint_extractor.extract(
+        original_query=query,
+        normalized_query=rewritten,
+        query_analysis=query_analysis,
+        resolved_entities=resolved,
+    )
+
+    # --- STEP 1.8: CONFLICT DETECTION (Temporal Consistency Guard) ---
+    # Detect contradictions BEFORE search to avoid impossible answers
+    # e.g., "Năm 1945 Trần Hưng Đạo" → Person died 1300 → CONFLICT
+    _conflict_detector = ConflictDetector()
+    query_info = _conflict_detector.detect(query_info)
+    if query_info.has_conflict:
+        conflict_msg = "; ".join(query_info.conflict_reasons)
+        print(f"[CONFLICT_GATE] Query rejected: {conflict_msg}")
+        return {
+            "query": q_display,
+            "intent": intent,
+            "answer": "Hiện tại tôi chưa tìm được thông tin phù hợp chính xác với câu hỏi này.",
+            "events": [],
+            "no_data": True,
+            "conflict": True,
+            "conflict_reasons": query_info.conflict_reasons,
+        }
+
     # Data scope query — immediate return, no retrieval needed
     if query_analysis.intent == "data_scope":
         answer = synthesize_answer(query_analysis, [])
@@ -946,6 +986,34 @@ def engine_answer(query: str):
             "answer": answer,
             "events": [],
             "no_data": False
+        }
+
+    # --- FACT-CHECK INTENT ---
+    # User claims a fact and asks for confirmation ("...năm 1991 phải không?")
+    # Retrieve events, then compare claimed year vs actual year
+    if query_analysis.intent == "fact_check":
+        fc_events = scan_by_entities(resolved)
+        if not fc_events:
+            fc_events = semantic_search(rewritten)
+        # Deduplicate and pick best match
+        fc_events = deduplicate_and_enrich(fc_events, max_events=5)
+        answer = synthesize_answer(query_analysis, fc_events)
+        if answer:
+            return {
+                "query": q_display,
+                "intent": "fact_check",
+                "answer": answer,
+                "events": fc_events[:3],
+                "no_data": False
+            }
+        # Fallback: if no events found, generate no-data suggestion
+        suggestion = _generate_no_data_suggestion(query, rewritten, resolved, question_intent)
+        return {
+            "query": q_display,
+            "intent": "fact_check",
+            "answer": suggestion,
+            "events": [],
+            "no_data": True
         }
 
     # --- STEP 1.6: SEMANTIC INTENT CLASSIFICATION ---
@@ -1281,6 +1349,13 @@ def engine_answer(query: str):
     if raw_events and not (is_entity_query or is_dynasty_query or is_range_query):
         raw_events = validate_events_nli(query, raw_events)
 
+    # --- STEP 5.5: HARD CONSTRAINT FILTER (Phase 1 / Giai đoạn 11) ---
+    # LỚP BẢO VỆ QUAN TRỌNG NHẤT — enforce year/entity/answer_type constraints
+    # Runs AFTER NLI to work on already-validated candidates
+    if raw_events:
+        _answer_validator = AnswerValidator()
+        raw_events = _answer_validator.filter_events(query_info, raw_events)
+
     # --- FINAL RELEVANCE GUARD ---
     # When query mentions specific persons, verify at least one result actually
     # discusses that person. Only check persons that appear in the ORIGINAL query
@@ -1349,16 +1424,50 @@ def engine_answer(query: str):
 
     # Deduplicate and enrich events
     unique_events = deduplicate_and_enrich(raw_events, max_events) if not no_data else []
-    
-    # --- V2 ANSWER SYNTHESIS ---
-    # Try V2 template-based synthesis first (respects question_type: when/who/list/what)
-    # Falls back to legacy format_complete_answer if synthesis returns None
-    synthesized = synthesize_answer(query_analysis, unique_events)
-    if synthesized:
-        answer = synthesized
-    else:
-        # Legacy: comprehensive answer formatting
-        answer = format_complete_answer(unique_events, group_by=semantic_group_by)
+
+    # --- STEP 7: CONFIDENCE SCORING (Phase 1 / Giai đoạn 11) ---
+    # Score events and check if confidence is high enough to answer
+    if unique_events:
+        unique_events = confidence_scorer.score_events(
+            unique_events,
+            rerank_weight=RERANK_WEIGHT,
+            entailment_weight=ENTAILMENT_WEIGHT,
+        )
+        # Gate: reject if best confidence < threshold (context-aware)
+        if not confidence_scorer.should_answer(unique_events, CONFIDENCE_THRESHOLD, intent=intent):
+            # Override no_data — confidence too low
+            safe_resp = confidence_scorer.safe_fallback()
+            return {
+                "query": q_display,
+                "intent": intent,
+                "answer": safe_resp["answer"],
+                "events": unique_events[:3],  # Still return top events for debug
+                "no_data": True
+            }
+
+    # --- STEP 8: ANSWER SYNTHESIS (Phase 1 / Giai đoạn 11) ---
+    # Try new AnswerBuilder → AnswerFormatter pipeline first
+    # Falls back to legacy synthesize_answer / format_complete_answer
+    answer = None
+
+    if unique_events:
+        # Phase 1: Structured answer pipeline
+        structured = answer_builder.build_answer(query_info, unique_events)
+        if structured:
+            formatted = answer_formatter.format_answer(structured, query_info)
+            if formatted:
+                # Apply LLM rewrite (currently disabled — placeholder)
+                _rewriter = RewriteEngine(enabled=USE_LLM_REWRITE)
+                answer = _rewriter.rewrite(structured, formatted)
+
+    # Fallback: legacy synthesis
+    if not answer:
+        synthesized = synthesize_answer(query_analysis, unique_events)
+        if synthesized:
+            answer = synthesized
+        else:
+            # Legacy: comprehensive answer formatting
+            answer = format_complete_answer(unique_events, group_by=semantic_group_by)
 
     # --- SPECIAL & QUỐC HIỆU INTRO SENTENCES ---
     # Prepend a poetic, engaging intro based on semantic intent or quốc hiệu

@@ -1106,3 +1106,195 @@ class TestPersonDynastyCollision:
         assert r["intent"] in ("dynasty", "dynasty_query")
 
 
+# ===================================================================
+# N. FACT-CHECK DETECTION (UNIT TESTS) — Pattern matching
+# ===================================================================
+
+class TestFactCheckDetection:
+    """Unit tests for detect_fact_check() — pattern-based confirmation detection."""
+
+    def test_wrong_year_phai_khong(self):
+        """'Bác Hồ ra đi năm 1991 phải không?' → fact_check, year=1991"""
+        from app.services.intent_classifier import detect_fact_check
+        is_fc, year = detect_fact_check("Bác Hồ ra đi năm 1991 phải không?")
+        assert is_fc is True
+        assert year == 1991
+
+    def test_correct_year_dung_khong(self):
+        """'Bác Hồ đọc tuyên ngôn năm 1945 đúng không?' → fact_check, year=1945"""
+        from app.services.intent_classifier import detect_fact_check
+        is_fc, year = detect_fact_check("Bác Hồ đọc tuyên ngôn năm 1945 đúng không?")
+        assert is_fc is True
+        assert year == 1945
+
+    def test_co_phai_pattern(self):
+        """'Có phải trận Bạch Đằng năm 900 không?' → fact_check, year=900"""
+        from app.services.intent_classifier import detect_fact_check
+        is_fc, year = detect_fact_check("Có phải trận Bạch Đằng năm 900 không?")
+        assert is_fc is True
+        assert year == 900
+
+    def test_reversed_year_first(self):
+        """'1911 đúng là năm Bác Hồ ra đi chứ?' → fact_check, year=1911"""
+        from app.services.intent_classifier import detect_fact_check
+        is_fc, year = detect_fact_check("1911 đúng là năm Bác Hồ ra đi chứ?")
+        assert is_fc is True
+        assert year == 1911
+
+    def test_casual_ha_suffix(self):
+        """'Trận Bạch Đằng năm 938 hả?' → fact_check"""
+        from app.services.intent_classifier import detect_fact_check
+        is_fc, year = detect_fact_check("Trận Bạch Đằng năm 938 hả?")
+        assert is_fc is True
+        assert year == 938
+
+    def test_casual_a_suffix(self):
+        """'Chiến thắng Điện Biên Phủ năm 1954 à?' → fact_check"""
+        from app.services.intent_classifier import detect_fact_check
+        is_fc, year = detect_fact_check("Chiến thắng Điện Biên Phủ năm 1954 à?")
+        assert is_fc is True
+        assert year == 1954
+
+    def test_dien_ra_phai_khong(self):
+        """'Khởi nghĩa Hai Bà Trưng diễn ra năm 50 phải không?' → fact_check"""
+        from app.services.intent_classifier import detect_fact_check
+        is_fc, year = detect_fact_check("Khởi nghĩa Hai Bà Trưng diễn ra năm 50 phải không?")
+        assert is_fc is True
+        assert year == 50
+
+    def test_not_fact_check_when_question(self):
+        """'Trận Bạch Đằng năm nào?' → NOT a fact-check (asking for info)"""
+        from app.services.intent_classifier import detect_fact_check
+        is_fc, year = detect_fact_check("Trận Bạch Đằng năm nào?")
+        assert is_fc is False
+
+    def test_not_fact_check_normal_query(self):
+        """'Sự kiện năm 1288' → NOT a fact-check"""
+        from app.services.intent_classifier import detect_fact_check
+        is_fc, year = detect_fact_check("Sự kiện năm 1288")
+        assert is_fc is False
+
+    def test_not_fact_check_greeting(self):
+        """'Xin chào' → NOT a fact-check"""
+        from app.services.intent_classifier import detect_fact_check
+        is_fc, year = detect_fact_check("Xin chào")
+        assert is_fc is False
+
+
+# ===================================================================
+# O. FACT-CHECK ENGINE QUERIES (Integration)
+# ===================================================================
+
+class TestFactCheckQueries:
+    """Integration tests: engine_answer with fact-check queries."""
+
+    @patch("app.services.engine.semantic_search")
+    @patch("app.services.engine.scan_by_entities")
+    def test_wrong_year_correction(self, mock_scan, mock_search):
+        """User claims wrong year → engine corrects with actual year."""
+        _setup_full_mocks()
+        mock_scan.return_value = [MOCK_TRAN_HUNG_DAO]  # year=1288
+        mock_search.return_value = []
+        from app.services.engine import engine_answer
+        r = engine_answer("Trần Hưng Đạo đánh quân Nguyên năm 1200 phải không?")
+        assert r["intent"] == "fact_check"
+        assert not r["no_data"]
+        # Answer should mention the correct year 1288 and refute 1200
+        assert "1288" in r["answer"]
+        assert "1200" in r["answer"]
+
+    @patch("app.services.engine.semantic_search")
+    @patch("app.services.engine.scan_by_entities")
+    def test_correct_year_confirmation(self, mock_scan, mock_search):
+        """User states correct year → engine confirms."""
+        _setup_full_mocks()
+        mock_scan.return_value = [MOCK_TRAN_HUNG_DAO]  # year=1288
+        mock_search.return_value = []
+        from app.services.engine import engine_answer
+        r = engine_answer("Có phải trận Bạch Đằng năm 1288 không?")
+        assert r["intent"] == "fact_check"
+        assert not r["no_data"]
+        # Answer should confirm
+        assert "1288" in r["answer"]
+        assert "Đúng" in r["answer"]
+
+    @patch("app.services.engine.semantic_search")
+    @patch("app.services.engine.scan_by_entities")
+    def test_fact_check_hcm_wrong_year(self, mock_scan, mock_search):
+        """'Bác Hồ đọc tuyên ngôn năm 1950 đúng không?' → correct to 1945"""
+        _setup_full_mocks()
+        mock_scan.return_value = [MOCK_HCM]  # year=1945
+        mock_search.return_value = []
+        from app.services.engine import engine_answer
+        r = engine_answer("Bác Hồ đọc tuyên ngôn năm 1950 đúng không?")
+        assert r["intent"] == "fact_check"
+        assert "1945" in r["answer"]
+        assert "1950" in r["answer"]
+
+    @patch("app.services.engine.semantic_search")
+    @patch("app.services.engine.scan_by_entities")
+    def test_fact_check_dbp_correct(self, mock_scan, mock_search):
+        """'Chiến thắng Điện Biên Phủ năm 1954 à?' → confirm"""
+        _setup_full_mocks()
+        mock_scan.return_value = [MOCK_DBP]  # year=1954
+        mock_search.return_value = []
+        from app.services.engine import engine_answer
+        r = engine_answer("Chiến thắng Điện Biên Phủ năm 1954 à?")
+        assert r["intent"] == "fact_check"
+        assert "1954" in r["answer"]
+        assert "Đúng" in r["answer"]
+
+
+# ===================================================================
+# P. QUESTION VARIANT TESTS (diverse phrasing → same answer)
+# ===================================================================
+
+class TestQuestionVariants:
+    """Test that diverse question phrasings resolve correctly."""
+
+    @patch("app.services.engine.semantic_search")
+    @patch("app.services.engine.scan_by_entities")
+    def test_ask_year_of_event(self, mock_scan, mock_search):
+        """'Trận Bạch Đằng diễn ra năm nào?' → returns year event"""
+        _setup_full_mocks()
+        mock_scan.return_value = [MOCK_NGO_QUYEN, MOCK_TRAN_HUNG_DAO]
+        mock_search.return_value = []
+        from app.services.engine import engine_answer
+        r = engine_answer("Trận Bạch Đằng diễn ra năm nào?")
+        assert not r["no_data"]
+        assert len(r["events"]) > 0
+
+    @patch("app.services.engine.semantic_search")
+    @patch("app.services.engine.scan_by_entities")
+    def test_ask_who_is_person(self, mock_scan, mock_search):
+        """'Trần Hưng Đạo là ai?' → definition/person query"""
+        _setup_full_mocks()
+        mock_scan.return_value = [MOCK_TRAN_HUNG_DAO, MOCK_HICH_TUONG_SI]
+        mock_search.return_value = []
+        from app.services.engine import engine_answer
+        r = engine_answer("Trần Hưng Đạo là ai?")
+        assert r["intent"] in ("definition", "person_query")
+        assert not r["no_data"]
+
+    @patch("app.services.engine.semantic_search")
+    @patch("app.services.engine.scan_by_entities")
+    def test_ask_what_happened(self, mock_scan, mock_search):
+        """'Quang Trung đánh quân Thanh như thế nào?' → event query"""
+        _setup_full_mocks()
+        mock_scan.return_value = [MOCK_QUANG_TRUNG]
+        mock_search.return_value = []
+        from app.services.engine import engine_answer
+        r = engine_answer("Quang Trung đánh quân Thanh như thế nào?")
+        assert not r["no_data"]
+        assert len(r["events"]) > 0
+
+    @patch("app.services.engine.semantic_search")
+    @patch("app.services.engine.scan_by_entities")
+    def test_casual_question(self, mock_scan, mock_search):
+        """'Nói cho tui biết về Lê Lợi đi' → person query"""
+        _setup_full_mocks()
+        mock_scan.return_value = [MOCK_LE_LOI]
+        mock_search.return_value = []
+        from app.services.engine import engine_answer
+        r = engine_answer("Nói cho tui biết về Lê Lợi đi")
+        assert not r["no_data"]

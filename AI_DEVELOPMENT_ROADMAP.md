@@ -44,9 +44,13 @@ timeline
                  : Dynamic entity registry
                  : Inverted indexes at startup
     Giai đoạn 9 : Robustness + Bug Fixing
-                 : 629+ tests, 24 test files
+                 : 650+ tests, 23 test files
                  : Null safety, type coercion
                  : Edge case handling
+    Giai đoạn 10 : Fact-Check Layer
+                  : Phát hiện/sửa sai sự thật
+                  : 11 regex patterns, 3 answer branches
+                  : Confirm ✅ hoặc Correct ❌
 ```
 
 ---
@@ -493,22 +497,88 @@ graph LR
     style A3 fill:#C8E6C9
 ```
 
-### Test Suite: 629+ tests
+### Test Suite: 650+ tests
 
 | Category | Files | Tests |
 |----------|-------|-------|
-| Engine | 3 | 78 + 35 + 16 = 129 |
+| Engine | 3 | 130 + 35 + 16 = 181 |
 | NLU | 3 | 55 + 30 + 53 = 138 |
 | Integration | 2 | 74 + 30 = 104 |
 | Pipeline | 3 | 30 + 20 + 30 = 80 |
 | API & Schema | 4 | 68 |
 | Performance | 2 | 36 |
-| Others | 7 | 74 |
-| **Tổng** | **24** | **629+** |
+| Others | 6 | 43 |
+| **Tổng** | **23** | **650+** |
 
 ---
 
-## Kiến trúc hiện tại (v4.0)
+## Giai đoạn 10: Fact-Check Layer ✅
+
+### Vấn đề
+
+Người dùng thường **nêu một sự thật và hỏi xác nhận** — nhưng sự thật đó có thể sai:
+
+- "Bác Hồ ra đi năm **1991** phải không?" → Sai! Đúng là 1911
+- "Trận Bạch Đằng năm **1200** đúng không?" → Sai! Đúng là 1288
+- "Điện Biên Phủ năm **1954** à?" → Đúng ✅
+
+Trước đây, engine xử lý như câu hỏi thông thường → không phát hiện lỗi sai của người dùng.
+
+### Giải pháp: Fact-Check Detection + Answer Correction
+
+```mermaid
+flowchart LR
+    Q["📝 Câu hỏi\n'Bác Hồ ra đi\nnăm 1991 phải không?'"] --> FC["🔍 Fact-Check\nDetector\n11 regex patterns"]
+    FC --> |"is_fact_check=True\nclaimed_year=1991"| SEARCH["🔎 Entity Scan\n+ Semantic Search"]
+    SEARCH --> |"actual_year=1911"| CMP{"So sánh\n1991 vs 1911"}
+    CMP --> |"≠"| WRONG["❌ Sửa sai\n'Không phải năm 1991,\nthực tế là năm 1911'"]
+    CMP --> |"="| RIGHT["✅ Xác nhận\n'Đúng rồi!\nnăm 1911'"]
+
+    style FC fill:#1b4332,color:#fff
+    style WRONG fill:#FFCDD2,stroke:#F44336
+    style RIGHT fill:#C8E6C9,stroke:#4CAF50
+```
+
+### 11 Fact-Check Patterns (Tiếng Việt)
+
+| Pattern | Ví dụ |
+|---------|-------|
+| `có phải ... năm X không` | "Có phải trận Bạch Đằng năm 900 không?" |
+| `... năm X phải không` | "Bác Hồ ra đi năm 1991 phải không?" |
+| `... năm X đúng không` | "Điện Biên Phủ năm 1954 đúng không?" |
+| `đúng là ... năm X chứ` | "Đúng là Bác Hồ ra đi năm 1911 chứ?" |
+| `X đúng là năm ... chứ` | "1911 đúng là năm Bác Hồ ra đi chứ?" |
+| `... năm X hả/à/chứ/nhỉ` | "Điện Biên Phủ năm 1954 à?" |
+| `có đúng là ... năm X` | "Có đúng là Bác Hồ ra đi năm 1911?" |
+| `... năm X có đúng không` | "Bạch Đằng năm 1288 có đúng không?" |
+| `... diễn ra năm X phải không` | "Trận này diễn ra năm 1288 phải không?" |
+| `... xảy ra năm X đúng không` | "Sự kiện xảy ra năm 1945 đúng không?" |
+| `... vào năm X phải/đúng không` | "Vào năm 1911 phải không?" |
+
+### 3 Answer Branches
+
+```mermaid
+graph TD
+    FC["Fact-Check Result"] --> B1["✅ Đúng rồi!\nUser's year = Actual year\n→ Xác nhận + kể chi tiết"]
+    FC --> B2["❌ Không phải năm X\nUser's year ≠ Actual year\n→ Sửa lịch sự + năm đúng"]
+    FC --> B3["📅 Năm thực tế là Y\nUser không nêu năm\n→ Cung cấp thông tin"]
+
+    style B1 fill:#C8E6C9,stroke:#4CAF50
+    style B2 fill:#FFCDD2,stroke:#F44336
+    style B3 fill:#E3F2FD,stroke:#1565C0
+```
+
+### Kết quả thực tế
+
+| Input | Output |
+|-------|--------|
+| "Bác Hồ ra đi năm 1991 phải không?" | ❌ **Không phải năm 1991**, sự kiện này thực tế diễn ra vào năm **1911**. |
+| "Điện Biên Phủ năm 1954 à?" | ✅ **Đúng rồi!** Sự kiện này diễn ra vào năm **1954**. |
+| "Trận Bạch Đằng năm 1200 đúng không?" | ❌ **Không phải năm 1200**, sự kiện này thực tế diễn ra vào năm **1288**. |
+
+---
+
+## Kiến trúc hiện tại (v5.0)
 
 ```mermaid
 flowchart TD
@@ -524,11 +594,12 @@ flowchart TD
 
     NLU --> IC
 
-    subgraph IC["🎯 Intent Classifier — 10 intent types"]
+    subgraph IC["🎯 Intent Classifier — 11 intent types"]
         direction TB
         IC1["Phân loại câu hỏi"]
         IC2["Duration guard"]
         IC3["Question type detection"]
+        IC4["Fact-check detection"]
     end
 
     IC --> Search
@@ -563,6 +634,7 @@ flowchart TD
         AS1["Template-based formatting"]
         AS2["Question-type aware verbosity"]
         AS3["Period grouping cho list queries"]
+        AS4["Fact-check: confirm ✅ / correct ❌"]
     end
 
     Synth -->|"Implicit context"| Format
@@ -634,10 +706,10 @@ graph TD
 
 ```mermaid
 graph LR
-    Now["Hiện tại v4.0<br/>Semantic Search<br/>+ Rerank + NLI<br/>+ Intent + Synthesis"] --> F1["🔜 Claude LLM<br/>Sinh câu trả lời<br/>tự nhiên hơn<br/>(fallback to rule-based)"]
-    Now --> F2["🔜 Fine-tune<br/>Cross-Encoder<br/>trên dữ liệu VN"]
-    Now --> F3["🔜 Hybrid Search<br/>BM25 + Semantic"]
-    Now --> F4["🔜 User Feedback<br/>thumb up/down<br/>cải thiện ranking"]
+    Now["Hiện tại v5.0\nSemantic Search\n+ Rerank + NLI\n+ Intent + Synthesis\n+ Fact-Check"] --> F1["🔜 Claude LLM\nSinh câu trả lời\ntự nhiên hơn\n(fallback to rule-based)"]
+    Now --> F2["🔜 Fine-tune\nCross-Encoder\ntrên dữ liệu VN"]
+    Now --> F3["🔜 Hybrid Search\nBM25 + Semantic"]
+    Now --> F4["🔜 User Feedback\nthumb up/down\ncải thiện ranking"]
 
     style Now fill:#E3F2FD,stroke:#1565C0
     style F1 fill:#FFF9C4,stroke:#F9A825
@@ -648,4 +720,4 @@ graph LR
 
 ---
 
-*Cập nhật lần cuối: 2026-02-15*
+*Cập nhật lần cuối: 2026-02-16*
