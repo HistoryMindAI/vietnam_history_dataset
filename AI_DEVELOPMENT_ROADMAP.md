@@ -36,6 +36,17 @@ timeline
     Giai đoạn 6 : NLI Answer Validator
                  : MiniLMv2-L6 multilingual NLI
                  : Entailment filtering
+    Giai đoạn 7 : Intent Classifier + Answer Synthesis
+                 : 10 intent types, duration guard
+                 : Template-based answer formatting
+    Giai đoạn 8 : Data-Driven Architecture
+                 : knowledge_base.json
+                 : Dynamic entity registry
+                 : Inverted indexes at startup
+    Giai đoạn 9 : Robustness + Bug Fixing
+                 : 629+ tests, 24 test files
+                 : Null safety, type coercion
+                 : Edge case handling
 ```
 
 ---
@@ -314,7 +325,190 @@ graph LR
 
 ---
 
-## Kiến trúc hiện tại
+## Giai đoạn 7: Intent Classifier + Answer Synthesis ✅
+
+### Vấn đề
+
+Pipeline NLI + Cross-Encoder tìm đúng kết quả, nhưng **cách trả lời chưa thông minh**:
+
+- Câu hỏi "khi nào" → trả lại danh sách dài thay vì chỉ nêu năm
+- Câu hỏi "ai" → dump toàn bộ sự kiện thay vì tập trung nhân vật
+- Câu hỏi "liệt kê" → không nhóm theo thời kỳ
+- "1000 năm Thăng Long" → hiểu nhầm thành năm 1000
+
+### Giải pháp: Intent Classifier
+
+Phân loại câu hỏi thành **10 intent types** trước khi xử lý:
+
+```mermaid
+graph TD
+    Q["📝 Câu hỏi"] --> IC["🎯 Intent Classifier"]
+
+    IC --> I1["year_range<br/>'Từ 1945 đến 1975'"]
+    IC --> I2["year_specific<br/>'Năm 1945 có gì?'"]
+    IC --> I3["person_query<br/>'Trần Hưng Đạo đánh gì?'"]
+    IC --> I4["dynasty_query<br/>'Nhà Trần tồn tại bao lâu?'"]
+    IC --> I5["event_query<br/>'Trận Bạch Đằng'"]
+    IC --> I6["definition<br/>'X là ai?'"]
+    IC --> I7["relationship<br/>'A và B là gì của nhau?'"]
+    IC --> I8["broad_history<br/>'Lịch sử VN'"]
+    IC --> I9["data_scope<br/>'Dataset có gì?'"]
+    IC --> I10["semantic<br/>Fallback"]
+
+    style IC fill:#1b4332,color:#fff
+    style I1 fill:#E3F2FD
+    style I2 fill:#E3F2FD
+    style I3 fill:#FFF3E0
+    style I4 fill:#FFF3E0
+    style I5 fill:#E8F5E9
+    style I6 fill:#E8F5E9
+    style I7 fill:#F3E5F5
+    style I8 fill:#F3E5F5
+    style I9 fill:#FCE4EC
+    style I10 fill:#ECEFF1
+```
+
+### Duration Guard
+
+Phân biệt **"X năm"** là thời gian hay năm lịch sử:
+
+| Input | Phân loại | Giải thích |
+|-------|-----------|------------|
+| "kỷ niệm 1000 năm Thăng Long" | ⏱️ Duration | 1000 là số năm, không phải năm 1000 |
+| "hơn 150 năm chia cắt" | ⏱️ Duration | 150 là thời gian |
+| "năm 1945" | 📅 Year | Năm lịch sử cụ thể |
+| "sự kiện năm 1010" | 📅 Year | Năm lịch sử cụ thể |
+
+### Answer Synthesis
+
+Điều chỉnh format câu trả lời theo **question_type**:
+
+```mermaid
+graph LR
+    subgraph "Question Type → Format"
+        WHEN["when<br/>'Khi nào?'"] --> WHEN_F["Năm + bối cảnh ngắn"]
+        WHO["who<br/>'Ai?'"] --> WHO_F["Tiểu sử + sự kiện chính"]
+        WHAT["what<br/>'Gì?'"] --> WHAT_F["Mô tả sự kiện chi tiết"]
+        LIST["list<br/>'Liệt kê'"] --> LIST_F["Nhóm theo thời kỳ"]
+        SCOPE["scope<br/>'Phạm vi?'"] --> SCOPE_F["Thống kê dataset"]
+    end
+
+    style WHEN fill:#E3F2FD
+    style WHO fill:#FFF3E0
+    style WHAT fill:#E8F5E9
+    style LIST fill:#F3E5F5
+    style SCOPE fill:#FCE4EC
+```
+
+---
+
+## Giai đoạn 8: Data-Driven Architecture ✅
+
+### Vấn đề
+
+Hệ thống trước đó hard-code aliases, synonyms trong code Python → **mỗi lần thêm nhân vật / chủ đề mới phải sửa code, commit, deploy lại**.
+
+### Giải pháp: `knowledge_base.json`
+
+**Single Source of Truth** — tất cả dữ liệu động load từ 1 file JSON:
+
+```mermaid
+graph TD
+    KB["📄 knowledge_base.json"] --> S1["person_aliases<br/>Trần Quốc Tuấn → Trần Hưng Đạo"]
+    KB --> S2["topic_synonyms<br/>Mông Cổ → Nguyên Mông"]
+    KB --> S3["dynasty_aliases<br/>Nhà Trần → Trần"]
+    KB --> S4["abbreviations<br/>HCM → Hồ Chí Minh"]
+    KB --> S5["typo_fixes<br/>quangtrung → quang trung"]
+    KB --> S6["question_patterns<br/>ai đã, khi nào, ở đâu"]
+    KB --> S7["resistance_synonyms<br/>kháng chiến → [các cuộc chiến]"]
+
+    S1 & S2 & S3 & S4 & S5 & S6 & S7 --> STARTUP["🚀 Startup<br/>Auto-build indexes"]
+    STARTUP --> IDX1["📇 PERSON_INDEX"]
+    STARTUP --> IDX2["📇 DYNASTY_INDEX"]
+    STARTUP --> IDX3["📇 KEYWORD_INDEX"]
+    STARTUP --> IDX4["📇 ENTITY_YEAR_INDEX"]
+
+    style KB fill:#FFF3E0,stroke:#FF9800
+    style STARTUP fill:#E8F5E9,stroke:#4CAF50
+```
+
+### Implicit Context Layer
+
+Xử lý đặc thù 100% dataset là lịch sử Việt Nam:
+
+- **"Việt Nam"** không phải keyword phân biệt → tự động bỏ qua khi filter
+- **Kháng chiến** → tự động mở rộng thành các cuộc chiến cụ thể
+- **Query rộng** → thêm search queries để bao phủ nhiều triều đại
+
+---
+
+## Giai đoạn 9: Robustness + Bug Fixing ✅
+
+### Vấn đề
+
+Khi scale lên 500K+ documents, xuất hiện các edge cases:
+
+- **Null/empty fields**: Story hoặc event là `None`, empty string
+- **Malformed data types**: Year là string, story là integer/list/dict
+- **FAISS negative indices**: Index trả về `-1` khi không tìm thấy
+- **Empty max() calls**: Không có valid scores để so sánh
+
+### 7 bugs được fix
+
+| Bug | Mô tả | Ảnh hưởng |
+|-----|-------|-----------|
+| #1 | `clean_story[0].upper()` crash khi string rỗng | Server crash |
+| #2 | `max()` trên empty list | Server crash |
+| #4 | `None` passed to string operations | Server crash |
+| #5 | FAISS negative indices `-1` → array access | Kết quả sai |
+| — | `len(non-string)` crash trong sort | Server crash |
+| — | Unhashable year types (list, dict) | Server crash |
+| — | None years break sort comparison | Server crash |
+
+### Type Safety được thêm vào
+
+```mermaid
+graph LR
+    subgraph "Trước: Crash với data xấu"
+        B1["story = 12345<br/>❌ len(12345)"]
+        B2["year = [1945]<br/>❌ unhashable"]
+        B3["story = None<br/>❌ None.strip()"]
+    end
+
+    subgraph "Sau: Handles gracefully"
+        A1["story = 12345<br/>✅ str(12345)"]
+        A2["year = [1945]<br/>✅ int(1945)"]
+        A3["story = None<br/>✅ return empty"]
+    end
+
+    B1 -->|"Type coercion"| A1
+    B2 -->|"Year coercion"| A2
+    B3 -->|"Null safety"| A3
+
+    style B1 fill:#FFCDD2
+    style B2 fill:#FFCDD2
+    style B3 fill:#FFCDD2
+    style A1 fill:#C8E6C9
+    style A2 fill:#C8E6C9
+    style A3 fill:#C8E6C9
+```
+
+### Test Suite: 629+ tests
+
+| Category | Files | Tests |
+|----------|-------|-------|
+| Engine | 3 | 78 + 35 + 16 = 129 |
+| NLU | 3 | 55 + 30 + 53 = 138 |
+| Integration | 2 | 74 + 30 = 104 |
+| Pipeline | 3 | 30 + 20 + 30 = 80 |
+| API & Schema | 4 | 68 |
+| Performance | 2 | 36 |
+| Others | 7 | 74 |
+| **Tổng** | **24** | **629+** |
+
+---
+
+## Kiến trúc hiện tại (v4.0)
 
 ```mermaid
 flowchart TD
@@ -328,7 +522,16 @@ flowchart TD
         N4["Entity detection"]
     end
 
-    NLU --> Search
+    NLU --> IC
+
+    subgraph IC["🎯 Intent Classifier — 10 intent types"]
+        direction TB
+        IC1["Phân loại câu hỏi"]
+        IC2["Duration guard"]
+        IC3["Question type detection"]
+    end
+
+    IC --> Search
 
     subgraph Search["🔍 Semantic Search — vietnamese-sbert ONNX 130 MB"]
         direction TB
@@ -353,21 +556,33 @@ flowchart TD
         V2["Loại bỏ contradiction events"]
     end
 
-    NLI -->|"Filtered events"| Format
+    NLI -->|"Filtered events"| Synth
 
-    subgraph Format["📄 Answer Formatting"]
+    subgraph Synth["📄 Answer Synthesis"]
         direction TB
-        F1["Template-based formatting"]
-        F2["Ghép theo năm, nhân vật"]
+        AS1["Template-based formatting"]
+        AS2["Question-type aware verbosity"]
+        AS3["Period grouping cho list queries"]
+    end
+
+    Synth -->|"Implicit context"| Format
+
+    subgraph Format["🌍 Implicit Context"]
+        direction TB
+        F1["Vietnam scope detection"]
+        F2["Resistance term expansion"]
+        F3["Non-discriminating keyword filter"]
     end
 
     Format --> A["💬 Câu trả lời"]
 
     style Q fill:#E3F2FD,stroke:#1565C0
     style A fill:#E8F5E9,stroke:#2E7D32
+    style IC fill:#1b4332,color:#fff
     style Search fill:#FFF3E0,stroke:#FF9800
     style Rerank fill:#E8EAF6,stroke:#3F51B5
     style NLI fill:#F3E5F5,stroke:#7B1FA2
+    style Synth fill:#FFF8E1,stroke:#FF6F00
 ```
 
 ## Tổng kích thước Models
@@ -419,7 +634,7 @@ graph TD
 
 ```mermaid
 graph LR
-    Now["Hiện tại<br/>Semantic Search<br/>+ Rerank + NLI"] --> F1["🔜 Phi-4-mini LLM<br/>Sinh câu trả lời<br/>tự nhiên hơn"]
+    Now["Hiện tại v4.0<br/>Semantic Search<br/>+ Rerank + NLI<br/>+ Intent + Synthesis"] --> F1["🔜 Claude LLM<br/>Sinh câu trả lời<br/>tự nhiên hơn<br/>(fallback to rule-based)"]
     Now --> F2["🔜 Fine-tune<br/>Cross-Encoder<br/>trên dữ liệu VN"]
     Now --> F3["🔜 Hybrid Search<br/>BM25 + Semantic"]
     Now --> F4["🔜 User Feedback<br/>thumb up/down<br/>cải thiện ranking"]
@@ -433,4 +648,4 @@ graph LR
 
 ---
 
-*Cập nhật lần cuối: 2026-02-13*
+*Cập nhật lần cuối: 2026-02-15*

@@ -30,6 +30,32 @@ from app.services.implicit_context import (
 import app.core.startup as startup
 import re
 
+# ===================================================================
+# HELPER FUNCTIONS FOR ENTITY DETECTION
+# ===================================================================
+
+def _looks_like_entity_query(query: str) -> bool:
+    """
+    Detect if query looks like it's asking about a specific entity
+    (person, dynasty, event) even if entity resolution failed.
+
+    Used to prevent hallucination from weak semantic matches.
+    """
+    q_lower = query.lower()
+
+    # Patterns indicating entity-specific query
+    entity_patterns = [
+        r"(ai là|là ai|who is|who was)",
+        r"(là gì|what is|what was)",
+        r"(nào là|which is)",
+        r"(vua|vị vua|vị tướng|hoàng đế|anh hùng)",
+        r"(bà|ông|chúa|tướng|thái úy)",
+        r"(nhà .{1,20})",  # "nhà X", likely dynasty
+    ]
+
+    return any(re.search(pattern, q_lower) for pattern in entity_patterns)
+
+
 # Pre-compile regex for faster matching
 YEAR_PATTERN = re.compile(r"(?<![\d-])([1-9][0-9]{1,3})(?!\d)")
 
@@ -255,6 +281,10 @@ def clean_story_text(text: str, year: int | None = None) -> str:
     if not text:
         return ""
     
+    # Coerce non-string types to string
+    if not isinstance(text, str):
+        text = str(text)
+    
     result = text.strip()
     
     # Phase 1: Remove structural/query-style prefixes (these are data artifacts, not content)
@@ -374,6 +404,16 @@ def deduplicate_and_enrich(raw_events: list, max_events: int = MAX_TOTAL_EVENTS)
     by_year = {}
     for e in raw_events:
         year = e.get("year", 0)
+        # Coerce non-int/non-hashable year types
+        if year is None:
+            year = 0
+        elif not isinstance(year, (int, float)):
+            try:
+                year = int(year) if not isinstance(year, (list, dict, set)) else 0
+            except (ValueError, TypeError):
+                year = 0
+        else:
+            year = int(year)
         if year not in by_year:
             by_year[year] = []
         by_year[year].append(e)
@@ -381,16 +421,16 @@ def deduplicate_and_enrich(raw_events: list, max_events: int = MAX_TOTAL_EVENTS)
     # Global cluster for cross-year dedup
     global_cluster = []  # [{"event": doc, "text": cleaned, "text_lower": lower, "keywords": set}]
     
-    for year in sorted(by_year.keys()):
+    for year in sorted(by_year.keys(), key=lambda y: y if isinstance(y, (int, float)) else 0):
         year_events = by_year[year]
         if not year_events:
             continue
 
         # Sort by content length (descending) to prefer longer, detailed stories as base 
-        year_events.sort(key=lambda x: len(x.get("story", "") or x.get("event", "")), reverse=True)
+        year_events.sort(key=lambda x: len(str(x.get("story", "") or x.get("event", "") or "")), reverse=True)
         
         for event in year_events:
-            event_text = clean_story_text(event.get("story", "") or event.get("event", ""))
+            event_text = clean_story_text(event.get("story", "") or event.get("event", "") or "")
             
             # Filter out texts that are too short after cleaning (metadata noise)
             if len(event_text.strip()) < MIN_CLEAN_TEXT_LENGTH:
@@ -493,19 +533,29 @@ def format_complete_answer(events: list, group_by: str = "year") -> str:
 
 def _format_event_text(e: dict, year=None, seen_texts: set = None) -> str | None:
     """Format a single event into clean text. Returns None if duplicate."""
-    story = e.get("story", "") or e.get("event", "")
+    story = e.get("story", "") or e.get("event", "") or ""
+    # Coerce non-string types to string
+    if not isinstance(story, str):
+        story = str(story)
     clean_story = clean_story_text(story, year)
 
-    if not clean_story:
+    # Bug #4 Fix: Ensure clean_story is valid before proceeding
+    if not clean_story or not isinstance(clean_story, str) or len(clean_story.strip()) == 0:
         return None
 
     title = e.get("title", "")
     clean_title = clean_story_text(title, year) if title else ""
 
-    if clean_title and clean_story and clean_title.lower() != clean_story.lower():
-        if not _is_question_title(clean_title):
-            if clean_title.lower() not in clean_story.lower():
-                clean_story = f"{clean_title}: {clean_story}"
+    # Bug #4 Fix: Additional validation for clean_title before string operations
+    if clean_title and isinstance(clean_title, str) and clean_title.strip():
+        if clean_story and clean_title.lower() != clean_story.lower():
+            if not _is_question_title(clean_title):
+                if clean_title.lower() not in clean_story.lower():
+                    clean_story = f"{clean_title}: {clean_story}"
+
+    # Bug #1 Fix: Check clean_story is not empty before indexing
+    if not clean_story or len(clean_story) == 0:
+        return None
 
     clean_story = clean_story[0].upper() + clean_story[1:]
     if not clean_story.endswith(('.', '!', '?')):
@@ -527,6 +577,16 @@ def _format_by_year(events: list) -> str | None:
     by_year = {}
     for e in events:
         year = e.get("year")
+        # Coerce non-hashable/non-int year types
+        if year is None:
+            year = 0
+        elif not isinstance(year, (int, float)):
+            try:
+                year = int(year) if not isinstance(year, (list, dict, set)) else 0
+            except (ValueError, TypeError):
+                year = 0
+        else:
+            year = int(year)
         if year not in by_year:
             by_year[year] = []
         by_year[year].append(e)
@@ -586,10 +646,14 @@ def _format_by_dynasty(events: list) -> str | None:
 
         if event_texts:
             # Create dynasty header with year range
-            years = [e.get("year") for e in dynasty_events if e.get("year")]
-            if years:
-                year_range = f"{min(years)}–{max(years)}" if min(years) != max(years) else str(min(years))
-                header = f"**{dynasty} ({year_range}):**"
+            # Bug #2b Fix: Ensure years list is not empty before min/max
+            years = [e.get("year") for e in dynasty_events if e.get("year") and isinstance(e.get("year"), (int, str))]
+            if years and len(years) > 0:
+                try:
+                    year_range = f"{min(years)}–{max(years)}" if min(years) != max(years) else str(min(years))
+                    header = f"**{dynasty} ({year_range}):**"
+                except (ValueError, TypeError):
+                    header = f"**{dynasty}:**"
             else:
                 header = f"**{dynasty}:**"
             paragraphs.append(f"{header} {' '.join(event_texts)}")
@@ -645,8 +709,13 @@ def _filter_by_query_keywords(query: str, events: list) -> list:
     if not scored:
         return events
 
+    # Bug #2 Fix: Filter out None scores and check if any valid scores exist
+    valid_scores = [s for _, s in scored if s is not None and s > 0]
+    if not valid_scores:
+        return events  # No valid scores to compare
+
     # Find the maximum score achieved
-    max_score = max(s for _, s in scored)
+    max_score = max(valid_scores)
     if max_score <= 1:
         return events  # All events have low overlap, don't filter
 
@@ -1050,8 +1119,16 @@ def engine_answer(query: str):
             if 0 < entity_scan_count < 3:
                 raw_events.extend(semantic_search(rewritten))
         elif is_definition:
-            intent = "definition"
-            raw_events = semantic_search(rewritten)
+            # GROUNDING CHECK: If definition query looks like asking about specific entity
+            # but entity resolution found NOTHING, this is likely a DATA GAP (missing person in database).
+            # Don't fallback to semantic search → force "no data" to prevent hallucination
+            if _looks_like_entity_query(q) and not has_entities:
+                # Query looks entity-specific but no entities resolved → data gap
+                intent = "no_data"
+                raw_events = []  # Force no_data=True to trigger "not found" message
+            else:
+                intent = "definition"
+                raw_events = semantic_search(rewritten)
         else:
             # Use pre-extracted year (with duration guard already applied)
             year = query_analysis.year  # None if duration_guard is True
