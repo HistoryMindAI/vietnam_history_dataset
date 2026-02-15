@@ -42,7 +42,7 @@ from entity_registry import (
 # CONFIGURATION
 # ========================
 DATASET_NAME = "minhxthanh/Vietnam-History-1M-Vi"
-MAX_SAMPLES = int(os.getenv("MAX_SAMPLES", 500000))
+MAX_SAMPLES = int(os.getenv("MAX_SAMPLES", 1000000))
 DEDUP_THRESHOLD = float(os.getenv("DEDUP_THRESHOLD", 0.85))
 MIN_ANSWER_LENGTH = int(os.getenv("MIN_ANSWER_LENGTH", 30))
 MIN_DOCS_TARGET = 5000

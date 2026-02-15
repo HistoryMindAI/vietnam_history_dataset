@@ -115,6 +115,9 @@ class ConstraintExtractor:
             if query_analysis.intent in ("year_specific", "year"):
                 required_year = query_analysis.year
 
+        # --- Detect relation type (Phase 3 v2.1) ---
+        relation_type = self._detect_relation_type(normalized_query)
+
         return QueryInfo(
             original_query=original_query,
             normalized_query=normalized_query,
@@ -129,6 +132,7 @@ class ConstraintExtractor:
             is_fact_check=query_analysis.is_fact_check,
             claimed_year=query_analysis.fact_check_year,
             confidence_threshold=0.55,
+            relation_type=relation_type,
         )
 
     def _extract_required_persons(self, resolved: dict) -> List[str]:
@@ -164,6 +168,54 @@ class ConstraintExtractor:
         topics = resolved.get("topics", [])
         if topics:
             return topics[0].strip().lower()
+        return None
+
+    def _detect_relation_type(self, query: str) -> Optional[str]:
+        """
+        Phase 3 v2.1: Detect person-dynasty relation type from query text.
+
+        Priority order (higher wins):
+            1. live_during — temporal reference, NOT membership
+            2. belong_to  — explicit membership claim
+            3. compare    — comparison between entities
+            4. None       — no relation detected → Phase 3 skips
+
+        Priority matters:
+            "Nguyễn Trãi sống cuối thời nhà Trần"
+            Contains BOTH "thời nhà" (belong_to) AND "cuối thời" (live_during).
+            live_during wins → Phase 3 DOES NOT fire → no false reject.
+        """
+        q = query.lower()
+
+        # 1. live_during (must check BEFORE belong_to)
+        live_during_patterns = [
+            r"cuối\s+thời", r"đầu\s+thời", r"sinh\s+thời",
+            r"trong\s+giai\s+đoạn", r"sống\s+vào", r"sống\s+thời",
+            r"sinh\s+vào", r"ra\s+đời\s+thời", r"cuối\s+đời",
+        ]
+        for pattern in live_during_patterns:
+            if re.search(pattern, q):
+                return "live_during"
+
+        # 2. belong_to (explicit membership)
+        belong_to_patterns = [
+            r"thuộc", r"phục\s+vụ", r"thời\s+nhà",
+            r"dưới\s+triều", r"triều\s+đại",
+            r"\btriều\b",  # "triều Lê" → belong_to
+            r"\bthời\b",  # generic "thời" as fallback belong_to
+        ]
+        for pattern in belong_to_patterns:
+            if re.search(pattern, q):
+                return "belong_to"
+
+        # 3. compare
+        compare_patterns = [
+            r"so\s+với", r"\bvà\b.*\bthời\b",
+        ]
+        for pattern in compare_patterns:
+            if re.search(pattern, q):
+                return "compare"
+
         return None
 
     def _detect_question_type(
