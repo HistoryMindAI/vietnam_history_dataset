@@ -74,6 +74,10 @@ class QueryInfo:
     has_conflict: bool = False
     conflict_reasons: List[str] = field(default_factory=list)
 
+    # Phase 3 v2.1: Relation type (extracted by ConstraintExtractor)
+    # "belong_to" | "live_during" | "compare" | None
+    relation_type: Optional[str] = None
+
     # Scoring
     confidence_threshold: float = 0.55
 

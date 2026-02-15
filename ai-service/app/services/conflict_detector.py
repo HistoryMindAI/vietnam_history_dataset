@@ -35,7 +35,7 @@ from app.core.query_schema import QueryInfo
 logger = logging.getLogger(__name__)
 
 
-ENTITY_TEMPORAL_METADATA_VERSION = "v2.0"
+ENTITY_TEMPORAL_METADATA_VERSION = "v2.1"
 
 # ===================================================================
 # ENTITY TEMPORAL METADATA
@@ -154,6 +154,11 @@ ENTITY_TEMPORAL_METADATA: Dict[str, dict] = {
         "lifespan": (1442, 1497),
         "era": ["lê sơ"],
     },
+    "nguyễn kim": {
+        "type": "person",
+        "lifespan": (1468, 1545),
+        "era": ["lê trung hưng"],
+    },
     "nguyễn huệ": {
         "type": "person",
         "lifespan": (1753, 1792),
@@ -262,6 +267,14 @@ ENTITY_TEMPORAL_METADATA: Dict[str, dict] = {
         "type": "dynasty",
         "year_range": (1533, 1789),
     },
+    "hậu lê": {
+        "type": "dynasty",
+        "year_range": (1428, 1789),  # Composite: lê sơ + lê trung hưng
+    },
+    "nhà lê": {
+        "type": "dynasty",
+        "year_range": (1428, 1789),  # Composite: lê sơ + lê trung hưng
+    },
     "tây sơn": {
         "type": "dynasty",
         "year_range": (1778, 1802),
@@ -284,12 +297,13 @@ ENTITY_TEMPORAL_METADATA: Dict[str, dict] = {
 _DYNASTY_SHORT_NAMES = {
     "lý": "nhà lý",
     "trần": "nhà trần",
-    "lê": "lê sơ",  # Default "Lê" → Lê sơ
+    "lê": "lê sơ",  # Default "Lê" → Lê sơ for metadata lookup
     "nguyễn": "nhà nguyễn",
     "mạc": "nhà mạc",
     "hồ": "nhà hồ",
     "đinh": "nhà đinh",
     "ngô": "nhà ngô",
+    # nhà lê & hậu lê now have their own metadata entries
 }
 
 # Dynasty normalization for era-membership check (Phase 3)
@@ -299,7 +313,7 @@ _DYNASTY_NORMALIZATION_MAP = {
     # Short names → canonical
     "trần": "nhà trần",
     "lý": "nhà lý",
-    "lê": "lê sơ",
+    "lê": ["lê sơ", "lê trung hưng"],  # Ambiguous → both candidates
     "nguyễn": "nhà nguyễn",
     "mạc": "nhà mạc",
     "hồ": "nhà hồ",
@@ -308,10 +322,10 @@ _DYNASTY_NORMALIZATION_MAP = {
     # Full names → canonical (identity or disambiguation)
     "nhà trần": "nhà trần",
     "nhà lý": "nhà lý",
-    "nhà lê": "lê sơ",       # Ambiguous: default to Lê sơ
+    "nhà lê": ["lê sơ", "lê trung hưng"],  # Ambiguous → both candidates
     "lê sơ": "lê sơ",
     "lê trung hưng": "lê trung hưng",
-    "hậu lê": "lê trung hưng",
+    "hậu lê": ["lê sơ", "lê trung hưng"],  # Composite: cả hai
     "nhà nguyễn": "nhà nguyễn",
     "triều nguyễn": "nhà nguyễn",
     "nhà mạc": "nhà mạc",
@@ -353,10 +367,11 @@ class ConflictDetector:
         """
         Check query constraints for temporal conflicts.
 
-        Invariants (FROZEN):
+        Invariants (FROZEN v2.1):
             0. Self-consistency: required_year ∈ required_year_range
             1. Entity vs query: each entity overlaps required_year / required_year_range
             2. Cross-entity: all entities share non-empty global temporal intersection
+            3. Era-membership: person.era ∋ dynasty (only if relation_type == belong_to)
 
         Mutates query_info in-place:
           - query_info.has_conflict = True if conflict found
@@ -498,20 +513,29 @@ class ConflictDetector:
 
     def _detect_era_membership_conflicts(self, query_info: QueryInfo) -> None:
         """
-        Phase 3: Era-membership consistency — HARD rule.
+        Phase 3 (v2.1): Era-membership consistency — STRICT but context-aware HARD rule.
 
-        Reject when:
+        Reject ONLY when:
+        - relation_type == "belong_to"
         - Query contains ≥1 person with era metadata
         - Query contains ≥1 dynasty
-        - Person.era does NOT include dynasty
+        - No normalized dynasty candidate matches person's era list
 
-        Complexity: O(p × d), typically constant.
+        Safety guarantees:
+        - No over-rejection for live_during / compare relations
+        - Ambiguous dynasty names handled via multi-candidate normalization
+        - Deterministic, O(p × d × k) but tiny constants
         """
         if query_info.has_conflict:
             return  # short-circuit safety
 
+        # Context-aware guard: only fire for explicit membership claims
+        if getattr(query_info, "relation_type", None) != "belong_to":
+            return
+
         persons_with_era = []
         dynasties = []
+        seen_persons = set()  # deduplicate
 
         for name in query_info.required_persons:
             meta = self._lookup_metadata(name)
@@ -521,7 +545,10 @@ class ConflictDetector:
             entity_type = meta.get("type")
 
             if entity_type == "person" and "era" in meta:
-                persons_with_era.append((name, meta["era"]))
+                person_key = name.lower().strip()
+                if person_key not in seen_persons:
+                    seen_persons.add(person_key)
+                    persons_with_era.append((name, meta["era"]))
             elif entity_type in ("dynasty", "era"):
                 dynasties.append(self._normalize_dynasty_name(name))
 
@@ -531,12 +558,18 @@ class ConflictDetector:
 
         # HARD RULE: each person must match each dynasty
         for person_name, person_eras in persons_with_era:
-            for dynasty in dynasties:
-                if dynasty not in person_eras:
+            for dynasty_candidates in dynasties:
+                # dynasty_candidates is List[str] — check if ANY candidate matches
+                match_found = any(
+                    candidate in person_eras
+                    for candidate in dynasty_candidates
+                )
+
+                if not match_found:
                     query_info.has_conflict = True
                     query_info.conflict_reasons.append(
                         f"Era-membership conflict: "
-                        f"'{person_name}' belongs to {person_eras}, not '{dynasty}'."
+                        f"'{person_name}' belongs to {person_eras}, not {dynasty_candidates}."
                     )
                     logger.warning(
                         f"[CONFLICT] {query_info.conflict_reasons[-1]} "
@@ -544,7 +577,15 @@ class ConflictDetector:
                     )
                     return  # early exit (deterministic reject)
 
-    def _normalize_dynasty_name(self, name: str) -> str:
-        """Normalize dynasty name to canonical form for era-membership lookup."""
+    def _normalize_dynasty_name(self, name: str) -> list:
+        """
+        Normalize dynasty name to canonical form(s) for era-membership lookup.
+
+        Returns List[str] — always a list.
+        For ambiguous names (e.g., 'nhà lê'), returns multiple candidates.
+        """
         normalized = name.lower().strip()
-        return _DYNASTY_NORMALIZATION_MAP.get(normalized, normalized)
+        result = _DYNASTY_NORMALIZATION_MAP.get(normalized, normalized)
+        if isinstance(result, list):
+            return result
+        return [result]
