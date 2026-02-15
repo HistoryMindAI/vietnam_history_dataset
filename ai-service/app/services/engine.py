@@ -19,6 +19,7 @@ from app.services.intent_classifier import (
     classify_intent, QueryAnalysis, detect_duration_guard,
 )
 from app.services.answer_synthesis import synthesize_answer
+from app.services.semantic_intent import classify_semantic_intent
 from app.services.implicit_context import (
     expand_query_with_implicit_context,
     filter_discriminating_keywords,
@@ -947,8 +948,56 @@ def engine_answer(query: str):
             "no_data": False
         }
 
+    # --- STEP 1.6: SEMANTIC INTENT CLASSIFICATION ---
+    # Classify war/resistance/territorial queries using linguistic analysis
+    # This handles: "chiến tranh Việt Nam", "kháng chiến ở VN", etc.
+    sem_intent = classify_semantic_intent(rewritten, resolved)
+    war_intro = None  # Special intro for war/resistance queries
+
     # Map new intents to legacy dispatch flags
-    if query_analysis.intent == "dynasty_timeline":
+    if sem_intent.intent == "resistance_national" and sem_intent.confidence >= 0.85:
+        # NATIONAL RESISTANCE — "chiến tranh Việt Nam", "kháng chiến chống ngoại xâm"
+        intent = "resistance_national"
+        is_range_query = True  # Use higher event limit
+        raw_events = scan_national_resistance()
+        # Also supplement with year-range scan for 1945-1975 (anti-French + anti-American)
+        range_events = scan_by_year_range(1945, 1975)
+        for e in range_events:
+            if e not in raw_events:
+                raw_events.append(e)
+        # Also supplement with semantic search for broader coverage
+        sem_results = semantic_search(rewritten)
+        for e in sem_results:
+            if e not in raw_events:
+                raw_events.append(e)
+        war_intro = (
+            'Có phải bạn đang muốn tìm hiểu về: "Kháng chiến chống giặc ngoại xâm'
+            ' – bản hùng ca giữ nước vang vọng suốt chiều dài'
+            ' lịch sử vẻ vang của dân tộc Việt Nam ta."'
+        )
+    elif sem_intent.intent == "territorial_event" and sem_intent.confidence >= 0.80:
+        # TERRITORIAL — "chiến tranh ở Việt Nam"
+        intent = "territorial_event"
+        is_range_query = True
+        raw_events = scan_territorial_conflicts()
+        range_events = scan_by_year_range(1945, 1975)
+        for e in range_events:
+            if e not in raw_events:
+                raw_events.append(e)
+        sem_results = semantic_search(rewritten)
+        for e in sem_results:
+            if e not in raw_events:
+                raw_events.append(e)
+        war_intro = (
+            'Có phải bạn đang muốn tìm hiểu về: "Kháng chiến chống giặc ngoại xâm'
+            ' – bản hùng ca giữ nước vang vọng suốt chiều dài'
+            ' lịch sử vẻ vang của dân tộc Việt Nam ta."'
+        )
+    elif sem_intent.intent == "civil_war" and sem_intent.confidence >= 0.80:
+        intent = "civil_war"
+        is_range_query = True
+        raw_events = scan_civil_wars()
+    elif query_analysis.intent == "dynasty_timeline":
         intent = "dynasty_timeline"
         is_dynasty_query = True
         raw_events = scan_by_dynasty_timeline()
@@ -1251,6 +1300,28 @@ def engine_answer(query: str):
             if not has_relevant:
                 raw_events = []  # No doc mentions the queried person → noise
 
+    # --- ĐẠI VIỆT TEMPORAL FILTER ---
+    # Quốc hiệu (country names) have known date ranges.
+    # Filter events outside the quốc hiệu's temporal bounds to avoid anachronisms.
+    QUOC_HIEU_TEMPORAL = {
+        "đại việt": (1054, 1804),   # Lý Thánh Tông đổi quốc hiệu 1054 → Gia Long đổi thành Việt Nam 1804
+        "đại cồ việt": (968, 1054), # Đinh Tiên Hoàng 968 → Lý Thánh Tông 1054
+        "đại nam": (1820, 1945),    # Minh Mạng đổi quốc hiệu → end of Nguyễn dynasty
+    }
+    if raw_events and resolved.get("places"):
+        resolved_places_lower = set(p.lower() for p in resolved["places"])
+        for quoc_hieu, (start_yr, end_yr) in QUOC_HIEU_TEMPORAL.items():
+            if quoc_hieu in resolved_places_lower:
+                # Filter out events outside the quốc hiệu's temporal bounds
+                temporal_filtered = [
+                    e for e in raw_events
+                    if start_yr <= (e.get("year", 0) or 0) <= end_yr
+                ]
+                # Only apply filter if it keeps at least some results
+                if temporal_filtered:
+                    raw_events = temporal_filtered
+                break  # Only apply one quốc hiệu filter
+
     no_data = not raw_events
 
     # Use higher event limit for range/dynasty/entity queries
@@ -1277,24 +1348,14 @@ def engine_answer(query: str):
         answer = format_complete_answer(unique_events, group_by=semantic_group_by)
 
     # --- SPECIAL & QUỐC HIỆU INTRO SENTENCES ---
-    # Prepend a poetic, engaging intro based on query keywords or quốc hiệu
+    # Prepend a poetic, engaging intro based on semantic intent or quốc hiệu
     if answer and not no_data:
         intro_added = False
 
-        # 1) Keyword-based special intros (checked against original query text)
-        _KEYWORD_INTROS = {
-            "chiến tranh việt nam": (
-                'Bạn đang muốn tìm hiểu về: "Kháng chiến chống giặc ngoại xâm'
-                " – bản hùng ca giữ nước vang vọng suốt chiều dài"
-                ' lịch sử dân tộc Việt Nam ta."'
-            ),
-        }
-        query_lower = query.lower()
-        for keyword, intro in _KEYWORD_INTROS.items():
-            if keyword in query_lower:
-                answer = intro + "\n\n" + answer
-                intro_added = True
-                break
+        # 1) War/resistance intro from semantic intent classification
+        if war_intro:
+            answer = war_intro + "\n\n" + answer
+            intro_added = True
 
         # 2) Quốc hiệu intros (checked against resolved places)
         if not intro_added:
