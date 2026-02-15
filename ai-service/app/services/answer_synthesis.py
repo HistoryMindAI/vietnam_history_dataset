@@ -121,9 +121,13 @@ def _build_who_answer(events: list, analysis: QueryAnalysis) -> str | None:
     """
     Build answer for 'who' questions about a person.
     Focuses on the person's identity and key achievements.
+    Validates each event mentions the target person (grounding).
     """
     if not events:
         return None
+
+    # Extract target persons for grounding validation
+    target_persons = [p.lower() for p in analysis.entities.get("persons", [])]
 
     parts = []
     seen_texts = set()
@@ -132,6 +136,21 @@ def _build_who_answer(events: list, analysis: QueryAnalysis) -> str | None:
         story = (e.get("story") or "").strip()
         if not story or story.lower() in seen_texts:
             continue
+
+        # GROUNDING CHECK: Skip events that don't mention target person
+        if target_persons:
+            event_persons = [p.lower() for p in (e.get("persons") or [])]
+            story_lower = story.lower()
+
+            # Check if event mentions any target person
+            mentions_target = any(
+                person in event_persons or person in story_lower
+                for person in target_persons
+            )
+
+            if not mentions_target:
+                continue  # Skip unrelated events
+
         seen_texts.add(story.lower())
 
         year = e.get("year")
@@ -268,6 +287,7 @@ def synthesize_answer(analysis: QueryAnalysis, events: list) -> str | None:
     1. Check for data_scope intent → direct meta-answer
     2. Route by question_type → focused builder
     3. Apply duration guard warnings
+    4. GROUNDING CHECK: Validate events are relevant to query entities
     """
     # Data scope → no events needed
     if analysis.intent == "data_scope":
@@ -275,6 +295,36 @@ def synthesize_answer(analysis: QueryAnalysis, events: list) -> str | None:
 
     if not events:
         return None
+
+    # GROUNDING VALIDATION: Check if events are actually relevant
+    # For entity-specific queries (person/dynasty), validate that returned events mention the target entity
+    target_persons = analysis.entities.get("persons", [])
+    target_dynasties = analysis.entities.get("dynasties", [])
+
+    if target_persons or target_dynasties:
+        # Check if at least the first event mentions the target entity
+        first_event = events[0]
+        event_persons = [p.lower() for p in (first_event.get("persons") or [])]
+        event_dynasties = [d.lower() for d in (first_event.get("dynasties") or [])]
+        event_text = (first_event.get("story") or first_event.get("event") or "").lower()
+
+        # Validate grounding: does the event mention any target entity?
+        entity_found = False
+
+        for person in target_persons:
+            if person.lower() in event_persons or person.lower() in event_text:
+                entity_found = True
+                break
+
+        if not entity_found:
+            for dynasty in target_dynasties:
+                if dynasty.lower() in event_dynasties or dynasty.lower() in event_text:
+                    entity_found = True
+                    break
+
+        # If no entity found in first event, likely weak semantic match → return None to force "no data"
+        if not entity_found:
+            return None
 
     # Route by question type
     qtype = analysis.question_type

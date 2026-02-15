@@ -298,7 +298,7 @@ def scan_by_entities(resolved: dict, max_results: int = 50) -> list:
     # Return actual documents, capped at max_results
     docs = []
     for i in sorted(doc_indices):
-        if i < len(startup.DOCUMENTS):
+        if 0 <= i < len(startup.DOCUMENTS):
             docs.append(startup.DOCUMENTS[i])
         if len(docs) >= max_results:
             break
@@ -545,14 +545,15 @@ def semantic_search(query: str):
 
         # Then add FAISS semantic results
         for score, idx in zip(scores[0], ids[0]):
-            if idx == -1:
+            # Bug #5 Fix: Reject all negative indices (not just -1)
+            if idx < 0:
                 continue
-            
+
             # Score must meet threshold
             if score < threshold:
                 continue
-            
-            # Use startup.DOCUMENTS
+
+            # Use startup.DOCUMENTS with bounds check
             if idx < len(startup.DOCUMENTS):
                 doc = startup.DOCUMENTS[idx]
                 
@@ -580,7 +581,7 @@ def semantic_search(query: str):
                     var_emb_2d = np.expand_dims(var_emb, axis=0)
                     var_scores, var_ids = startup.index.search(var_emb_2d, TOP_K)
                     for v_score, v_idx in zip(var_scores[0], var_ids[0]):
-                        if v_idx == -1 or v_score < threshold:
+                        if v_idx < 0 or v_score < threshold:
                             continue
                         if v_idx < len(startup.DOCUMENTS):
                             doc = startup.DOCUMENTS[v_idx]
