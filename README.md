@@ -5,10 +5,10 @@ Dự án này là hệ thống Chatbot thông minh hỗ trợ tra cứu và tr�
 ## 🎯 Status
 
 ```
-✅ Version: 4.0.0
-✅ Tests: 629+ tests passing (24 test files)
+✅ Version: 5.0.0
+✅ Tests: 650+ tests passing (23 test files)
 ✅ AI Models: 3 ONNX models (Embedding + Cross-Encoder + NLI)
-✅ Architecture: Intent Classifier + Answer Synthesis + Implicit Context
+✅ Architecture: Intent Classifier (11 types) + Fact-Check + Answer Synthesis + Implicit Context
 ✅ Data: HuggingFace Dataset (500K+ samples) → FAISS Index
 ✅ Status: PRODUCTION READY
 ```
@@ -88,11 +88,11 @@ graph TD
 
     subgraph "🤖 AI Service — FastAPI"
         NLU["NLU Layer<br/>Sửa lỗi, phục hồi dấu, entity detection"]
-        IC["Intent Classifier<br/>10 intent types, duration guard"]
+        IC["Intent Classifier<br/>11 intent types, duration guard, fact-check"]
         ENGINE["Query Engine<br/>Multi-strategy search routing"]
         CE["Cross-Encoder Rerank<br/>mmarco multilingual ONNX"]
         NLI["NLI Validator<br/>Entailment checking"]
-        AS["Answer Synthesis<br/>Template-based, question-type aware"]
+        AS["Answer Synthesis<br/>Template-based, question-type aware, fact-check"]
         CTX["Implicit Context<br/>Vietnam scope detection"]
     end
 
@@ -171,10 +171,13 @@ flowchart LR
 | `definition` | Định nghĩa | "Trần Quốc Tuấn là ai?" |
 | `relationship` | Mối quan hệ | "Trần Hưng Đạo và Trần Quốc Tuấn là gì?" |
 | `broad_history` | Lịch sử tổng quan | "Lịch sử Việt Nam qua các triều đại" |
+| `fact_check` | Kiểm tra sự thật | "Bác Hồ ra đi năm 1991 phải không?" |
 | `data_scope` | Phạm vi dữ liệu | "Bạn có dữ liệu đến năm nào?" |
 | `semantic` | Fallback tìm kiếm ngữ nghĩa | Query chung |
 
 > **Duration Guard**: Tự động phát hiện "1000 năm Thăng Long" = kỷ niệm, KHÔNG phải năm 1000. Xử lý thông minh "hơn 150 năm chia cắt", "kỷ niệm 1000 năm".
+>
+> **Fact-Check**: Phát hiện khi người dùng nêu một sự thật sai và hỏi xác nhận ("...năm 1991 phải không?") → so sánh với dữ liệu thực → ✅ xác nhận hoặc ❌ sửa lịch sự.
 
 ---
 
@@ -190,7 +193,9 @@ flowchart TD
     IDENTITY -- Có --> ID["🤖 Identity"]
     IDENTITY -- Không --> SCOPE{"Data scope?"}
     SCOPE -- Có --> DS["📊 Data Scope Stats"]
-    SCOPE -- Không --> YEAR_RANGE{"Khoảng năm?"}
+    SCOPE -- Không --> FACTCHECK{"Fact-check?"}
+    FACTCHECK -- Có --> FC["🔍 Fact-Check\n✅ Confirm / ❌ Correct"]
+    FACTCHECK -- Không --> YEAR_RANGE{"Khoảng năm?"}
     YEAR_RANGE -- Có --> YR["📅 scan_by_year_range"]
     YEAR_RANGE -- Không --> MULTI_YEAR{"Nhiều năm?"}
     MULTI_YEAR -- Có --> MY["📅 scan_by_year × N"]
@@ -212,6 +217,8 @@ flowchart TD
     RESULT -- Không --> FALLBACK["🔄 Fallback Chain"]
     FORMAT --> OUTPUT["📤 JSON Response"]
     FALLBACK --> OUTPUT
+    FC --> OUTPUT
+    DS --> OUTPUT
 
     style NLU fill:#1b4332,color:#fff
     style INTENT fill:#1b4332,color:#fff
@@ -260,12 +267,12 @@ cd ai-service
 
 python -m pytest ../tests/test_engine.py -v         # Engine tests
 python -m pytest ../tests/test_nlu.py -v             # NLU tests
-python -m pytest ../tests/ -v                        # Full suite (629+ tests)
+python -m pytest ../tests/ -v                        # Full suite (650+ tests)
 ```
 
 | File | Tests | Nội dung |
 |------|-------|---------  |
-| `test_engine.py` | 78 | Engine: intent, entity, year, multi-entity |
+| `test_engine.py` | 130 | Engine: intent, entity, year, fact-check, multi-entity |
 | `test_comprehensive.py` | 74 | Integration tests: accuracy, relevance |
 | `test_nlu.py` | 55 | NLU: rewriting, fuzzy, accents, phonetic |
 | `test_search_utils.py` | 53 | Search, indexing, relevance |
@@ -274,7 +281,7 @@ python -m pytest ../tests/ -v                        # Full suite (629+ tests)
 | `test_year_extraction.py` | 30 | Year extraction |
 | `test_text_cleaning.py` | 20 | Text normalization |
 | `test_bug_fixes.py` | 16 | Critical bug regression tests |
-| *+ 15 more files* | 238+ | API, schema, performance, dedup, etc. |
+| *+ 14 more files* | 187+ | API, schema, performance, dedup, etc. |
 
 ---
 
@@ -288,13 +295,13 @@ vietnam_history_dataset/
 │   │   │   ├── config.py                  # Config paths & constants
 │   │   │   └── startup.py                 # Load models + build indexes
 │   │   ├── services/
-│   │   │   ├── engine.py                  # 🧠 Query Engine chính (~1300 LOC)
+│   │   │   ├── engine.py                  # 🧠 Query Engine chính (~1500 LOC)
 │   │   │   ├── query_understanding.py     # 🔤 NLU Layer
 │   │   │   ├── search_service.py          # 🔍 Entity resolution + FAISS
 │   │   │   ├── cross_encoder_service.py   # 📊 Cross-Encoder Re-ranking
 │   │   │   ├── nli_validator_service.py   # ✅ NLI Answer Validation
-│   │   │   ├── intent_classifier.py       # 🎯 Intent Classification (10 types)
-│   │   │   ├── answer_synthesis.py        # 📄 Template-Based Answer Synthesis
+│   │   │   ├── intent_classifier.py       # 🎯 Intent Classification (11 types + fact-check)
+│   │   │   ├── answer_synthesis.py        # 📄 Answer Synthesis + Fact-Check Correction
 │   │   │   ├── implicit_context.py        # 🌍 Implicit Vietnam Context
 │   │   │   ├── semantic_intent.py         # Legacy semantic intent
 │   │   │   ├── prompt_templates.py        # Prompt templates
@@ -312,7 +319,7 @@ vietnam_history_dataset/
 │   ├── storyteller.py                     # HuggingFace → structured data
 │   ├── clean_structured_data.py           # Data cleaning
 │   └── index_docs.py                      # FAISS index builder
-├── tests/                                 # Unit tests (24 files, 629+ tests)
+├── tests/                                 # Unit tests (23 files, 650+ tests)
 ├── deploy.ps1 / deploy.sh                 # 🚀 Auto deploy scripts
 ├── push-to-github.ps1 / push-to-github.sh # 📤 Auto push scripts
 ├── docker-compose.yml                     # Docker Compose config
@@ -329,7 +336,7 @@ vietnam_history_dataset/
 | Reranker | `mmarco-mMiniLMv2-L12-H384-v1` (ONNX) |
 | NLI | `multilingual-MiniLMv2-L6-mnli-xnli` (ONNX) |
 | NLU | Fuzzy matching, accent restoration, phonetic normalization |
-| Intent | Custom rule-based classifier (10 intent types) |
+| Intent | Custom rule-based classifier (11 intent types + fact-check) |
 | Synthesis | Template-based, question-type aware |
 | Data | HuggingFace Datasets, Dynamic Entity Registry |
 | Deploy | Docker, Railway, GitHub Actions |

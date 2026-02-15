@@ -58,3 +58,16 @@ RERANKER_THRESHOLD = float(os.getenv("RERANKER_THRESHOLD", -5.0))
 NLI_MODEL_PATH = os.path.join(BASE_DIR, "onnx_nli", "model_quantized.onnx")
 NLI_TOKENIZER_PATH = os.path.join(BASE_DIR, "onnx_nli")
 NLI_ENTAILMENT_THRESHOLD = float(os.getenv("NLI_ENTAILMENT_THRESHOLD", 0.5))
+
+# ===============================
+# CONFIDENCE SCORING (Phase 1 — Giai đoạn 11)
+# ===============================
+CONFIDENCE_THRESHOLD = float(os.getenv("CONFIDENCE_THRESHOLD", 0.55))
+RERANK_WEIGHT = float(os.getenv("RERANK_WEIGHT", 0.6))
+ENTAILMENT_WEIGHT = float(os.getenv("ENTAILMENT_WEIGHT", 0.4))
+
+# ===============================
+# LLM REWRITE (Future — disabled by default)
+# ===============================
+USE_LLM_REWRITE = os.getenv("USE_LLM_REWRITE", "false").lower() == "true"
+
