@@ -13,6 +13,7 @@ from .config import (
     EMBED_MODEL,
     INDEX_PATH,
     META_PATH,
+    DOCS_JSONL_PATH,
     EMBED_MODEL_PATH,
     TOKENIZER_PATH,
     KNOWLEDGE_BASE_PATH,
@@ -140,7 +141,25 @@ def load_resources():
             print(f"[WARN] Metadata not found at {META_PATH}", flush=True)
             META_RAW = {"documents": []}
 
-        DOCUMENTS = META_RAW.get("documents", [])
+        # ===============================
+        # LOAD DOCUMENTS (v3: documents.jsonl, legacy: meta.json)
+        # ===============================
+        if os.path.exists(DOCS_JSONL_PATH):
+            try:
+                docs = []
+                with open(DOCS_JSONL_PATH, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        line = line.strip()
+                        if line:
+                            docs.append(json.loads(line))
+                DOCUMENTS = docs
+                print(f"[STARTUP] Documents loaded from {DOCS_JSONL_PATH} ({len(DOCUMENTS)} docs)", flush=True)
+            except Exception as e:
+                print(f"[ERROR] Failed to read documents.jsonl: {e}", flush=True)
+                DOCUMENTS = META_RAW.get("documents", [])
+        else:
+            DOCUMENTS = META_RAW.get("documents", [])
+            print(f"[STARTUP] Documents loaded from meta.json ({len(DOCUMENTS)} docs)", flush=True)
 
         # ===============================
         # PRE-CALCULATE YEAR INDEX
