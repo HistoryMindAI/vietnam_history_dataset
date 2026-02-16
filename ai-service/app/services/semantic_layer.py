@@ -73,10 +73,10 @@ class FriendlyHistoryAssistant:
 # ==============================================================================
 
 _ALIAS_MAP: Dict[str, str] = {
-    "đàng ngoài": "trịnh",
-    "đàng trong": "nguyễn",
-    "nam triều": "lê trung hưng",
-    "bắc triều": "mạc",
+    "đàng ngoài": "Trịnh",
+    "đàng trong": "Nguyễn",
+    "nam triều": "Lê Trung Hưng",
+    "bắc triều": "Mạc",
 }
 
 
@@ -100,12 +100,11 @@ class SemanticAnalyzer:
         """
         Run all soft semantic checks.
         Returns SemanticResult with notes, warnings, expansions.
+
+        NOTE: Caller (detect()) is responsible for skipping when has_conflict.
+        This keeps the analyzer pure — no conflict-state awareness.
         """
         result = SemanticResult()
-
-        # Phase 4 must NOT override HARD conflict
-        if query_info.has_conflict:
-            return result
 
         self._expand_aliases(query_info, result)
         self._soft_person_overlap(query_info, result)
@@ -129,10 +128,15 @@ class SemanticAnalyzer:
                 )
 
     def _soft_person_overlap(self, query_info, result: SemanticResult) -> None:
-        """Note when multiple persons share temporal overlap."""
+        """Note when multiple persons share temporal overlap (all pairs)."""
+        # Deduplicate by lowercase key to avoid duplicate notes for repeated entities
+        seen_keys: set = set()
         persons = []
         for e in query_info.required_persons:
             key = e.lower().strip()
+            if key in seen_keys:
+                continue
+            seen_keys.add(key)
             meta = self._metadata.get(key)
             if meta and meta.get("type") == "person":
                 lifespan = meta.get("lifespan")
@@ -142,15 +146,17 @@ class SemanticAnalyzer:
         if len(persons) < 2:
             return
 
-        # Global intersection
-        global_start = max(p[1][0] for p in persons)
-        global_end = min(p[1][1] for p in persons)
-
-        if global_start <= global_end:
-            p1, p2 = persons[0][0], persons[1][0]
-            result.notes.append(
-                FriendlyHistoryAssistant.explain_overlap(p1, p2)
-            )
+        # Check ALL pairs — not just the first two
+        for i in range(len(persons)):
+            for j in range(i + 1, len(persons)):
+                p1_name, p1_span = persons[i]
+                p2_name, p2_span = persons[j]
+                pair_start = max(p1_span[0], p2_span[0])
+                pair_end = min(p1_span[1], p2_span[1])
+                if pair_start <= pair_end:
+                    result.notes.append(
+                        FriendlyHistoryAssistant.explain_overlap(p1_name, p2_name)
+                    )
 
     def _soft_person_alignment(self, query_info, result: SemanticResult) -> None:
         """Warn when two persons belong to different eras."""
