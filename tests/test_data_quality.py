@@ -12,6 +12,26 @@ from collections import Counter
 AI_SERVICE_DIR = os.path.join(os.path.dirname(__file__), '..', 'ai-service')
 META_PATH = os.path.join(AI_SERVICE_DIR, 'faiss_index', 'meta.json')
 INDEX_PATH = os.path.join(AI_SERVICE_DIR, 'faiss_index', 'index.bin')
+DOCS_PATH = os.path.join(AI_SERVICE_DIR, 'faiss_index', 'documents.jsonl')
+
+
+def _load_documents():
+    """Load documents from documents.jsonl (v3) or meta.json (legacy)."""
+    # V3: documents.jsonl
+    if os.path.exists(DOCS_PATH):
+        docs = []
+        with open(DOCS_PATH, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    docs.append(json.loads(line))
+        return docs
+    # Legacy: meta.json
+    if os.path.exists(META_PATH):
+        with open(META_PATH, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        return data.get('documents', [])
+    return []
 
 
 class TestFAISSIndexExists:
@@ -26,16 +46,18 @@ class TestFAISSIndexExists:
         assert os.path.exists(INDEX_PATH), f"history.index not found at {INDEX_PATH}"
     
     def test_meta_json_valid_structure(self):
-        """meta.json should have valid structure."""
+        """meta.json should have valid structure (v3: count+dimension, docs in documents.jsonl)."""
         if not os.path.exists(META_PATH):
             pytest.skip("meta.json not found")
         
         with open(META_PATH, 'r', encoding='utf-8') as f:
             data = json.load(f)
         
-        assert "documents" in data, "meta.json missing 'documents' key"
-        assert isinstance(data["documents"], list), "'documents' should be a list"
-        assert len(data["documents"]) > 0, "No documents in meta.json"
+        assert "count" in data, "meta.json missing 'count' key"
+        assert "dimension" in data, "meta.json missing 'dimension' key"
+        # V3: documents live in documents.jsonl
+        docs = _load_documents()
+        assert len(docs) > 0, "No documents found (checked documents.jsonl and meta.json)"
 
 
 class TestDataQuality:
@@ -43,13 +65,11 @@ class TestDataQuality:
     
     @pytest.fixture
     def documents(self):
-        """Load documents from meta.json."""
-        if not os.path.exists(META_PATH):
-            pytest.skip("meta.json not found")
-        
-        with open(META_PATH, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-        return data.get("documents", [])
+        """Load documents from documents.jsonl (v3) or meta.json (legacy)."""
+        docs = _load_documents()
+        if not docs:
+            pytest.skip("No documents found")
+        return docs
     
     def test_documents_have_required_fields(self, documents):
         """Each document should have year and event/title."""
@@ -120,13 +140,11 @@ class TestDeduplicationQuality:
     
     @pytest.fixture
     def documents(self):
-        """Load documents from meta.json."""
-        if not os.path.exists(META_PATH):
-            pytest.skip("meta.json not found")
-        
-        with open(META_PATH, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-        return data.get("documents", [])
+        """Load documents from documents.jsonl (v3) or meta.json (legacy)."""
+        docs = _load_documents()
+        if not docs:
+            pytest.skip("No documents found")
+        return docs
     
     @pytest.mark.skip(reason="Dataset contains augmented variations (questions/summaries) which are similar.")
     def test_no_similar_events_same_year(self, documents):

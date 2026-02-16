@@ -15,8 +15,9 @@ from app.main import app
 from app.schemas.chat import EventOut
 from app.core import startup
 
-# Path to meta.json
+# Paths
 META_JSON_PATH = AI_SERVICE_DIR / "faiss_index" / "meta.json"
+DOCS_JSONL_PATH = AI_SERVICE_DIR / "faiss_index" / "documents.jsonl"
 
 class TestSchemaIntegrity:
     """
@@ -29,14 +30,22 @@ class TestSchemaIntegrity:
 
     def test_event_out_schema_compatibility(self):
         """
-        Load every document from meta.json and validate it against EventOut schema.
-        Fail if any document causes a validation error.
+        Load every document and validate it against EventOut schema.
+        Reads from documents.jsonl (v3) or meta.json (legacy).
         """
-        with open(META_JSON_PATH, encoding="utf-8") as f:
-            data = json.load(f)
-            documents = data.get("documents", [])
+        documents = []
+        if DOCS_JSONL_PATH.exists():
+            with open(DOCS_JSONL_PATH, encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line:
+                        documents.append(json.loads(line))
+        else:
+            with open(META_JSON_PATH, encoding="utf-8") as f:
+                data = json.load(f)
+                documents = data.get("documents", [])
             
-        assert len(documents) > 0, "No documents found in meta.json"
+        assert len(documents) > 0, "No documents found"
         
         for i, doc in enumerate(documents):
             try:
