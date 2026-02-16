@@ -1280,3 +1280,100 @@ class TestEnterpriseEdgeCases:
             assert result.has_conflict == baseline.has_conflict, \
                 f"Order-dependent! {shuffled} gave different result"
 
+
+# ==============================================================================
+# Phase 4: Soft Semantic Layer Tests
+# ==============================================================================
+
+class TestPhase4SoftSemantic:
+    """
+    Phase 4 tests — Soft Semantic Layer.
+    Invariant: Phase 4 NEVER sets has_conflict.
+    """
+
+    def test_phase4_no_mutation(self):
+        """Phase 4 must NEVER set has_conflict = True."""
+        meta = {
+            "nguyễn trãi": {"type": "person", "lifespan": (1380, 1442), "era": ["lê sơ"]},
+            "lê thánh tông": {"type": "person", "lifespan": (1442, 1497), "era": ["lê sơ"]},
+        }
+        detector = ConflictDetector(entity_metadata=meta)
+        qi = _make_query_info(
+            query="Nguyễn Trãi và Lê Thánh Tông",
+            required_persons=["Nguyễn Trãi", "Lê Thánh Tông"],
+        )
+        result = detector.detect(qi)
+        # Phase 4 may add notes/warnings but NEVER conflicts
+        assert result.has_conflict is False
+        assert len(result.conflict_reasons) == 0
+
+    def test_phase4_alias_expansion(self):
+        """Đàng Ngoài → Trịnh alias expansion."""
+        meta = {}  # no metadata needed for alias test
+        detector = ConflictDetector(entity_metadata=meta)
+        qi = _make_query_info(
+            query="Đàng Ngoài",
+            required_persons=["Đàng Ngoài"],
+        )
+        result = detector.detect(qi)
+        assert result.has_conflict is False
+        assert "Đàng Ngoài" in result.semantic_expansions
+        assert result.semantic_expansions["Đàng Ngoài"] == ["trịnh"]
+        assert any("Đàng Ngoài" in n for n in result.semantic_notes)
+
+    def test_phase4_person_overlap_note(self):
+        """Two persons with overlapping lifespans get a friendly note."""
+        meta = {
+            "nguyễn trãi": {"type": "person", "lifespan": (1380, 1442), "era": ["lê sơ"]},
+            "lê lợi": {"type": "person", "lifespan": (1385, 1433), "era": ["lê sơ"]},
+        }
+        detector = ConflictDetector(entity_metadata=meta)
+        qi = _make_query_info(
+            query="Nguyễn Trãi và Lê Lợi",
+            required_persons=["Nguyễn Trãi", "Lê Lợi"],
+        )
+        result = detector.detect(qi)
+        assert result.has_conflict is False
+        assert any("trùng" in n for n in result.semantic_notes)
+
+    def test_phase4_era_alignment_warning(self):
+        """Two persons from different eras get a friendly warning."""
+        meta = {
+            "nguyễn trãi": {"type": "person", "lifespan": (1380, 1442), "era": ["lê sơ"]},
+            "trần hưng đạo": {"type": "person", "lifespan": (1228, 1300), "era": ["trần"]},
+        }
+        detector = ConflictDetector(entity_metadata=meta)
+        qi = _make_query_info(
+            query="Nguyễn Trãi và Trần Hưng Đạo",
+            required_persons=["Nguyễn Trãi", "Trần Hưng Đạo"],
+        )
+        result = detector.detect(qi)
+        # Phase 2 will fire (no overlap) → Phase 4 skipped
+        # So this tests Phase 2 pre-emption
+        if result.has_conflict:
+            # Phase 2 caught it — Phase 4 should NOT have run
+            assert len(result.semantic_warnings) == 0
+        else:
+            # If no conflict, Phase 4 should warn
+            assert any("triều đại khác nhau" in w for w in result.semantic_warnings)
+
+    def test_phase4_skipped_on_conflict(self):
+        """Phase 4 must not run when has_conflict is already True."""
+        meta = {
+            "trần hưng đạo": {"type": "person", "lifespan": (1228, 1300), "era": ["trần"]},
+        }
+        detector = ConflictDetector(entity_metadata=meta)
+        qi = _make_query_info(
+            query="Năm 1945 Trần Hưng Đạo",
+            required_persons=["Trần Hưng Đạo"],
+            required_year=1945,
+        )
+        result = detector.detect(qi)
+        # Phase 1 should catch conflict
+        assert result.has_conflict is True
+        # Phase 4 should have been skipped entirely
+        assert len(result.semantic_notes) == 0
+        assert len(result.semantic_warnings) == 0
+        assert len(result.semantic_expansions) == 0
+
+

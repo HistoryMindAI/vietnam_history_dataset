@@ -22,7 +22,7 @@ USAGE:
 """
 
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 
 @dataclass
@@ -77,6 +77,11 @@ class QueryInfo:
     # Phase 3 v2.1: Relation type (extracted by ConstraintExtractor)
     # "belong_to" | "live_during" | "compare" | None
     relation_type: Optional[str] = None
+
+    # Phase 4: Soft Semantic Layer (non-blocking)
+    semantic_notes: List[str] = field(default_factory=list)
+    semantic_warnings: List[str] = field(default_factory=list)
+    semantic_expansions: Dict[str, List[str]] = field(default_factory=dict)
 
     # Scoring
     confidence_threshold: float = 0.55
