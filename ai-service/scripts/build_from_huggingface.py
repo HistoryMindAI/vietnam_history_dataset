@@ -735,9 +735,12 @@ def _atomic_write_index(index, output_path: Path):
     # Write to temporary file
     faiss.write_index(index, str(tmp_path))
 
-    # fsync the file to ensure data hits disk
-    with open(tmp_path, "rb") as f:
-        os.fsync(f.fileno())
+    # fsync the file to ensure data hits disk (best-effort on Windows)
+    try:
+        with open(tmp_path, "rb") as f:
+            os.fsync(f.fileno())
+    except OSError:
+        pass  # Windows may not support fsync on re-opened descriptors
 
     # Atomic rename (POSIX guarantees atomicity)
     tmp_path.rename(output_path)
