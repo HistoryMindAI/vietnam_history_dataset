@@ -29,6 +29,7 @@ KNOWLEDGE_BASE_PATH = os.path.join(BASE_DIR, "knowledge_base.json")
 # NOTE: history.index only has 1 vector (placeholder). index.bin has 630 real vectors.
 INDEX_PATH = os.path.join(INDEX_DIR, "index.bin")
 META_PATH = os.path.join(INDEX_DIR, "meta.json")
+DOCS_JSONL_PATH = os.path.join(INDEX_DIR, "documents.jsonl")
 
 # ===============================
 # SEARCH CONFIG
