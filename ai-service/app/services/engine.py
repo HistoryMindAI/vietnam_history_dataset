@@ -854,6 +854,60 @@ def _generate_same_entity_response(info: dict) -> str:
     return response
 
 
+def _boost_year_match(events: list, target_year: int) -> list:
+    """
+    Reorder events so that events with years closest to target_year come first.
+    Exact year match → highest priority, then sorted by distance.
+    Events without year field go to the end.
+    """
+    def year_distance(event):
+        y = event.get("year")
+        if y is None:
+            return 999999
+        try:
+            return abs(int(y) - target_year)
+        except (ValueError, TypeError):
+            return 999999
+    return sorted(events, key=year_distance)
+
+
+def _build_conflict_explanation(query_info, resolved: dict) -> str:
+    """
+    Build an informative Vietnamese answer explaining temporal conflict.
+    Instead of returning 'no data', explain WHY the entities don't overlap.
+    """
+    persons = resolved.get("persons", [])
+    
+    if len(persons) >= 2:
+        # Multi-person temporal conflict
+        names = [p.title() for p in persons]
+        names_str = " và ".join(names)
+        explanation = (
+            f"**{names_str}** sống ở các giai đoạn lịch sử khác nhau, "
+            f"nên không có sự kiện chung trong cùng thời kỳ.\n\n"
+        )
+        # Suggest individual searches
+        explanation += "Bạn có thể tìm hiểu riêng từng nhân vật:\n\n"
+        for p in persons:
+            explanation += f"- *\"{p.title()}\"*\n"
+        
+        return explanation
+    
+    # Generic conflict explanation
+    reasons = query_info.conflict_reasons if hasattr(query_info, 'conflict_reasons') else []
+    if reasons:
+        return (
+            "Câu hỏi có mâu thuẫn về mặt thời gian. "
+            + " ".join(reasons)
+            + "\n\nBạn có thể thử hỏi cụ thể hơn về từng nhân vật hoặc sự kiện."
+        )
+    
+    return (
+        "Câu hỏi chứa thông tin mâu thuẫn về mặt thời gian. "
+        "Bạn có thể thử hỏi cụ thể hơn về từng nhân vật hoặc sự kiện."
+    )
+
+
 def engine_answer(query: str):
     # --- STEP 0: Query Understanding (NLU) ---
     # Rewrite query: fix typos, expand abbreviations, restore accents
@@ -947,6 +1001,7 @@ def engine_answer(query: str):
         year=single_year,
         year_range=year_range,
         multi_years=multi_years,
+        original_query=query,
     )
 
     # --- STEP 1.7: CONSTRAINT EXTRACTION (Phase 1 / Giai đoạn 11) ---
@@ -968,12 +1023,14 @@ def engine_answer(query: str):
     if query_info.has_conflict:
         conflict_msg = "; ".join(query_info.conflict_reasons)
         print(f"[CONFLICT_GATE] Query rejected: {conflict_msg}")
+        # Build an informative answer explaining the temporal conflict
+        conflict_explanation = _build_conflict_explanation(query_info, resolved)
         return {
             "query": q_display,
             "intent": intent,
-            "answer": "Hiện tại tôi chưa tìm được thông tin phù hợp chính xác với câu hỏi này.",
+            "answer": conflict_explanation,
             "events": [],
-            "no_data": True,
+            "no_data": False,  # This IS an answer — explaining the conflict
             "conflict": True,
             "conflict_reasons": query_info.conflict_reasons,
         }
@@ -998,6 +1055,10 @@ def engine_answer(query: str):
             fc_events = semantic_search(rewritten)
         # Deduplicate and pick best match
         fc_events = deduplicate_and_enrich(fc_events, max_events=5)
+        # Year-proximity boost: sort events so claimed_year match comes first
+        # Otherwise _build_fact_check picks events[0] which may be wrong year
+        if query_analysis.fact_check_year and fc_events:
+            fc_events = _boost_year_match(fc_events, query_analysis.fact_check_year)
         answer = synthesize_answer(query_analysis, fc_events)
         if answer:
             return {

@@ -282,6 +282,7 @@ def classify_intent(
     year: int | None = None,
     year_range: tuple | None = None,
     multi_years: list | None = None,
+    original_query: str | None = None,
 ) -> QueryAnalysis:
     """
     Core intent classifier — determines what the user is asking.
@@ -292,6 +293,9 @@ def classify_intent(
         year: Extracted single year (from engine)
         year_range: Extracted year range (from engine)
         multi_years: Extracted multiple years (from engine)
+        original_query: Original user query (before rewrite), used for
+                        fact-check detection since rewrite may strip
+                        confirmation phrases
 
     Returns:
         QueryAnalysis with intent, focus, question_type, guards
@@ -310,7 +314,11 @@ def classify_intent(
     qtype = detect_question_type(query)
 
     # --- Fact-check detection (before standard classification) ---
+    # Check both rewritten and original query — rewrite may strip
+    # confirmation suffixes like 'đúng không' or 'phải không'
     is_fc, fc_year = detect_fact_check(query)
+    if not is_fc and original_query:
+        is_fc, fc_year = detect_fact_check(original_query)
 
     # Base analysis
     analysis = QueryAnalysis(
