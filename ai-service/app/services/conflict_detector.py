@@ -440,6 +440,15 @@ class ConflictDetector:
         if not query_info.has_conflict:
             self._detect_era_membership_conflicts(query_info)
 
+        # 4️⃣ Soft Semantic Layer (Phase 4) — non-blocking
+        if not query_info.has_conflict:
+            from app.services.semantic_layer import SemanticAnalyzer
+            analyzer = SemanticAnalyzer(self.entity_metadata)
+            sem_result = analyzer.analyze(query_info)
+            query_info.semantic_notes.extend(sem_result.notes)
+            query_info.semantic_warnings.extend(sem_result.warnings)
+            query_info.semantic_expansions.update(sem_result.expansions)
+
         return query_info
 
     def _detect_cross_entity_conflicts(self, query_info: QueryInfo) -> None:
