@@ -73,13 +73,42 @@ RUN if [ ! -f /app/faiss_index/index.bin ]; then \
     echo "✅ FAISS index.bin present: ${INDEX_SIZE} bytes"; \
     fi
 
+# V3: Validate FAISS meta.json audit fields exist and count > 0
+RUN if [ -f /app/faiss_index/meta.json ]; then \
+    META_COUNT=$(python -c "import json; m=json.load(open('/app/faiss_index/meta.json')); print(m.get('count',0))") && \
+    echo "✅ FAISS meta.json: count=${META_COUNT}" && \
+    if [ "$META_COUNT" -lt 1 ]; then \
+    echo "❌ FATAL: FAISS meta.json count is 0" && exit 1; \
+    fi; \
+    fi
+
+# V3: Validate checksum if present
+RUN if [ -f /app/faiss_index/checksum.sha256 ]; then \
+    cd /app/faiss_index && sha256sum -c checksum.sha256 && \
+    echo "✅ FAISS index checksum verified"; \
+    fi
+
 ENV TRANSFORMERS_CACHE=/app/.cache/huggingface
 ENV HF_HOME=/app/.cache/huggingface
 ENV PYTHONPATH=/app
-ENV INDEX_VERSION=v6
+ENV INDEX_VERSION=v7
+# Runtime lock: service verifies these at startup
+ENV FAISS_READONLY=1
+ENV INDEX_EXPECTED_VERSION=v7
+
+# =====================
+# Non-root user (security hardening)
+# =====================
+RUN groupadd -r appgroup && useradd -r -g appgroup -d /app -s /sbin/nologin appuser && \
+    chown -R appuser:appgroup /app
+USER appuser
 
 # Copy startup script
-COPY start_server.py /app/start_server.py
+COPY --chown=appuser:appgroup start_server.py /app/start_server.py
+
+# HEALTHCHECK — production monitoring
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
 
 # Run with python script to handle env vars robustly
 CMD ["python", "start_server.py"]

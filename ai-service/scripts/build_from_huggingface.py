@@ -1,17 +1,19 @@
 """
-HuggingFace Dataset Loader and FAISS Builder - V2
+HuggingFace Dataset Loader and FAISS Builder - V3 (Enterprise)
 
 This script:
 1. Downloads Vietnam-History-1M-Vi dataset from HuggingFace
 2. Processes with dynamic entity extraction (persons, places, keywords)
 3. Builds FAISS index for semantic search
 
-Key improvements over V1:
-- Dynamic entity extraction using entity_registry.py
-- Smart year extraction (handles "kỷ niệm 1000 năm" edge cases)
-- Better dedup with higher threshold
-- Full keyword, person, place extraction
-- Tone and nature classification
+V3 improvements:
+- Chunked encoding (BATCH_SIZE=2048, no OOM on 1M docs)
+- Atomic write (tmp → fsync → rename → fsync dir)
+- SHA256 checksum for index integrity
+- Separate documents.jsonl (no multi-GB meta.json)
+- Full audit metadata (model SHA, library versions, timestamps)
+- Rollback strategy (candidate → validate → rename)
+- Post-build validation (ntotal == count)
 
 Run locally: python scripts/build_from_huggingface.py
 """
@@ -19,7 +21,10 @@ import json
 import re
 import os
 import sys
+import hashlib
+import platform
 from pathlib import Path
+from datetime import datetime, timezone
 from collections import defaultdict
 
 # Add parent to path for imports
@@ -46,6 +51,12 @@ MAX_SAMPLES = int(os.getenv("MAX_SAMPLES", 1000000))
 DEDUP_THRESHOLD = float(os.getenv("DEDUP_THRESHOLD", 0.85))
 MIN_ANSWER_LENGTH = int(os.getenv("MIN_ANSWER_LENGTH", 30))
 MIN_DOCS_TARGET = 5000
+
+# V3 Enterprise constants
+INDEX_VERSION = "v3.0"
+PIPELINE_VERSION = "3.2"
+EMBED_MODEL = "keepitreal/vietnamese-sbert"
+BATCH_SIZE = int(os.getenv("FAISS_BATCH_SIZE", 2048))
 
 # ========================
 # TEXT CLEANING
@@ -699,61 +710,203 @@ def load_from_huggingface() -> list[dict]:
     return documents
 
 
+# ========================
+# V3 UTILITY FUNCTIONS
+# ========================
+
+def _sha256_file(path: Path) -> str:
+    """Compute SHA256 hash of a file."""
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        while chunk := f.read(8192):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _atomic_write_index(index, output_path: Path):
+    """
+    Write FAISS index atomically with fsync.
+    Sequence: write tmp → fsync file → rename → fsync directory.
+    Crash-safe: partial write never corrupts existing index.
+    """
+    import faiss
+    tmp_path = output_path.with_suffix(".tmp")
+
+    # Write to temporary file
+    faiss.write_index(index, str(tmp_path))
+
+    # fsync the file to ensure data hits disk
+    with open(tmp_path, "rb") as f:
+        os.fsync(f.fileno())
+
+    # Atomic rename (POSIX guarantees atomicity)
+    tmp_path.rename(output_path)
+
+    # fsync the directory to persist the rename
+    try:
+        fd = os.open(str(output_path.parent), os.O_RDONLY)
+        os.fsync(fd)
+        os.close(fd)
+    except OSError:
+        pass  # Windows doesn't support dir fsync — rename is still safe
+
+
+def _get_model_sha(model) -> str:
+    """Get the SHA of the loaded sentence-transformers model."""
+    try:
+        # Try to get commit hash from model config
+        config = getattr(model, "_model_config", {})
+        sha = config.get("model_sha", "")
+        if sha:
+            return sha
+        # Fallback: hash the model card path
+        model_path = Path(model.tokenizer.name_or_path)
+        if (model_path / "config.json").exists():
+            return _sha256_file(model_path / "config.json")[:16]
+    except Exception:
+        pass
+    return "unknown"
+
+
 def build_faiss_index(documents: list[dict], output_dir: Path):
-    """Build FAISS index from documents."""
+    """
+    Build FAISS index from documents (V3 — Enterprise).
+
+    Features:
+    - Chunked encoding (BATCH_SIZE, no OOM)
+    - Atomic write with fsync (crash-safe)
+    - SHA256 checksum
+    - Separate documents.jsonl
+    - Full audit metadata
+    - Post-build validation
+    - Rollback on failure
+    """
     import faiss
     import numpy as np
+    import sentence_transformers
     from sentence_transformers import SentenceTransformer
 
-    print(f"\n📚 Building FAISS from {len(documents)} documents")
+    print(f"\n📚 Building FAISS V3 from {len(documents)} documents")
 
     # Load model
-    print("🔧 Loading sentence transformer...")
-    model = SentenceTransformer("keepitreal/vietnamese-sbert")
+    print(f"🔧 Loading {EMBED_MODEL}...")
+    model = SentenceTransformer(EMBED_MODEL)
 
-    # Generate embeddings from combined text for better search
-    print("🧠 Generating embeddings...")
+    # Prepare texts — combine fields for richer embeddings
+    print("📝 Preparing embedding texts...")
     texts = []
     for d in documents:
-        # Combine event + story + keywords for richer embeddings
         kw_text = " ".join(d.get("keywords", []))
         person_text = " ".join(d.get("persons", []))
         combined = f"{d['event']} {d['story'][:500]} {kw_text} {person_text}"
         texts.append(combined)
 
-    embeddings = model.encode(texts, show_progress_bar=True, batch_size=64)
+    # Detect dimension from test vector
+    print("📐 Detecting embedding dimension...")
+    test_vec = model.encode(["test"])
+    dimension = test_vec.shape[1]
+    print(f"   Dimension: {dimension}")
 
-    # Build index
-    print("🔨 Building FAISS index...")
-    dimension = embeddings.shape[1]
+    # Build index with chunked encoding (OOM-safe)
     index = faiss.IndexFlatIP(dimension)
+    total = len(texts)
 
-    faiss.normalize_L2(embeddings)
-    index.add(embeddings.astype(np.float32))
+    print(f"🧠 Encoding in batches of {BATCH_SIZE}...")
+    for i in range(0, total, BATCH_SIZE):
+        batch = texts[i:i + BATCH_SIZE]
+        embeddings = model.encode(batch, show_progress_bar=False, batch_size=64)
+        faiss.normalize_L2(embeddings)
+        index.add(embeddings.astype(np.float32))
+        done = min(i + BATCH_SIZE, total)
+        print(f"   ✓ {done:,}/{total:,} vectors added")
 
-    # Save
-    output_dir.mkdir(parents=True, exist_ok=True)
+    # ================================================================
+    # POST-BUILD VALIDATION — abort if mismatch
+    # ================================================================
+    if index.ntotal != len(documents):
+        print(f"❌ FATAL: ntotal={index.ntotal} != documents={len(documents)}")
+        sys.exit(1)
+    print(f"✅ Validation: ntotal={index.ntotal} matches {len(documents)} documents")
 
-    # Save index as both names for compatibility
-    faiss.write_index(index, str(output_dir / "index.bin"))
-    faiss.write_index(index, str(output_dir / "history.index"))
+    # ================================================================
+    # ROLLBACK STRATEGY: write to candidate dir, validate, then rename
+    # ================================================================
+    candidate_dir = output_dir.parent / f"{output_dir.name}_candidate"
+    candidate_dir.mkdir(parents=True, exist_ok=True)
 
-    # Save metadata
+    # 1. Atomic write index files
+    print("💾 Writing index (atomic)...")
+    _atomic_write_index(index, candidate_dir / "index.bin")
+    _atomic_write_index(index, candidate_dir / "history.index")
+
+    # 2. Write documents.jsonl (separate from meta)
+    print("📄 Writing documents.jsonl...")
+    docs_path = candidate_dir / "documents.jsonl"
+    with open(docs_path, "w", encoding="utf-8") as f:
+        for d in documents:
+            f.write(json.dumps(d, ensure_ascii=False) + "\n")
+
+    # 3. SHA256 checksum
+    index_checksum = _sha256_file(candidate_dir / "index.bin")
+    checksum_path = candidate_dir / "checksum.sha256"
+    with open(checksum_path, "w") as f:
+        f.write(f"{index_checksum}  index.bin\n")
+    print(f"🔒 SHA256: {index_checksum[:32]}...")
+
+    # 4. Audit metadata (minimal — documents are in .jsonl)
+    model_sha = _get_model_sha(model)
     meta = {
-        "model": "keepitreal/vietnamese-sbert",
+        "index_version": INDEX_VERSION,
+        "pipeline_version": PIPELINE_VERSION,
+        "embed_model": EMBED_MODEL,
+        "embed_model_sha": model_sha,
         "dimension": dimension,
         "count": len(documents),
         "source": DATASET_NAME,
-        "documents": documents,
+        "entity_metadata_version": "v2.1",
+        "library_versions": {
+            "sentence_transformers": sentence_transformers.__version__,
+            "faiss": faiss.__version__ if hasattr(faiss, "__version__") else "unknown",
+            "numpy": np.__version__,
+        },
+        "build_timestamp": datetime.now(timezone.utc).isoformat(),
+        "build_host": platform.node(),
+        "index_checksum_sha256": index_checksum,
     }
 
-    with open(output_dir / "meta.json", "w", encoding="utf-8") as f:
+    meta_path = candidate_dir / "meta.json"
+    with open(meta_path, "w", encoding="utf-8") as f:
         json.dump(meta, f, ensure_ascii=False, indent=2)
 
-    print(f"\n✅ FAISS index saved: {output_dir}")
-    print(f"   - Vectors: {index.ntotal}")
-    print(f"   - Documents: {len(documents)}")
-    print(f"   - Index files: index.bin, history.index")
+    # ================================================================
+    # PROMOTE: candidate → output_dir (rollback-safe)
+    # ================================================================
+    print("🔄 Promoting candidate to production...")
+
+    # Backup existing if present
+    backup_dir = output_dir.parent / f"{output_dir.name}_backup"
+    if output_dir.exists():
+        if backup_dir.exists():
+            import shutil
+            shutil.rmtree(backup_dir)
+        output_dir.rename(backup_dir)
+
+    # Promote candidate
+    candidate_dir.rename(output_dir)
+
+    # Clean up backup (only after successful promote)
+    if backup_dir.exists():
+        import shutil
+        shutil.rmtree(backup_dir)
+
+    print(f"\n✅ FAISS V3 index saved: {output_dir}")
+    print(f"   - Vectors:    {index.ntotal:,}")
+    print(f"   - Documents:  {len(documents):,}")
+    print(f"   - Index:      index.bin, history.index")
+    print(f"   - Metadata:   meta.json")
+    print(f"   - Documents:  documents.jsonl")
+    print(f"   - Checksum:   checksum.sha256")
+    print(f"   - Version:    {INDEX_VERSION}")
 
 
 def main():

@@ -32,6 +32,7 @@ from app.services.implicit_context import (
 from app.services.constraint_extractor import ConstraintExtractor
 from app.services.answer_validator import AnswerValidator
 from app.services.conflict_detector import ConflictDetector
+from app.services.guardrails import OutputVerifier
 from app.services import confidence_scorer
 from app.services import answer_builder
 from app.services import answer_formatter
@@ -1519,6 +1520,24 @@ def engine_answer(query: str):
     if no_data:
         answer = _generate_no_data_suggestion(q_display, rewritten, resolved, question_intent)
     
+    # --- PHASE 5: OUTPUT VERIFICATION PASS (Guardrails) ---
+    # Final quality checks before returning to user.
+    # Detects truncation, topic drift, year hallucination.
+    # Auto-corrects where possible (severity=AUTO_FIX).
+    if answer and not no_data:
+        _verifier = OutputVerifier()
+        verification = _verifier.verify(answer, query_info)
+        if verification.corrected_answer:
+            answer = verification.corrected_answer
+        if verification.hard_failed:
+            print(f"[GUARDRAIL] Hard fail: {[c.message for c in verification.checks if c.severity.value == 'HARD_FAIL']}")
+            answer = "Hiện tại tôi chưa tìm được thông tin phù hợp chính xác với câu hỏi này."
+            no_data = True
+        elif not verification.passed:
+            for check in verification.checks:
+                if check.message:
+                    print(f"[GUARDRAIL] {check.name}: {check.message}")
+
     # --- LEGACY VALIDATION (Cross-Encoder based) ---
     # Kept as secondary check; NLI validation above is the primary filter
     if answer and not no_data:

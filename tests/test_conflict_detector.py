@@ -1471,3 +1471,153 @@ class TestPhase4SoftSemantic:
             result = detector.detect(qi_factory())
             assert result.has_conflict == baseline.has_conflict
             assert result.confidence_threshold == baseline.confidence_threshold
+
+    # ------------------------------------------------------------------
+    # Enterprise Tests — Phase 4 Architecture Validation
+    # ------------------------------------------------------------------
+
+    def test_confidence_high_exact_era_match(self):
+        """Ngô Quyền + Nhà Ngô → same era → no conflict."""
+        meta = {
+            "ngô quyền": {"type": "person", "lifespan": (897, 944), "era": ["ngô"]},
+            "nhà ngô": {"type": "dynasty", "lifespan": (939, 965), "era": ["ngô"]},
+        }
+        detector = ConflictDetector(entity_metadata=meta)
+        qi = _make_query_info(
+            query="Ngô Quyền và Nhà Ngô",
+            required_persons=["Ngô Quyền", "Nhà Ngô"],
+        )
+        result = detector.detect(qi)
+        assert result.has_conflict is False
+
+    def test_confidence_ambiguous_era(self):
+        """Nguyễn Huệ (Tây Sơn) + Hậu Lê → different eras → conflict expected."""
+        meta = {
+            "nguyễn huệ": {"type": "person", "lifespan": (1753, 1792), "era": ["tây sơn"]},
+            "hậu lê": {"type": "dynasty", "lifespan": (1428, 1789), "era": ["hậu lê"]},
+        }
+        detector = ConflictDetector(entity_metadata=meta)
+        qi = _make_query_info(
+            query="Nguyễn Huệ nhà Hậu Lê",
+            required_persons=["Nguyễn Huệ", "Hậu Lê"],
+            relation_type="belong_to",
+        )
+        result = detector.detect(qi)
+        # Phase 3 era-membership should flag this (Tây Sơn ≠ Hậu Lê)
+        assert result.has_conflict is True
+
+    def test_explainability_json_structure(self):
+        """SemanticResult must have notes, warnings, expansions."""
+        from app.services.semantic_layer import SemanticAnalyzer, SemanticResult
+        meta = {
+            "nguyễn trãi": {"type": "person", "lifespan": (1380, 1442), "era": ["lê sơ"]},
+        }
+        analyzer = SemanticAnalyzer(meta)
+        qi = _make_query_info(
+            query="Nguyễn Trãi",
+            required_persons=["Nguyễn Trãi"],
+        )
+        result = analyzer.analyze(qi)
+        assert isinstance(result, SemanticResult)
+        assert isinstance(result.notes, list)
+        assert isinstance(result.warnings, list)
+        assert isinstance(result.expansions, dict)
+
+    def test_soft_warning_does_not_override_conflict(self):
+        """Hard conflict must prevent Phase 4 from running."""
+        meta = {
+            "trần hưng đạo": {"type": "person", "lifespan": (1228, 1300), "era": ["trần"]},
+        }
+        detector = ConflictDetector(entity_metadata=meta)
+        qi = _make_query_info(
+            query="Năm 1945 Trần Hưng Đạo",
+            required_persons=["Trần Hưng Đạo"],
+            required_year=1945,
+        )
+        result = detector.detect(qi)
+        assert result.has_conflict is True
+        # Phase 4 must NOT run after hard conflict
+        assert len(result.semantic_notes) == 0
+        assert len(result.semantic_warnings) == 0
+
+    def test_multi_era_person_no_conflict(self):
+        """Lê Lợi + Lê Sơ → same era → no conflict."""
+        meta = {
+            "lê lợi": {"type": "person", "lifespan": (1385, 1433), "era": ["lê sơ"]},
+            "lê sơ": {"type": "dynasty", "lifespan": (1428, 1527), "era": ["lê sơ"]},
+        }
+        detector = ConflictDetector(entity_metadata=meta)
+        qi = _make_query_info(
+            query="Lê Lợi nhà Lê Sơ",
+            required_persons=["Lê Lợi", "Lê Sơ"],
+            relation_type="belong_to",
+        )
+        result = detector.detect(qi)
+        assert result.has_conflict is False
+
+    def test_metadata_version_freeze(self):
+        """ENTITY_TEMPORAL_METADATA_VERSION must be v2.1."""
+        from app.services.conflict_detector import ENTITY_TEMPORAL_METADATA_VERSION
+        assert ENTITY_TEMPORAL_METADATA_VERSION == "v2.1"
+
+    # ------------------------------------------------------------------
+    # Enterprise Tests — Phase 5 Guardrails (Output Verification)
+    # ------------------------------------------------------------------
+
+    def test_guardrail_truncation(self):
+        """OutputVerifier must detect and fix truncated output."""
+        from app.services.guardrails import OutputVerifier, Severity
+        verifier = OutputVerifier()
+
+        # Case 1: Dangling comma
+        result = verifier.verify("Sự kiện diễn ra vào năm 1945,")
+        assert result.status == Severity.AUTO_FIX
+        assert result.corrected_answer is not None
+        assert not result.corrected_answer.endswith(",")
+
+        # Case 2: Proper ending → PASS
+        result2 = verifier.verify("Sự kiện diễn ra vào năm 1945.")
+        assert result2.status == Severity.PASS
+
+    def test_guardrail_topic_drift(self):
+        """OutputVerifier must flag answer that doesn't mention queried entity."""
+        from app.services.guardrails import OutputVerifier, Severity
+        verifier = OutputVerifier()
+
+        qi = _make_query_info(
+            query="Bác Hồ đi năm 1991 phải không?",
+            required_persons=["Hồ Chí Minh"],
+        )
+        qi.is_fact_check = True
+
+        # Answer doesn't mention Hồ Chí Minh or Bác Hồ → soft fail
+        result = verifier.verify(
+            "Khúc Thừa Dụ khởi nghĩa năm 905.",
+            qi,
+        )
+        assert result.status == Severity.SOFT_FAIL
+        drift_checks = [c for c in result.checks if c.name == "topic_drift"]
+        assert len(drift_checks) == 1
+        assert drift_checks[0].severity == Severity.SOFT_FAIL
+
+    def test_guardrail_year_hallucination(self):
+        """OutputVerifier must flag phantom years in fact-check answers."""
+        from app.services.guardrails import OutputVerifier, Severity
+        verifier = OutputVerifier()
+
+        qi = _make_query_info(
+            query="Bác Hồ ra đi năm 1991 phải không?",
+            required_persons=["Hồ Chí Minh"],
+        )
+        qi.is_fact_check = True
+        qi.claimed_year = 1991
+        qi.required_year = 1911
+
+        # Answer with valid correction (1911) → PASS
+        result_ok = verifier.verify(
+            "Không phải. Bác Hồ ra đi tìm đường cứu nước năm 1911.",
+            qi,
+        )
+        year_checks = [c for c in result_ok.checks if c.name == "year_hallucination"]
+        assert year_checks[0].severity == Severity.PASS
+
