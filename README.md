@@ -5,12 +5,13 @@ Dự án này là hệ thống Chatbot thông minh hỗ trợ tra cứu và tr�
 ## 🎯 Status
 
 ```
-✅ Version: 6.0.0
-✅ Tests: 820+ tests passing (26 test files)
+✅ Version: 7.0.0
+✅ Tests: 841 tests passing (26 test files)
 ✅ AI Models: 3 ONNX models (Embedding + Cross-Encoder + NLI)
-✅ Architecture: 14-phase pipeline — NLU → Intent → Constraint → Conflict → Search → Rerank → NLI → Synthesis → Guardrails
-✅ Data: HuggingFace Dataset (500K+ samples) → FAISS v3 Index (checksum + atomic writes)
+✅ Architecture: 16-phase pipeline — NLU → Intent → Constraint → Conflict → Hybrid Search V2 → Rerank → Self-Verification → NLI → Synthesis → Guardrails
+✅ Data: HuggingFace Dataset (1M+ samples) → FAISS v3 Index (checksum + atomic writes)
 ✅ Quality: Enterprise test suite (27 behavioral tests) + Advanced resilience suite (29 tests)
+✅ New: Hybrid Retriever V2 | Temporal Engine V2 | Self-Verification | Knowledge Graph | Evaluation Framework
 ✅ Status: PRODUCTION READY
 ```
 
@@ -87,13 +88,15 @@ graph TD
         B["API Gateway / Orchestrator"]
     end
 
-    subgraph "🤖 AI Service — FastAPI (v6.0)"
+    subgraph "🤖 AI Service — FastAPI (v7.0)"
         NLU["NLU Layer<br/>Sửa lỗi, phục hồi dấu, entity detection"]
         IC["Intent Classifier<br/>11 intent types, duration guard, fact-check"]
         CE_EXT["Constraint Extractor<br/>Hard constraint consolidation"]
         CD["Conflict Detector<br/>Temporal consistency guard"]
-        ENGINE["Query Engine<br/>Multi-strategy search routing"]
+        ENGINE["Hybrid Search V2<br/>BM25 + Semantic + RRF fusion"]
+        TE["Temporal Engine V2<br/>Reasoning + Conflict Detection"]
         CE["Cross-Encoder Rerank<br/>mmarco multilingual ONNX"]
+        SV["Self-Verification<br/>Claim extraction + Evidence check"]
         NLI["NLI Validator<br/>Entailment checking"]
         AS["Answer Synthesis<br/>Template-based, question-type aware, fact-check"]
         GR["Output Verifier<br/>Truncation, drift, hallucination guard"]
@@ -104,6 +107,7 @@ graph TD
         D1["FAISS v3 Index — Semantic vectors + checksum"]
         D2["meta.json — Metadata + Inverted Indexes"]
         D3["knowledge_base.json — Aliases, Synonyms, Typos"]
+        KG["Knowledge Graph — Entity + Relation schema"]
     end
 
     A -- "HTTP" --> B
@@ -112,9 +116,11 @@ graph TD
     IC --> CE_EXT
     CE_EXT --> CD
     CD -->|"conflict? → reject"| ENGINE
-    ENGINE --> D1 & D2 & D3
-    ENGINE --> CE
-    CE --> NLI
+    ENGINE --> D1 & D2 & D3 & KG
+    ENGINE --> TE
+    TE --> CE
+    CE --> SV
+    SV --> NLI
     NLI --> AS
     AS --> GR
     GR --> CTX

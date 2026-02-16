@@ -224,8 +224,17 @@ def _setup_full_mocks():
         "quân nam hán": "quân nam hán",
     }
     startup.RESISTANCE_SYNONYMS = {
-        "kháng chiến": True, "chống ngoại xâm": True,
-        "giải phóng": True, "đánh giặc": True,
+        "kháng chiến": [
+            "kháng chiến chống pháp", "kháng chiến chống mỹ",
+            "chống quân nguyên mông", "chống quân tống", "chống quân thanh",
+            "chống quân minh", "chống quân nam hán",
+        ],
+        "chống ngoại xâm": [
+            "kháng chiến", "chống giặc", "nguyên mông", "quân tống",
+            "thực dân pháp", "quân minh",
+        ],
+        "giải phóng": ["giải phóng dân tộc", "giải phóng đất nước"],
+        "đánh giặc": ["đánh giặc ngoại xâm", "kháng chiến"],
     }
 
 _setup_full_mocks()
