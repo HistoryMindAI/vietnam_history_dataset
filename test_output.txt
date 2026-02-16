@@ -1,0 +1,30 @@
+........................................................................ [  8%]
+........................................................................ [ 17%]
+........................................................................ [ 26%]
+............................................................ss...s...... [ 35%]
+........................................................................ [ 43%]
+..................................................FF.................... [ 52%]
+........................................................................ [ 61%]
+........................................................................ [ 70%]
+........................................................................ [ 79%]
+........................................................................ [ 87%]
+........................................................................ [ 96%]
+............................                                             [100%]
+================================== FAILURES ===================================
+d:\HistoryMindAI\vietnam_history_dataset\ai-service\app\services\implicit_context.py:113: TypeError: 'bool' object is not iterable
+d:\HistoryMindAI\vietnam_history_dataset\ai-service\app\services\implicit_context.py:113: TypeError: 'bool' object is not iterable
+============================== warnings summary ===============================
+<frozen importlib._bootstrap>:241
+  <frozen importlib._bootstrap>:241: DeprecationWarning: builtin type SwigPyPacked has no __module__ attribute
+
+<frozen importlib._bootstrap>:241
+  <frozen importlib._bootstrap>:241: DeprecationWarning: builtin type SwigPyObject has no __module__ attribute
+
+<frozen importlib._bootstrap>:241
+  <frozen importlib._bootstrap>:241: DeprecationWarning: builtin type swigvarlink has no __module__ attribute
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_engine.py::TestImplicitContextDetection::test_resistance_expansion
+FAILED tests/test_engine.py::TestImplicitContextDetection::test_expand_query_context
+2 failed, 815 passed, 3 skipped, 3 warnings in 20.79s

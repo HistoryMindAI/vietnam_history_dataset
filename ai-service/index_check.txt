@@ -1,0 +1,9 @@
+Restored index.bin: 68 vectors, dim=768
+meta.json keys: ['model', 'dimension', 'count', 'source', 'documents']
+meta.json doc count: 68
+First doc keys: ['id', 'year', 'title', 'event', 'story', 'tone', 'nature', 'persons', 'places', 'keywords', 'dynasty', 'period']
+First doc year: 1884
+First doc event: Hòa ước Patenôtre (Giáp Thân). Triều Nguyễn ký hiệp ước đặt Việt Nam dưới chế độ bảo hộ của Pháp. Ch
+docs[10]: year=905, event=Khúc Thừa Dụ dựng chính quyền tự chủ. Ông nắm quyền ở Tống Bình, khôi phục quyền
+docs[30]: year=1533, event=Lê trung hưng khôi phục danh nghĩa nhà Lê được coi là cột mốc quan trọng.
+docs[60]: year=1009, event=Lý Công Uẩn được tôn lập (kết thúc Tiền Lê). Sau khi Lê Long Đĩnh qua đời, Lý Cô

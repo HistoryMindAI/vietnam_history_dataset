@@ -1,0 +1,10 @@
+........................................................................ [ 55%]
+..................................F.......................               [100%]
+================================== FAILURES ===================================
+____________ TestStructuredRetrieval.test_engine_resistance_intent ____________
+..\tests\test_engine.py:1053: in test_engine_resistance_intent
+    assert r["intent"] in ("broad_history", "resistance_national", "event_query")
+E   AssertionError: assert 'semantic' in ('broad_history', 'resistance_national', 'event_query')
+=========================== short test summary info ===========================
+FAILED ..\tests\test_engine.py::TestStructuredRetrieval::test_engine_resistance_intent
+1 failed, 129 passed in 1.04s

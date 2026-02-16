@@ -1,0 +1,122 @@
+[
+  {
+    "id": "ADV_001",
+    "question": "Hiệp định Genève có phải ký năm 1955 không?",
+    "gold_answer": "Hiệp định Genève được ký năm 1954, không phải 1955.",
+    "expected_entities": ["Hiệp định Genève"],
+    "expected_years": [1954],
+    "query_type": "fact_year",
+    "difficulty": "hard",
+    "multi_hop": false,
+    "temporal_constraint": true,
+    "adversarial_type": "year_trap"
+  },
+  {
+    "id": "ADV_002",
+    "question": "Sau Điện Biên Phủ nhưng trước Tết Mậu Thân, điều gì xảy ra?",
+    "gold_answer": "Sau chiến thắng Điện Biên Phủ (1954) và trước Tổng tiến công Tết Mậu Thân (1968), các sự kiện chính bao gồm Hiệp định Genève chia đôi đất nước, Mỹ can thiệp vào miền Nam Việt Nam.",
+    "expected_entities": ["Điện Biên Phủ", "Tết Mậu Thân"],
+    "expected_years": [1954, 1968],
+    "query_type": "temporal_range",
+    "difficulty": "hard",
+    "multi_hop": true,
+    "temporal_constraint": true,
+    "adversarial_type": "temporal_sandwich"
+  },
+  {
+    "id": "ADV_003",
+    "question": "Nguyễn Ái Quốc hoạt động ở đâu năm 1919?",
+    "gold_answer": "Năm 1919, Nguyễn Ái Quốc (Hồ Chí Minh) hoạt động tại Pháp, gửi bản Yêu sách của nhân dân An Nam đến Hội nghị Versailles.",
+    "expected_entities": ["Nguyễn Ái Quốc", "Hồ Chí Minh"],
+    "expected_years": [1919],
+    "query_type": "fact_year",
+    "difficulty": "hard",
+    "multi_hop": false,
+    "temporal_constraint": true,
+    "adversarial_type": "ambiguous_entity"
+  },
+  {
+    "id": "ADV_004",
+    "question": "Điện Biên Phủ có trực tiếp khiến Mỹ rút khỏi Việt Nam năm 1954 không?",
+    "gold_answer": "Không. Chiến thắng Điện Biên Phủ năm 1954 dẫn đến Pháp ký Hiệp định Genève và rút khỏi Việt Nam, không phải Mỹ. Mỹ rút khỏi Việt Nam vào năm 1973 theo Hiệp định Paris.",
+    "expected_entities": ["Điện Biên Phủ", "Hiệp định Genève"],
+    "expected_years": [1954, 1973],
+    "query_type": "causal",
+    "difficulty": "hard",
+    "multi_hop": true,
+    "temporal_constraint": true,
+    "adversarial_type": "false_causality"
+  },
+  {
+    "id": "ADV_005",
+    "question": "Sự kiện nào dẫn đến Hiệp định Genève và xảy ra trước 1954?",
+    "gold_answer": "Chiến thắng Điện Biên Phủ (7/5/1954) là sự kiện quyết định dẫn đến Hiệp định Genève. Trước đó có các chiến dịch Biên giới (1950) và kháng chiến chống Pháp kéo dài từ 1946.",
+    "expected_entities": ["Điện Biên Phủ", "Hiệp định Genève"],
+    "expected_years": [1954, 1950, 1946],
+    "query_type": "multi_hop",
+    "difficulty": "hard",
+    "multi_hop": true,
+    "temporal_constraint": true,
+    "adversarial_type": "multi_hop_temporal"
+  },
+  {
+    "id": "ADV_006",
+    "question": "Hiệp định Genève năm 1956 được ký ở đâu?",
+    "gold_answer": "Hiệp định Genève được ký năm 1954 (không phải 1956) tại thành phố Genève, Thụy Sĩ.",
+    "expected_entities": ["Hiệp định Genève"],
+    "expected_years": [1954],
+    "query_type": "fact_year",
+    "difficulty": "hard",
+    "multi_hop": false,
+    "temporal_constraint": true,
+    "adversarial_type": "conflicting_year"
+  },
+  {
+    "id": "ADV_007",
+    "question": "Những sự kiện diễn ra trong giai đoạn 1954–1956?",
+    "gold_answer": "Giai đoạn 1954-1956: Hiệp định Genève chia đôi Việt Nam tại vĩ tuyến 17 (1954), cuộc di cư lớn Bắc-Nam, Ngô Đình Diệm phế truất Bảo Đại lập nên Việt Nam Cộng Hòa (1955), bắt đầu cải cách ruộng đất ở miền Bắc.",
+    "expected_entities": ["Hiệp định Genève"],
+    "expected_years": [1954, 1955, 1956],
+    "query_type": "temporal_range",
+    "difficulty": "medium",
+    "multi_hop": false,
+    "temporal_constraint": true,
+    "adversarial_type": "partial_overlap"
+  },
+  {
+    "id": "ADV_008",
+    "question": "Tóm tắt diễn biến từ Điện Biên Phủ đến khi Mỹ can thiệp sâu vào miền Nam.",
+    "gold_answer": "Sau chiến thắng Điện Biên Phủ (1954), Hiệp định Genève chia đôi Việt Nam. Ngô Đình Diệm lập chính quyền Sài Gòn được Mỹ hậu thuẫn. Từ 1955-1965, Mỹ tăng dần viện trợ quân sự, gửi cố vấn, và chính thức đổ quân chiến đấu ồ ạt từ 1965.",
+    "expected_entities": ["Điện Biên Phủ", "Hiệp định Genève"],
+    "expected_years": [1954, 1965],
+    "query_type": "narrative",
+    "difficulty": "hard",
+    "multi_hop": true,
+    "temporal_constraint": true,
+    "adversarial_type": "long_narrative"
+  },
+  {
+    "id": "ADV_009",
+    "question": "1954 có phải là năm của cả Điện Biên Phủ và Hiệp định Genève?",
+    "gold_answer": "Đúng. Cả chiến thắng Điện Biên Phủ (7/5/1954) và Hiệp định Genève (21/7/1954) đều diễn ra trong năm 1954.",
+    "expected_entities": ["Điện Biên Phủ", "Hiệp định Genève"],
+    "expected_years": [1954],
+    "query_type": "fact_year",
+    "difficulty": "medium",
+    "multi_hop": false,
+    "temporal_constraint": true,
+    "adversarial_type": "multiple_match"
+  },
+  {
+    "id": "ADV_010",
+    "question": "Sự kiện nào quan trọng hơn giữa Điện Biên Phủ và Genève?",
+    "gold_answer": "Cả hai sự kiện đều có ý nghĩa quan trọng. Chiến thắng Điện Biên Phủ là thắng lợi quân sự quyết định, trong khi Hiệp định Genève là thắng lợi ngoại giao. Hai sự kiện có mối liên hệ nhân quả: Điện Biên Phủ tạo điều kiện cho Hiệp định Genève.",
+    "expected_entities": ["Điện Biên Phủ", "Hiệp định Genève"],
+    "expected_years": [1954],
+    "query_type": "comparison",
+    "difficulty": "hard",
+    "multi_hop": false,
+    "temporal_constraint": false,
+    "adversarial_type": "semantic_trap"
+  }
+]

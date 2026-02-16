@@ -13,6 +13,7 @@ Principles:
 """
 import app.core.startup as startup
 from app.services.intent_classifier import QueryAnalysis
+from app.core.utils.date_utils import safe_year
 
 
 # ===================================================================
@@ -202,7 +203,7 @@ def _build_period_grouped_list(events: list) -> str:
     for period_name, start, end in HISTORICAL_PERIODS:
         if period_name in grouped:
             items = grouped[period_name]
-            items.sort(key=lambda x: x.get("year", 0))
+            items.sort(key=lambda x: safe_year(x.get("year"), default=0))
             part_lines = [f"### {period_name} ({start}–{end})"]
             seen = set()
             for e in items:
