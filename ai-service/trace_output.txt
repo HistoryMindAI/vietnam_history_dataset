@@ -1,0 +1,16 @@
+[STARTUP] Loading embedding model & FAISS...
+[STARTUP] Loading ONNX model from D:\HistoryMindAI\vietnam_history_dataset\ai-service\onnx_model\model_quantized.onnx...
+[STARTUP] Tokenizer loaded.
+[STARTUP] ONNX Session loaded successfully.
+[STARTUP] FAISS index loaded from D:\HistoryMindAI\vietnam_history_dataset\ai-service\faiss_index\index.bin
+[STARTUP] Metadata loaded from D:\HistoryMindAI\vietnam_history_dataset\ai-service\faiss_index\meta.json
+[STARTUP] Documents loaded from D:\HistoryMindAI\vietnam_history_dataset\ai-service\faiss_index\documents.jsonl (68 docs)
+[STARTUP] Inverted indexes built: persons=52, dynasties=16, keywords=99, places=22
+[STARTUP] Knowledge base loaded: person_aliases=114, topic_synonyms=83, dynasty_aliases=47, abbreviations=13, typo_fixes=20, resistance_synonyms=5
+[NLU] UNACCENTED_MAP enriched: 66 static + 220 auto-generated = 286 total
+[STARTUP] Historical phrases auto-generated: 248
+[STARTUP] Loading Cross-Encoder ONNX from D:\HistoryMindAI\vietnam_history_dataset\ai-service\onnx_cross_encoder\model_quantized.onnx...
+[STARTUP] Cross-Encoder ONNX loaded ✅
+[STARTUP] Loading NLI ONNX from D:\HistoryMindAI\vietnam_history_dataset\ai-service\onnx_nli\model_quantized.onnx...
+[STARTUP] NLI ONNX loaded ✅
+[STARTUP] Ready | docs=68 | years=65 | persons=52 | dynasties=16 | aliases=114 | abbrevs=13 | typos=20 | phrases=248 | cross_encoder=✅ | nli=✅

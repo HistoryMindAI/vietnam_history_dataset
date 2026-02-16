@@ -1,0 +1,57 @@
+============================= test session starts =============================
+collecting ... collected 4 items
+
+..\tests\test_engine.py::TestFactCheckQueries::test_wrong_year_correction PASSED [ 25%]
+..\tests\test_engine.py::TestFactCheckQueries::test_correct_year_confirmation FAILED [ 50%]
+..\tests\test_engine.py::TestFactCheckQueries::test_fact_check_hcm_wrong_year FAILED [ 75%]
+..\tests\test_engine.py::TestFactCheckQueries::test_fact_check_dbp_correct PASSED [100%]
+
+================================== FAILURES ===================================
+_____________ TestFactCheckQueries.test_correct_year_confirmation _____________
+
+self = <test_engine.TestFactCheckQueries object at 0x000002527E8046D0>
+mock_scan = <MagicMock name='scan_by_entities' id='2553333624272'>
+mock_search = <MagicMock name='semantic_search' id='2553333645968'>
+
+    @patch("app.services.engine.semantic_search")
+    @patch("app.services.engine.scan_by_entities")
+    def test_correct_year_confirmation(self, mock_scan, mock_search):
+        """User states correct year \u2192 engine confirms."""
+        _setup_full_mocks()
+        mock_scan.return_value = [MOCK_TRAN_HUNG_DAO]  # year=1288
+        mock_search.return_value = []
+        from app.services.engine import engine_answer
+        r = engine_answer("C\xf3 ph\u1ea3i tr\u1eadn B\u1ea1ch \u0110\u1eb1ng n\u0103m 1288 kh\xf4ng?")
+>       assert r["intent"] == "fact_check"
+E       AssertionError: assert 'dynasty_query' == 'fact_check'
+E         
+E         - fact_check
+E         + dynasty_query
+
+..\tests\test_engine.py:1215: AssertionError
+_____________ TestFactCheckQueries.test_fact_check_hcm_wrong_year _____________
+
+self = <test_engine.TestFactCheckQueries object at 0x000002527E804DD0>
+mock_scan = <MagicMock name='scan_by_entities' id='2553333614928'>
+mock_search = <MagicMock name='semantic_search' id='2553333548560'>
+
+    @patch("app.services.engine.semantic_search")
+    @patch("app.services.engine.scan_by_entities")
+    def test_fact_check_hcm_wrong_year(self, mock_scan, mock_search):
+        """'B\xe1c H\u1ed3 \u0111\u1ecdc tuy\xean ng\xf4n n\u0103m 1950 \u0111\xfang kh\xf4ng?' \u2192 correct to 1945"""
+        _setup_full_mocks()
+        mock_scan.return_value = [MOCK_HCM]  # year=1945
+        mock_search.return_value = []
+        from app.services.engine import engine_answer
+        r = engine_answer("B\xe1c H\u1ed3 \u0111\u1ecdc tuy\xean ng\xf4n n\u0103m 1950 \u0111\xfang kh\xf4ng?")
+>       assert r["intent"] == "fact_check"
+E       AssertionError: assert 'person_query' == 'fact_check'
+E         
+E         - fact_check
+E         + person_query
+
+..\tests\test_engine.py:1230: AssertionError
+=========================== short test summary info ===========================
+FAILED ..\tests\test_engine.py::TestFactCheckQueries::test_correct_year_confirmation
+FAILED ..\tests\test_engine.py::TestFactCheckQueries::test_fact_check_hcm_wrong_year
+========================= 2 failed, 2 passed in 0.22s =========================
