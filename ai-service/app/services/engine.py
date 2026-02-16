@@ -40,6 +40,7 @@ from app.services.rewrite_engine import RewriteEngine
 from app.core.config import (
     CONFIDENCE_THRESHOLD, RERANK_WEIGHT, ENTAILMENT_WEIGHT, USE_LLM_REWRITE,
 )
+from app.core.utils.date_utils import safe_year
 import app.core.startup as startup
 import re
 
@@ -649,7 +650,7 @@ def _format_by_dynasty(events: list) -> str | None:
             continue
 
         # Sort events within dynasty by year
-        dynasty_events.sort(key=lambda d: d.get("year", 9999))
+        dynasty_events.sort(key=lambda d: safe_year(d.get("year")))
 
         event_texts = []
         for e in dynasty_events:

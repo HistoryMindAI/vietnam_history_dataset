@@ -110,7 +110,8 @@ def expand_resistance_terms(query: str) -> list:
 
     for term, expansions in resistance_synonyms.items():
         if term in q:
-            expanded.extend(expansions)
+            if isinstance(expansions, list):
+                expanded.extend(expansions)
 
     # Deduplicate while preserving order
     seen = set()

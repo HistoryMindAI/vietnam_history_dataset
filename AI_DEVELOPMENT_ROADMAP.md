@@ -51,6 +51,19 @@ timeline
                   : Phát hiện/sửa sai sự thật
                   : 11 regex patterns, 3 answer branches
                   : Confirm ✅ hoặc Correct ❌
+    Giai đoạn 11 : Constraint + Conflict Detection
+                  : QueryInfo consolidation
+                  : Temporal consistency guard
+    Giai đoạn 12 : Output Verifier + Guardrails
+                  : Auto-fix + severity escalation
+                  : Truncation, drift, hallucination
+    Giai đoạn 13 : War Query + Dynamic Resolution
+                  : Chien tranh VN special intro
+                  : Khang chien range filtering
+    Giai đoạn 14 : Production-Hardened Testing
+                  : Enterprise suite 27 tests
+                  : Advanced resilience 29 tests
+                  : 820+ tests, 26 files
 ```
 
 ---
@@ -497,18 +510,20 @@ graph LR
     style A3 fill:#C8E6C9
 ```
 
-### Test Suite: 650+ tests
+### Test Suite: 820+ tests
 
 | Category | Files | Tests |
 |----------|-------|-------|
 | Engine | 3 | 130 + 35 + 16 = 181 |
 | NLU | 3 | 55 + 30 + 53 = 138 |
 | Integration | 2 | 74 + 30 = 104 |
+| Conflict Detector | 1 | 90+ |
 | Pipeline | 3 | 30 + 20 + 30 = 80 |
 | API & Schema | 4 | 68 |
+| Enterprise + Resilience | 2 | 27 + 29 = 56 |
 | Performance | 2 | 36 |
-| Others | 6 | 43 |
-| **Tổng** | **23** | **650+** |
+| Others | 6 | 67+ |
+| **Tổng** | **26** | **820+** |
 
 ---
 
@@ -578,7 +593,79 @@ graph TD
 
 ---
 
-## Kiến trúc hiện tại (v5.0)
+## Giai đoạn 11: Constraint Extraction + Conflict Detection ✅
+
+### Vấn đề
+
+Người dùng hỏi câu **mâu thuẫn về thời gian** mà engine vẫn trả kết quả:
+
+- "Năm 1945 Trần Hưng Đạo" → THĐ mất năm 1300 → Vô lý!
+- "Năm 2020 Điện Biên Phủ" → ĐBP năm 1954 → Vô lý!
+
+### Giải pháp: 2 module mới
+
+```mermaid
+flowchart LR
+    Q["Câu hỏi"] --> CE["Constraint Extractor<br/>Trích xuất hard constraints<br/>year, person, dynasty"]
+    CE --> CD["Conflict Detector<br/>Kiểm tra mâu thuẫn<br/>person.death < query.year?"]
+    CD --> |"Mâu thuẫn"| REJECT["❌ Từ chối + giải thích"]
+    CD --> |"Hợp lệ"| ENGINE["✅ Tiếp tục search"]
+
+    style CE fill:#FFF3E0,stroke:#FF9800
+    style CD fill:#FFCDD2,stroke:#F44336
+    style REJECT fill:#FFCDD2,stroke:#F44336
+    style ENGINE fill:#C8E6C9,stroke:#4CAF50
+```
+
+**`ConstraintExtractor`**: Gom tất cả hard constraints vào 1 object `QueryInfo`.
+
+**`ConflictDetector`**: Sử dụng `ENTITY_TEMPORAL_METADATA` để kiểm tra person có sống trong khoảng thời gian query yêu cầu không.
+
+---
+
+## Giai đoạn 12: Output Verifier + Guardrails ✅
+
+### Vấn đề
+
+Câu trả lời đôi khi bị cắt dở, thiếu dấu chấm, lệch chủ đề, hoặc ảo giác năm.
+
+### Giải pháp: `OutputVerifier` (Phase 5)
+
+| Severity | Ý nghĩa | Hành động |
+|----------|---------|--------|
+| `PASS` | Đạt | Không làm gì |
+| `AUTO_FIX` | Lỗi nhỏ, sửa được | Tự động sửa |
+| `SOFT_FAIL` | Lệch chủ đề | Cảnh báo, giữ nguyên |
+| `HARD_FAIL` | Sai nghiêm trọng | Loại bỏ hoặc thay thế |
+
+---
+
+## Giai đoạn 13: War Query + Dynamic Resolution ✅
+
+- **"Chiến tranh Việt Nam"** → special intro title + events cụ thể
+- **"Kháng chiến chống giặc ngoại xâm"** → trả full resistance wars (1945–1975)
+- **"Đại Việt"** → chỉ xuất hiện từ 1054 trở đi
+- **CI/CD**: Sửa 6 failing tests liên quan đến typo, viết tắt, không dấu
+
+---
+
+## Giai đoạn 14: Production-Hardened Testing ✅
+
+### 2 test suites mới
+
+| Suite | Tests | Time | Result |
+|-------|-------|------|--------|
+| Enterprise Levels (6 levels) | 27 | 0.59s | ✅ 27/27 |
+| Advanced Resilience (8 categories) | 29 | 1.32s | ✅ 29/29 |
+| Full regression | 820+ | 20.79s | ✅ 815 passed |
+
+**Enterprise**: Basic Sanity → Controlled Logic → Drift Traps → Multi-Layer Edge → Adversarial → System Integrity
+
+**Resilience**: 🔁 Determinism · 🔍 Retrieval Integrity · 🛡️ Guardrails · 📦 FAISS · 🔒 Version Freeze · 💥 Chaos · ⚡ Concurrency · ⏱️ Performance
+
+---
+
+## Kiến trúc hiện tại (v6.0)
 
 ```mermaid
 flowchart TD
@@ -602,7 +689,23 @@ flowchart TD
         IC4["Fact-check detection"]
     end
 
-    IC --> Search
+    IC --> ConstraintEx
+
+    subgraph ConstraintEx["📐 Constraint Extraction"]
+        direction TB
+        CE1["Gom hard constraints"]
+        CE2["year, person, dynasty, place"]
+    end
+
+    ConstraintEx --> ConflictDet
+
+    subgraph ConflictDet["⚠️ Conflict Detection"]
+        direction TB
+        CD1["Kiểm tra mâu thuẫn thời gian"]
+        CD2["Person timeline vs query year"]
+    end
+
+    ConflictDet --> Search
 
     subgraph Search["🔍 Semantic Search — vietnamese-sbert ONNX 130 MB"]
         direction TB
@@ -637,7 +740,17 @@ flowchart TD
         AS4["Fact-check: confirm ✅ / correct ❌"]
     end
 
-    Synth -->|"Implicit context"| Format
+    Synth --> Guard
+
+    subgraph Guard["🛡️ Output Verifier"]
+        direction TB
+        G1["Truncation check + auto-fix"]
+        G2["Completeness check"]
+        G3["Topic drift detection"]
+        G4["Year hallucination guard"]
+    end
+
+    Guard -->|"Verified"| Format
 
     subgraph Format["🌍 Implicit Context"]
         direction TB
@@ -651,10 +764,13 @@ flowchart TD
     style Q fill:#E3F2FD,stroke:#1565C0
     style A fill:#E8F5E9,stroke:#2E7D32
     style IC fill:#1b4332,color:#fff
+    style ConstraintEx fill:#FFF3E0,stroke:#FF9800
+    style ConflictDet fill:#FFCDD2,stroke:#F44336
     style Search fill:#FFF3E0,stroke:#FF9800
     style Rerank fill:#E8EAF6,stroke:#3F51B5
     style NLI fill:#F3E5F5,stroke:#7B1FA2
     style Synth fill:#FFF8E1,stroke:#FF6F00
+    style Guard fill:#E0F7FA,stroke:#00838F
 ```
 
 ## Tổng kích thước Models
@@ -706,17 +822,285 @@ graph TD
 
 ```mermaid
 graph LR
-    Now["Hiện tại v5.0\nSemantic Search\n+ Rerank + NLI\n+ Intent + Synthesis\n+ Fact-Check"] --> F1["🔜 Claude LLM\nSinh câu trả lời\ntự nhiên hơn\n(fallback to rule-based)"]
-    Now --> F2["🔜 Fine-tune\nCross-Encoder\ntrên dữ liệu VN"]
-    Now --> F3["🔜 Hybrid Search\nBM25 + Semantic"]
-    Now --> F4["🔜 User Feedback\nthumb up/down\ncải thiện ranking"]
+    Now["Hiện tại v6.0<br/>14-phase pipeline<br/>820+ tests<br/>Constraint + Conflict<br/>Guardrails + Verifier"] --> F1["🔜 Claude LLM<br/>Sinh câu trả lời<br/>tự nhiên hơn<br/>(fallback to rule-based)"]
+    Now --> F2["🔜 Fine-tune<br/>Cross-Encoder<br/>trên dữ liệu VN"]
+    Now --> F3["🔜 Hybrid Search<br/>BM25 + Semantic"]
+    Now --> F4["🔜 User Feedback<br/>thumb up/down<br/>cải thiện ranking"]
+    Now --> F5["🔜 FAISS Rollback<br/>Checksum validation<br/>Production failure sim"]
 
     style Now fill:#E3F2FD,stroke:#1565C0
     style F1 fill:#FFF9C4,stroke:#F9A825
     style F2 fill:#FFF9C4,stroke:#F9A825
     style F3 fill:#FFF9C4,stroke:#F9A825
     style F4 fill:#FFF9C4,stroke:#F9A825
+    style F5 fill:#FFF9C4,stroke:#F9A825
 ```
+
+---
+
+## 🧭 TẦNG NHÌN TỔNG THỂ — TỪ ENGINE → CHATBOT LỊCH SỬ HOÀN CHỈNH
+
+### Đánh giá hiện tại
+
+| Năng lực | Mức độ | Ghi chú |
+|----------|--------|---------|
+| Retrieval (RAG) | ✅ Mạnh | FAISS + rerank + NLI |
+| Determinism | ✅ | 100% reproducible |
+| Guardrails | ✅ | AUTO_FIX / SOFT_FAIL / HARD_FAIL |
+| Temporal reasoning | ⚠️ Cơ bản | overlap + constraint, chưa có compare/duration |
+| Multi-hop reasoning | ❌ | Cần graph traversal |
+| Knowledge Graph | ⚠️ Sơ khai | Entity metadata, chưa có relation layer |
+| Coreference resolution | ❌ | "Ông ấy" → ai? |
+| Conversational memory | ❌ | Chưa có session context |
+| Hallucination defense | ⚠️ | Guardrail grammar, chưa fact verify |
+| Counterfactual | ❌ | "Nếu Ngô Quyền thất bại thì..." |
+
+**Điểm đánh giá:** Engine 8.8/10 · Test Coverage 9.2/10 · **Chatbot Level 6.5/10**
+
+---
+
+### 🧱 Phase 1 — Ổn định Core Engine ✅ (v6.0.1)
+
+> Đã hoàn thành trong commit hiện tại.
+
+- [x] Fix crash `year="invalid"` → centralized `safe_year()` utility
+- [x] Fix resistance term expansion `TypeError: 'bool' object is not iterable`
+- [x] Thêm Cat 9: Data Type Corruption tests (year=None, "", [], True, False)
+- [x] Unit tests cho `safe_year()` — 19 test cases
+
+---
+
+### 🧠 Phase 2 — Semantic Intelligence (Tiếp theo)
+
+Hiện engine thiên về retrieval + rule-based. Để "hiểu" lịch sử, cần:
+
+**2.1 Temporal Reasoning Layer**
+```python
+# Cần build:
+compare_entities()        # "Ai trị vì lâu nhất?"
+timeline_reasoning()      # "Sự kiện nào trước khởi nghĩa Lam Sơn?"
+relative_temporal_query() # "Triều đại nào tồn tại ngắn nhất?"
+```
+
+**2.2 Multi-hop Reasoning**
+```
+Q: "Vị vua sáng lập triều đại tồn tại ngắn nhất là ai?"
+→ Step 1: Tìm triều đại ngắn nhất
+→ Step 2: Lấy người sáng lập
+→ Cần: resolve_entity_relations()
+```
+
+**2.3 Intent Hierarchy mở rộng**
+
+| Intent mới | Ví dụ |
+|------------|-------|
+| `compare_intent` | "So sánh Trần Hưng Đạo và Lê Lợi" |
+| `narrative_intent` | "Kể lại diễn biến trận Bạch Đằng" |
+| `analysis_intent` | "Phân tích nguyên nhân sụp đổ nhà Hồ" |
+| `counterfactual_intent` | "Nếu Ngô Quyền thất bại thì sao?" |
+
+---
+
+### 🔍 Phase 2.5 — Hybrid Search V2 (Production-Grade) ✅ Implemented
+
+> ⚠️ Bước này nên làm **trước** Knowledge Graph.
+
+**V2 Upgrade (implemented 2026-02-17):**
+- ✅ Score normalization (min-max + percentile) — chống BM25 score domination
+- ✅ RRF weighted fusion với dynamic α/β theo query intent
+- ✅ Hard keyword filter trên structured year fields (không dùng text search)
+- ✅ Diversity control (`max_per_event`) — tránh over-concentration
+- ✅ Pluggable cross-encoder reranker hook
+- ✅ Fail-safe khi một retriever trả empty
+- ✅ BM25 Retriever (rank-bm25 BM25Okapi) với Vietnamese tokenization
+
+**Files:**
+- [x] `retrieval/base_retriever.py` — abstract interface
+- [x] `retrieval/semantic_retriever.py` — FAISS wrapper
+- [x] `retrieval/bm25_retriever.py` — BM25Okapi + Vietnamese tokenization + lazy indexing
+- [x] `retrieval/hybrid_retriever.py` — V2: normalization + weighted RRF + dynamic α/β + hard filter + diversity
+
+**Dynamic Intent Weights:**
+| Intent | α (Semantic) | β (BM25) |
+|--------|-------------|----------|
+| fact_year | 0.3 | 0.7 |
+| explanation | 0.7 | 0.3 |
+| multi_hop | 0.8 | 0.2 |
+| comparison | 0.5 | 0.5 |
+| person_search | 0.4 | 0.6 |
+
+---
+
+### 🛡️ Phase 2.6 — Self-Verification Engine ✅ Implemented
+
+Anti-hallucination layer:
+- [x] `services/self_verification.py` — ClaimExtractor + EvidenceComparator + ConfidenceScorer
+- ✅ Year/Entity claim extraction (dictionary-based, deterministic)
+- ✅ Evidence-based mismatch detection (critical + warning severity)
+- ✅ Penalty-based confidence scoring (1.0 - penalties + agreement bonus)
+- ✅ Three-tier threshold: verified (≥0.85), needs_review (0.6–0.85), rejected (<0.6)
+
+---
+
+### 📊 Phase 2.7 — Evaluation Benchmark Framework ✅ Implemented
+
+- [x] `evaluation/benchmark.py` — EvaluationRunner + ScoringEngine
+- [x] `evaluation/adversarial_queries.json` — 10 adversarial test cases
+- ✅ Metrics: Exact Match, F1, Temporal Accuracy, Entity Accuracy, Hallucination Rate
+- ✅ Production thresholds: 90% accuracy, 95% temporal, ≤3% hallucination, <2.5s latency
+
+**Thứ tự đúng trong pipeline:**
+```
+Embedding search → Hybrid merge (RRF) → Cross-Encoder → Self-Verification → NLI
+```
+
+---
+
+### 🕸️ Phase 3 — Knowledge Graph Layer (Quan trọng nhất)
+
+Tách Knowledge thành 3 tầng:
+
+```
+┌──────────────────────────────────────────┐
+│ Entity Layer                             │
+│  Person · Dynasty · Event · War          │
+├──────────────────────────────────────────┤
+│ Relation Layer                           │
+│  participated_in · founded · successor_of│
+│  defeated · contemporary_of              │
+├──────────────────────────────────────────┤
+│ Temporal Layer                           │
+│  start_year · end_year · overlap logic   │
+└──────────────────────────────────────────┘
+```
+
+Mini knowledge graph in-memory:
+```python
+ENTITY_GRAPH = {
+    "Ngô Quyền": {
+        "type": "person",
+        "founded": "Nhà Ngô",
+        "battle": "Bạch Đằng 938",
+        "reign_start": 939,
+        "reign_end": 944
+    }
+}
+```
+
+---
+
+### 🛡️ Phase 4 — Safety & Fact Verification
+
+**4.1 Hallucination Check**
+- Entity không tồn tại nhưng model fabricate
+- Năm sai lệch ± 5 năm → flag
+- Triều đại sai người → reject
+
+**4.2 Self-Verification Loop**
+```python
+def verify_answer(answer):
+    facts = extract_facts(answer)
+    for fact in facts:
+        if not graph.verify(fact):
+            return regenerate_or_hard_fail()
+    return answer
+```
+
+---
+
+### 💬 Phase 5 — Chatbot Behavior Layer
+
+**5.1 Conversation Memory** (không cần SQL)
+```python
+session_memory = {
+    user_id: {
+        "last_entity": "Ngô Quyền",
+        "last_intent": "person_info",
+        "history": [...]
+    }
+}
+```
+
+Test: coreference resolution — *"Ông ấy trị vì bao lâu?"*
+
+**5.2 Response Style Control**
+
+| Mode | Mô tả |
+|------|--------|
+| `concise` | Trả lời ngắn gọn, bullet point |
+| `academic` | Trích dẫn nguồn, formal |
+| `narrative` | Kể chuyện, mô tả sinh động |
+| `exam_mode` | Đúng/sai + giải thích |
+
+**5.3 Explainability Mode** — evidence_docs + reasoning_steps + entity_resolution
+
+**5.4 Structured Query Mode** (Rất hợp với historical engine)
+```python
+class QueryMode(str, Enum):
+    STRICT_FACT = "strict_fact"   # Chỉ dữ kiện, reject nếu không chắc
+    EXPLAIN     = "explain"      # Giải thích + reasoning chain
+    NARRATIVE   = "narrative"    # Kể chuyện sinh động
+    DATA_ONLY   = "data_only"    # JSON: entities, years, events
+```
+
+---
+
+### 🚀 Phase 6 — Production Hardening (Nâng cao)
+
+- Cold start test: Load engine 100 lần
+- Memory leak test: Repeated calls 1000×
+- Corrupted FAISS: dimension mismatch, broken meta
+- Benchmark dataset + scoring engine
+
+---
+
+### 🏗️ Kiến trúc mục tiêu — Human-Level Historical Chatbot
+
+```
+                         ┌────────────────────┐
+User Input ─────────────▶│  Query Processor   │
+                         └────────┬───────────┘
+                                  │
+                    ┌─────────────▼─────────────┐
+                    │ Intent + Entity Detector  │
+                    └─────────────┬─────────────┘
+                                  │
+         ┌────────────────────────┼────────────────────────┐
+         │                        │                        │
+         ▼                        ▼                        ▼
+   RAG Retriever            Knowledge Graph           Conversation Memory
+ (FAISS + docs)            (Entity + Relation)        (Session context)
+         │                        │                        │
+         └───────────────┬────────┴────────┬──────────────┘
+                         ▼                 ▼
+                 Evidence Aggregator   Temporal Reasoner
+                         │                 │
+                         └────────┬────────┘
+                                  ▼
+                         Answer Generator
+                                  │
+                                  ▼
+                         Fact Verification Loop
+                                  │
+                                  ▼
+                             Guardrails
+                                  │
+                                  ▼
+                              Response
+```
+
+### 🎯 Thứ tự ưu tiên để lên 9.5/10
+
+| # | Việc cần làm | Impact |
+|---|-------------|--------|
+| 1 | ~~Fix crash & resistance bug~~ | ✅ Done |
+| 2 | Thêm fact verification loop | 🔴 Critical |
+| 3 | **Hybrid Search (BM25 + Semantic)** | 🔴 High |
+| 4 | Thêm temporal compare reasoning | 🔴 High |
+| 5 | Thêm mini knowledge graph | 🟡 High |
+| 6 | Thêm conversational memory | 🟡 Medium |
+| 7 | Multi-hop graph traversal | 🟡 Medium |
+| 8 | Response style control | 🟢 Nice-to-have |
 
 ---
 

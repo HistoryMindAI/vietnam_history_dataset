@@ -1,4 +1,5 @@
 import app.core.startup as startup
+from app.core.utils.date_utils import safe_year
 from app.core.config import TOP_K, SIM_THRESHOLD, SIM_THRESHOLD_LOW, FUZZY_MATCH_THRESHOLD, HIGH_CONFIDENCE_SCORE
 from functools import lru_cache
 from app.utils.normalize import normalize_query
@@ -710,7 +711,7 @@ def scan_national_resistance() -> list:
             results.append(doc)
 
     # Sort chronologically
-    results.sort(key=lambda d: d.get("year", 9999))
+    results.sort(key=lambda d: safe_year(d.get("year")))
     return results
 
 
@@ -729,7 +730,7 @@ def scan_territorial_conflicts() -> list:
         if ct in ("external_conflict", "civil_war", "colonial_aggression"):
             results.append(doc)
 
-    results.sort(key=lambda d: d.get("year", 9999))
+    results.sort(key=lambda d: safe_year(d.get("year")))
     return results
 
 
@@ -746,7 +747,7 @@ def scan_civil_wars() -> list:
         if doc.get("conflict_type") == "civil_war":
             results.append(doc)
 
-    results.sort(key=lambda d: d.get("year", 9999))
+    results.sort(key=lambda d: safe_year(d.get("year")))
     return results
 
 

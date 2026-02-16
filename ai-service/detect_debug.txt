@@ -1,0 +1,4 @@
+'C├│ phß║úi trß║¡n Bß║ích ─Éß║▒ng n─âm 1288 kh├┤ng?' => is_fc=True, fc_year=1288
+'B├íc Hß╗ô ─æß╗ìc tuy├¬n ng├┤n n─âm 1950 ─æ├║ng kh├┤ng?' => is_fc=True, fc_year=1950
+'c├│ phß║úi trß║¡n bß║ích ─æß║▒ng n─âm 1288 kh├┤ng?' => is_fc=True, fc_year=1288
+'b├íc hß╗ô ─æß╗ìc tuy├¬n ng├┤n n─âm 1950 ─æ├║ng kh├┤ng?' => is_fc=True, fc_year=1950

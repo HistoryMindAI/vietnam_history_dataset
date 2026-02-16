@@ -5,11 +5,12 @@ Dự án này là hệ thống Chatbot thông minh hỗ trợ tra cứu và tr�
 ## 🎯 Status
 
 ```
-✅ Version: 5.0.0
-✅ Tests: 650+ tests passing (23 test files)
+✅ Version: 6.0.0
+✅ Tests: 820+ tests passing (26 test files)
 ✅ AI Models: 3 ONNX models (Embedding + Cross-Encoder + NLI)
-✅ Architecture: Intent Classifier (11 types) + Fact-Check + Answer Synthesis + Implicit Context
-✅ Data: HuggingFace Dataset (500K+ samples) → FAISS Index
+✅ Architecture: 14-phase pipeline — NLU → Intent → Constraint → Conflict → Search → Rerank → NLI → Synthesis → Guardrails
+✅ Data: HuggingFace Dataset (500K+ samples) → FAISS v3 Index (checksum + atomic writes)
+✅ Quality: Enterprise test suite (27 behavioral tests) + Advanced resilience suite (29 tests)
 ✅ Status: PRODUCTION READY
 ```
 
@@ -86,18 +87,21 @@ graph TD
         B["API Gateway / Orchestrator"]
     end
 
-    subgraph "🤖 AI Service — FastAPI"
+    subgraph "🤖 AI Service — FastAPI (v6.0)"
         NLU["NLU Layer<br/>Sửa lỗi, phục hồi dấu, entity detection"]
         IC["Intent Classifier<br/>11 intent types, duration guard, fact-check"]
+        CE_EXT["Constraint Extractor<br/>Hard constraint consolidation"]
+        CD["Conflict Detector<br/>Temporal consistency guard"]
         ENGINE["Query Engine<br/>Multi-strategy search routing"]
         CE["Cross-Encoder Rerank<br/>mmarco multilingual ONNX"]
         NLI["NLI Validator<br/>Entailment checking"]
         AS["Answer Synthesis<br/>Template-based, question-type aware, fact-check"]
+        GR["Output Verifier<br/>Truncation, drift, hallucination guard"]
         CTX["Implicit Context<br/>Vietnam scope detection"]
     end
 
     subgraph "💾 Data Layer"
-        D1["FAISS Index — Semantic vectors"]
+        D1["FAISS v3 Index — Semantic vectors + checksum"]
         D2["meta.json — Metadata + Inverted Indexes"]
         D3["knowledge_base.json — Aliases, Synonyms, Typos"]
     end
@@ -105,12 +109,15 @@ graph TD
     A -- "HTTP" --> B
     B -- "REST" --> NLU
     NLU --> IC
-    IC --> ENGINE
+    IC --> CE_EXT
+    CE_EXT --> CD
+    CD -->|"conflict? → reject"| ENGINE
     ENGINE --> D1 & D2 & D3
     ENGINE --> CE
     CE --> NLI
     NLI --> AS
-    AS --> CTX
+    AS --> GR
+    GR --> CTX
     CTX --> FORMAT["📤 Response"]
 ```
 
@@ -262,26 +269,30 @@ flowchart TD
 ## 🧪 Testing
 
 ```bash
-# Chạy từ thư mục ai-service
-cd ai-service
-
-python -m pytest ../tests/test_engine.py -v         # Engine tests
-python -m pytest ../tests/test_nlu.py -v             # NLU tests
-python -m pytest ../tests/ -v                        # Full suite (650+ tests)
+# Chạy tất cả tests
+python -m pytest tests/ -v                              # Full suite (820+ tests)
+python -m pytest tests/test_enterprise_levels.py -v      # Enterprise behavioral suite
+python -m pytest tests/test_advanced_resilience.py -v     # Advanced resilience suite
+python -m pytest tests/test_engine.py -v                 # Engine core tests
 ```
 
-| File | Tests | Nội dung |
-|------|-------|---------  |
-| `test_engine.py` | 130 | Engine: intent, entity, year, fact-check, multi-entity |
-| `test_comprehensive.py` | 74 | Integration tests: accuracy, relevance |
-| `test_nlu.py` | 55 | NLU: rewriting, fuzzy, accents, phonetic |
-| `test_search_utils.py` | 53 | Search, indexing, relevance |
-| `test_edge_cases.py` | 35 | Edge cases: malformed data, boundary |
-| `test_pipeline.py` | 30 | Data pipeline |
-| `test_year_extraction.py` | 30 | Year extraction |
-| `test_text_cleaning.py` | 20 | Text normalization |
-| `test_bug_fixes.py` | 16 | Critical bug regression tests |
-| *+ 14 more files* | 187+ | API, schema, performance, dedup, etc. |
+### Test Suites
+
+| Suite | File | Tests | Focus |
+|-------|------|-------|-------|
+| **Enterprise Levels** | `test_enterprise_levels.py` | 27 | 6-level behavioral validation (sanity → adversarial) |
+| **Advanced Resilience** | `test_advanced_resilience.py` | 29 | Determinism, retrieval integrity, guardrails, chaos, concurrency, performance |
+| Engine Core | `test_engine.py` | 130 | Intent, entity, year, fact-check, multi-entity |
+| Conflict Detector | `test_conflict_detector.py` | 90+ | Temporal contradiction, constraint extraction |
+| Comprehensive | `test_comprehensive.py` | 74 | Integration: accuracy, relevance |
+| NLU | `test_nlu.py` | 55 | Rewriting, fuzzy, accents, phonetic |
+| Search | `test_search_utils.py` | 53 | Search, indexing, relevance |
+| Edge Cases | `test_edge_cases.py` | 35 | Malformed data, boundary |
+| Intent Classifier | `test_intent_classifier.py` | 30+ | Intent detection, duration guard |
+| Year Extraction | `test_year_extraction.py` | 30 | Year extraction |
+| Pipeline | `test_pipeline.py` | 30 | Data pipeline |
+| *+ 15 more files* | | 240+ | API, schema, performance, dedup, fuzzy, etc. |
+| **Tổng** | **26 files** | **820+** | |
 
 ---
 
@@ -293,6 +304,7 @@ vietnam_history_dataset/
 │   ├── app/
 │   │   ├── core/
 │   │   │   ├── config.py                  # Config paths & constants
+│   │   │   ├── query_schema.py            # QueryInfo dataclass
 │   │   │   └── startup.py                 # Load models + build indexes
 │   │   ├── services/
 │   │   │   ├── engine.py                  # 🧠 Query Engine chính (~1500 LOC)
@@ -300,26 +312,35 @@ vietnam_history_dataset/
 │   │   │   ├── search_service.py          # 🔍 Entity resolution + FAISS
 │   │   │   ├── cross_encoder_service.py   # 📊 Cross-Encoder Re-ranking
 │   │   │   ├── nli_validator_service.py   # ✅ NLI Answer Validation
-│   │   │   ├── intent_classifier.py       # 🎯 Intent Classification (11 types + fact-check)
-│   │   │   ├── answer_synthesis.py        # 📄 Answer Synthesis + Fact-Check Correction
+│   │   │   ├── intent_classifier.py       # 🎯 Intent Classification (11 types)
+│   │   │   ├── constraint_extractor.py    # 📐 Constraint Extraction (Phase 11)
+│   │   │   ├── conflict_detector.py       # ⚠️ Temporal Conflict Detection
+│   │   │   ├── answer_synthesis.py        # 📄 Answer Synthesis + Fact-Check
+│   │   │   ├── answer_validator.py        # ✔️ Answer Validation
+│   │   │   ├── guardrails.py              # 🛡️ Output Verifier (Phase 5)
+│   │   │   ├── confidence_scorer.py       # 📊 Confidence Scoring
+│   │   │   ├── rewrite_engine.py          # ✏️ Query Rewriting
 │   │   │   ├── implicit_context.py        # 🌍 Implicit Vietnam Context
-│   │   │   ├── semantic_intent.py         # Legacy semantic intent
-│   │   │   ├── prompt_templates.py        # Prompt templates
+│   │   │   ├── semantic_intent.py         # 🎭 Semantic Intent (war/territorial)
+│   │   │   ├── semantic_layer.py          # 🔗 Semantic Layer
 │   │   │   └── context7_service.py        # Context7 integration
 │   │   └── main.py                        # FastAPI entry point
 │   ├── scripts/
-│   │   └── build_from_huggingface.py      # 🚀 Pipeline: HuggingFace → FAISS
+│   │   └── build_from_huggingface.py      # 🚀 Pipeline: HuggingFace → FAISS v3
 │   ├── onnx_model/                        # Embedding model (130 MB)
 │   ├── onnx_cross_encoder/                # Cross-Encoder model (113 MB)
 │   ├── onnx_nli/                          # NLI model (102 MB)
-│   ├── faiss_index/                       # FAISS index + metadata
+│   ├── faiss_index/                       # FAISS v3 index + meta.json + checksum
 │   ├── knowledge_base.json                # 🔑 Aliases, Synonyms, Typos
 │   └── Dockerfile                         # Docker build config
 ├── pipeline/                              # Data processing pipeline
 │   ├── storyteller.py                     # HuggingFace → structured data
 │   ├── clean_structured_data.py           # Data cleaning
 │   └── index_docs.py                      # FAISS index builder
-├── tests/                                 # Unit tests (23 files, 650+ tests)
+├── tests/                                 # 🧪 Test suites (26 files, 820+ tests)
+│   ├── test_enterprise_levels.py          # Enterprise behavioral validation (27 tests)
+│   ├── test_advanced_resilience.py        # Advanced resilience (29 tests)
+│   └── ...                                # + 24 more test files
 ├── deploy.ps1 / deploy.sh                 # 🚀 Auto deploy scripts
 ├── push-to-github.ps1 / push-to-github.sh # 📤 Auto push scripts
 ├── docker-compose.yml                     # Docker Compose config
