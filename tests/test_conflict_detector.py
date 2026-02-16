@@ -1318,7 +1318,7 @@ class TestPhase4SoftSemantic:
         result = detector.detect(qi)
         assert result.has_conflict is False
         assert "Đàng Ngoài" in result.semantic_expansions
-        assert result.semantic_expansions["Đàng Ngoài"] == ["trịnh"]
+        assert result.semantic_expansions["Đàng Ngoài"] == ["Trịnh"]
         assert any("Đàng Ngoài" in n for n in result.semantic_notes)
 
     def test_phase4_person_overlap_note(self):
@@ -1349,12 +1349,9 @@ class TestPhase4SoftSemantic:
         )
         result = detector.detect(qi)
         # Phase 2 will fire (no overlap) → Phase 4 skipped
-        # So this tests Phase 2 pre-emption
         if result.has_conflict:
-            # Phase 2 caught it — Phase 4 should NOT have run
             assert len(result.semantic_warnings) == 0
         else:
-            # If no conflict, Phase 4 should warn
             assert any("triều đại khác nhau" in w for w in result.semantic_warnings)
 
     def test_phase4_skipped_on_conflict(self):
@@ -1369,11 +1366,108 @@ class TestPhase4SoftSemantic:
             required_year=1945,
         )
         result = detector.detect(qi)
-        # Phase 1 should catch conflict
         assert result.has_conflict is True
-        # Phase 4 should have been skipped entirely
         assert len(result.semantic_notes) == 0
         assert len(result.semantic_warnings) == 0
         assert len(result.semantic_expansions) == 0
 
+    # ------------------------------------------------------------------
+    # Phase 4 Extended Tests (user-requested batch 2)
+    # ------------------------------------------------------------------
 
+    def test_phase4_multiple_person_overlap(self):
+        """Three overlapping persons → 3 overlap notes (A-B, A-C, B-C)."""
+        meta = {
+            "nguyễn trãi": {"type": "person", "lifespan": (1380, 1442), "era": ["lê sơ"]},
+            "lê lợi": {"type": "person", "lifespan": (1385, 1433), "era": ["lê sơ"]},
+            "nguyễn phi khanh": {"type": "person", "lifespan": (1355, 1428), "era": ["trần", "lê sơ"]},
+        }
+        detector = ConflictDetector(entity_metadata=meta)
+        qi = _make_query_info(
+            query="Nguyễn Trãi, Lê Lợi, Nguyễn Phi Khanh",
+            required_persons=["Nguyễn Trãi", "Lê Lợi", "Nguyễn Phi Khanh"],
+        )
+        result = detector.detect(qi)
+        assert result.has_conflict is False
+        # All 3 pairs overlap (1385-1428 is common)
+        overlap_notes = [n for n in result.semantic_notes if "trùng" in n]
+        assert len(overlap_notes) == 3, f"Expected 3 overlap notes, got {len(overlap_notes)}: {overlap_notes}"
+
+    def test_phase4_no_duplicate_notes(self):
+        """Repeated entity in list → no duplicate overlap notes."""
+        meta = {
+            "nguyễn trãi": {"type": "person", "lifespan": (1380, 1442), "era": ["lê sơ"]},
+            "lê lợi": {"type": "person", "lifespan": (1385, 1433), "era": ["lê sơ"]},
+        }
+        detector = ConflictDetector(entity_metadata=meta)
+        qi = _make_query_info(
+            query="Nguyễn Trãi và Nguyễn Trãi và Lê Lợi",
+            required_persons=["Nguyễn Trãi", "Nguyễn Trãi", "Lê Lợi"],
+        )
+        result = detector.detect(qi)
+        assert result.has_conflict is False
+        overlap_notes = [n for n in result.semantic_notes if "trùng" in n]
+        assert len(overlap_notes) == 1, f"Duplicate entity produced duplicate notes: {overlap_notes}"
+
+    def test_phase4_alias_case_insensitive(self):
+        """ĐÀNG NGOÀI (uppercase) must expand."""
+        meta = {}
+        detector = ConflictDetector(entity_metadata=meta)
+        qi = _make_query_info(
+            query="ĐÀNG NGOÀI",
+            required_persons=["ĐÀNG NGOÀI"],
+        )
+        result = detector.detect(qi)
+        assert result.has_conflict is False
+        assert "ĐÀNG NGOÀI" in result.semantic_expansions
+        assert result.semantic_expansions["ĐÀNG NGOÀI"] == ["Trịnh"]
+
+    def test_phase4_does_not_mutate_metadata(self):
+        """analyze() must not mutate the metadata dict."""
+        import copy
+        meta = {
+            "nguyễn trãi": {"type": "person", "lifespan": (1380, 1442), "era": ["lê sơ"]},
+            "lê lợi": {"type": "person", "lifespan": (1385, 1433), "era": ["lê sơ"]},
+        }
+        meta_before = copy.deepcopy(meta)
+        detector = ConflictDetector(entity_metadata=meta)
+        qi = _make_query_info(
+            query="Nguyễn Trãi và Lê Lợi",
+            required_persons=["Nguyễn Trãi", "Lê Lợi"],
+        )
+        detector.detect(qi)
+        assert meta == meta_before, "Metadata mutated by Phase 4!"
+
+    def test_phase4_determinism(self):
+        """100 identical runs → identical result."""
+        meta = {
+            "nguyễn trãi": {"type": "person", "lifespan": (1380, 1442), "era": ["lê sơ"]},
+            "lê lợi": {"type": "person", "lifespan": (1385, 1433), "era": ["lê sơ"]},
+        }
+        detector = ConflictDetector(entity_metadata=meta)
+        qi_factory = lambda: _make_query_info(
+            query="Nguyễn Trãi Đàng Ngoài Lê Lợi",
+            required_persons=["Nguyễn Trãi", "Đàng Ngoài", "Lê Lợi"],
+        )
+        baseline = detector.detect(qi_factory())
+        for _ in range(100):
+            result = detector.detect(qi_factory())
+            assert result.semantic_notes == baseline.semantic_notes
+            assert result.semantic_warnings == baseline.semantic_warnings
+            assert result.semantic_expansions == baseline.semantic_expansions
+
+    def test_phase4_confidence_consistency(self):
+        """Same input → same confidence, no drift."""
+        meta = {
+            "nguyễn trãi": {"type": "person", "lifespan": (1380, 1442), "era": ["lê sơ"]},
+        }
+        detector = ConflictDetector(entity_metadata=meta)
+        qi_factory = lambda: _make_query_info(
+            query="Nguyễn Trãi",
+            required_persons=["Nguyễn Trãi"],
+        )
+        baseline = detector.detect(qi_factory())
+        for _ in range(100):
+            result = detector.detect(qi_factory())
+            assert result.has_conflict == baseline.has_conflict
+            assert result.confidence_threshold == baseline.confidence_threshold
