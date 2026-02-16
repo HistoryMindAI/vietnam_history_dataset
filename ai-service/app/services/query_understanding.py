@@ -310,6 +310,13 @@ def rewrite_query(query: str) -> str:
     # Check if query looks unaccented (no Vietnamese-specific chars)
     if _looks_unaccented(result):
         result = _restore_accents(result)
+    elif _has_mixed_accents(result):
+        # PARTIAL ACCENT RESTORATION: For mixed-accent queries like "Trận bạch den"
+        # Strip all accents, restore, and use if it produces a better result
+        stripped = _strip_accents(result)
+        restored = _restore_accents(stripped)
+        if restored != stripped:  # Restoration found something
+            result = restored
     
     # Step 4: Remove filler words
     for pattern in FILLER_PATTERNS:
@@ -339,6 +346,29 @@ def _looks_unaccented(text: str) -> bool:
     
     # If less than 5% of alphabetic chars are Vietnamese diacritics, likely unaccented
     return (vn_count / alpha_count) < 0.05
+
+
+def _has_mixed_accents(text: str) -> bool:
+    """
+    Detect queries with a MIX of accented and unaccented Vietnamese words.
+    Returns True if accent ratio is between 5% and 50% — enough accents to
+    fail _looks_unaccented() but not enough to be considered fully accented.
+    
+    Examples:
+      "Trận bạch den"  → ~16% → True (mixed)
+      "tran bach dan"  → 0%   → False (pure unaccented, handled by _looks_unaccented)
+      "Các cuộc kháng chiến của Việt Nam" → ~55% → False (fully accented)
+    """
+    vietnamese_chars = set("àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ")
+    text_lower = text.lower()
+    vn_count = sum(1 for c in text_lower if c in vietnamese_chars)
+    alpha_count = sum(1 for c in text_lower if c.isalpha())
+    
+    if alpha_count == 0:
+        return False
+    
+    ratio = vn_count / alpha_count
+    return 0.05 <= ratio < 0.50
 
 
 def _restore_accents(text: str) -> str:
