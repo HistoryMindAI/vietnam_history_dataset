@@ -94,22 +94,49 @@ def _handle_data_scope() -> str:
 def _build_when_answer(events: list, analysis: QueryAnalysis) -> str | None:
     """
     Build focused answer for 'when' questions.
-    Returns ONLY the year + brief context. No data dump.
+    Adapts verbosity based on analysis.detail_level:
+    - brief: year only
+    - standard: year + brief context
+    - detailed: year + date + location + full context
 
     Example: "Bác Hồ ra đi tìm đường cứu nước năm nào?"
-    → "Năm 1911, Nguyễn Tất Thành rời Bến Nhà Rồng ra đi tìm đường cứu nước."
+    → brief:    "Năm 1911."
+    → standard: "Năm 1911, Nguyễn Tất Thành rời Bến Nhà Rồng ra đi tìm đường cứu nước."
+    → detailed: "Ngày 5/6/1911, Nguyễn Tất Thành rời Bến Nhà Rồng (Sài Gòn) trên tàu
+                  Latouche-Tréville, bắt đầu hành trình tìm đường cứu nước."
     """
     if not events:
         return None
+
+    detail = getattr(analysis, "detail_level", "standard")
 
     # For 'when' questions, pick the best matching event
     best = events[0]
     year = best.get("year")
     story = (best.get("story") or best.get("event") or "").strip()
     title = (best.get("title") or "").strip()
+    places = best.get("places", [])
+    persons = best.get("persons", [])
 
+    if detail == "brief":
+        # Minimal: just the year
+        if year:
+            return f"Năm **{year}**."
+        elif story:
+            return story
+        return None
+
+    if detail == "detailed" and year and story:
+        # Rich: include location and persons metadata if available
+        text = story if len(story) > len(title) else title + ": " + story
+        parts = [f"Năm **{year}**"]
+        if places:
+            parts.append(f" (tại {', '.join(places[:2])})")
+        parts.append(f", {text}")
+        return "".join(parts)
+
+    # Standard: year + brief context
     if year and story:
-        # Clean up story to be a complete sentence
         text = story if len(story) > len(title) else title + ": " + story
         return f"Năm **{year}**, {text}"
     elif year:

@@ -225,6 +225,60 @@ class TestDeduplicateAnswer:
 
 
 # ======================================================================
+# 4b. INTRA-LINE DEDUP TESTS
+# ======================================================================
+
+from app.services.answer_postprocessor import _dedup_intra_line
+
+class TestIntraLineDedup:
+    """Test within-line clause deduplication."""
+
+    def test_exact_user_reported_case(self):
+        """The exact duplication pattern the user complained about."""
+        text = (
+            "Đại lễ 1000 năm Thăng Long – Hà Nội; Kỷ niệm nghìn năm Thăng Long – Hà Nội, "
+            "mang ý nghĩa khẳng định bề dày lịch sử – văn hóa Thủ đô. "
+            "(năm 2010): Đại lễ 1000 năm Thăng Long – Hà Nội; Kỷ niệm nghìn năm Thăng Long – Hà Nội, "
+            "mang ý nghĩa khẳng định bề dày lịch sử – văn hóa Thủ đô."
+        )
+        result = _dedup_intra_line(text)
+        assert result.count("Đại lễ 1000 năm") == 1, f"Got duplicate: {result}"
+
+    def test_year_marker_split_dedup(self):
+        """Content repeated before and after year marker."""
+        text = "Sự kiện lịch sử quan trọng. (năm 1945): Sự kiện lịch sử quan trọng."
+        result = _dedup_intra_line(text)
+        assert result.count("Sự kiện lịch sử") == 1
+
+    def test_sentence_level_dedup(self):
+        """Same sentence appearing twice in a line."""
+        text = "Trận Bạch Đằng đánh bại quân Nguyên. Trận Bạch Đằng đánh bại quân Nguyên."
+        result = _dedup_intra_line(text)
+        assert result.count("Trận Bạch Đằng") == 1
+
+    def test_no_false_positive_short(self):
+        """Short lines should not be modified."""
+        text = "Năm 938."
+        assert _dedup_intra_line(text) == text
+
+    def test_no_false_positive_distinct(self):
+        """Line with distinct clauses should be preserved."""
+        text = "Trận Bạch Đằng năm 938 đánh bại quân Nam Hán. Ngô Quyền lên ngôi vua."
+        result = _dedup_intra_line(text)
+        assert "Trận Bạch Đằng" in result
+        assert "Ngô Quyền" in result
+
+    def test_dedup_answer_single_line(self):
+        """deduplicate_answer should handle single-line intra-line dupes."""
+        text = (
+            "Đại lễ 1000 năm Thăng Long – Hà Nội. "
+            "(năm 2010): Đại lễ 1000 năm Thăng Long – Hà Nội."
+        )
+        result = deduplicate_answer(text)
+        assert result.count("Đại lễ 1000 năm") == 1
+
+
+# ======================================================================
 # 5. canonicalize_year_format TESTS
 # ======================================================================
 
