@@ -13,6 +13,7 @@ Principles:
 """
 import app.core.startup as startup
 from app.services.intent_classifier import QueryAnalysis
+from app.services.event_aggregator import normalize_for_dedup
 from app.core.utils.date_utils import safe_year
 
 
@@ -209,9 +210,12 @@ def _build_period_grouped_list(events: list) -> str:
             for e in items:
                 year = e.get("year", 0)
                 story = (e.get("story") or e.get("event") or "").strip()
-                if not story or story.lower() in seen:
+                if not story:
                     continue
-                seen.add(story.lower())
+                normalized = normalize_for_dedup(story)
+                if normalized in seen:
+                    continue
+                seen.add(normalized)
                 if year:
                     part_lines.append(f"- **Năm {year}:** {story}")
                 else:
@@ -236,9 +240,12 @@ def _build_simple_list(events: list) -> str:
     seen = set()
     for e in events:
         story = (e.get("story") or e.get("event") or "").strip()
-        if not story or story.lower() in seen:
+        if not story:
             continue
-        seen.add(story.lower())
+        normalized = normalize_for_dedup(story)
+        if normalized in seen:
+            continue
+        seen.add(normalized)
         year = e.get("year", 0)
         if year:
             parts.append(f"**Năm {year}:** {story}")
@@ -261,9 +268,12 @@ def _build_what_answer(events: list, analysis: QueryAnalysis) -> str | None:
     for e in events[:7]:
         story = (e.get("story") or "").strip()
         title = (e.get("title") or "").strip()
-        if not story or story.lower() in seen:
+        if not story:
             continue
-        seen.add(story.lower())
+        normalized = normalize_for_dedup(story)
+        if normalized in seen:
+            continue
+        seen.add(normalized)
 
         year = e.get("year", 0)
         if year:
