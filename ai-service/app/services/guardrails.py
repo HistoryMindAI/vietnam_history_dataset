@@ -85,6 +85,11 @@ _VALID_ENDINGS = re.compile(r'[.!?…"»]\s*$')
 # Patterns for phantom years (years not grounded in metadata)
 _YEAR_PATTERN = re.compile(r'\b([1-9]\d{2,3})\b')
 
+# Patterns for truncated Vietnamese names: "Hồ C.", "Nguyễn T."
+_TRUNCATED_NAME_RE = re.compile(
+    r'\b([A-ZĐÀ-Ỹ][a-zà-ỹ]+)\s+([A-ZĐÀ-Ỹ])\.(?!\w)'
+)
+
 
 class OutputVerifier:
     """
@@ -136,6 +141,15 @@ class OutputVerifier:
         if query_info is not None:
             year_check = self._check_year_hallucination(corrected, query_info)
             result.checks.append(year_check)
+
+        # 5. Truncated name check
+        trunc_name_check = self._check_truncated_names(corrected)
+        result.checks.append(trunc_name_check)
+
+        # 6. Temporal mixing check (requires query_info with events)
+        if query_info is not None:
+            temp_check = self._check_temporal_mixing(corrected, query_info)
+            result.checks.append(temp_check)
 
         # Aggregate severity — worst check wins
         worst = Severity.PASS
@@ -278,3 +292,52 @@ class OutputVerifier:
                     )
 
         return CheckResult(name="year_hallucination", severity=Severity.PASS)
+
+    def _check_truncated_names(self, answer: str) -> CheckResult:
+        """
+        Check for truncated Vietnamese person names in the answer.
+        Patterns like "Hồ C.", "Nguyễn T." indicate incomplete entity rendering.
+
+        Returns SOFT_FAIL — the entity normalizer should fix these upstream,
+        but this serves as a safety net.
+        """
+        matches = _TRUNCATED_NAME_RE.findall(answer)
+        if matches:
+            truncated = [f"{m[0]} {m[1]}." for m in matches]
+            return CheckResult(
+                name="truncated_names",
+                severity=Severity.SOFT_FAIL,
+                message=f"Truncated names detected: {truncated}",
+            )
+        return CheckResult(name="truncated_names", severity=Severity.PASS)
+
+    def _check_temporal_mixing(self, answer: str, query_info) -> CheckResult:
+        """
+        Check if the answer mentions years that are NOT present in the
+        event metadata. A mismatch suggests the answer drifted or hallucinated.
+
+        Only fires when query_info has event_years — a set of years from
+        the retrieved events.
+        """
+        event_years = getattr(query_info, "event_years", None)
+        if not event_years:
+            return CheckResult(name="temporal_mixing", severity=Severity.PASS)
+
+        years_in_answer = set(int(m) for m in _YEAR_PATTERN.findall(answer))
+        if not years_in_answer:
+            return CheckResult(name="temporal_mixing", severity=Severity.PASS)
+
+        # Allow years within ±5 of any event year (for approximate references)
+        ungrounded = []
+        for y in years_in_answer:
+            if not any(abs(y - ey) <= 5 for ey in event_years):
+                ungrounded.append(y)
+
+        if ungrounded:
+            return CheckResult(
+                name="temporal_mixing",
+                severity=Severity.SOFT_FAIL,
+                message=f"Years {ungrounded} not found in event metadata {sorted(event_years)}",
+            )
+
+        return CheckResult(name="temporal_mixing", severity=Severity.PASS)
