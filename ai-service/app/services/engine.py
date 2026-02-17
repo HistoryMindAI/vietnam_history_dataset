@@ -43,6 +43,7 @@ from app.core.config import (
     CONFIDENCE_THRESHOLD, RERANK_WEIGHT, ENTAILMENT_WEIGHT, USE_LLM_REWRITE,
 )
 from app.core.utils.date_utils import safe_year
+from app.services.entity_normalizer import normalize_entity_names
 import app.core.startup as startup
 import re
 
@@ -579,7 +580,17 @@ def _format_event_text(e: dict, year=None, seen_texts: set = None) -> str | None
     if clean_title and isinstance(clean_title, str) and clean_title.strip():
         if clean_story and clean_title.lower() != clean_story.lower():
             if not _is_question_title(clean_title):
-                if clean_title.lower() not in clean_story.lower():
+                # Check both exact containment AND fuzzy similarity
+                title_in_story = clean_title.lower() in clean_story.lower()
+                # Fuzzy guard: if title ≈ story (>70% similar), skip concat
+                from difflib import SequenceMatcher
+                title_norm = normalize_for_dedup(clean_title)
+                story_norm = normalize_for_dedup(clean_story)
+                fuzzy_dup = (
+                    SequenceMatcher(None, title_norm, story_norm).ratio() >= 0.7
+                    if title_norm and story_norm else False
+                )
+                if not title_in_story and not fuzzy_dup:
                     clean_story = f"{clean_title}: {clean_story}"
 
     # Bug #1 Fix: Check clean_story is not empty before indexing
@@ -1631,12 +1642,28 @@ def engine_answer(query: str):
         answer = canonicalize_year_format(answer)
         answer = deduplicate_answer(answer)
 
+    # --- ENTITY NORMALIZATION: alias consistency + truncation fix ---
+    if answer and not no_data:
+        answer = normalize_entity_names(answer)
+
+    # --- CONFIDENCE & EVIDENCE ATTRIBUTION ---
+    best_confidence = 0.0
+    evidence_ids = []
+    if unique_events and not no_data:
+        scored = [e for e in unique_events if e.get("_final_confidence", -1.0) >= 0.0]
+        if scored:
+            best_confidence = max(e.get("_final_confidence", 0.0) for e in scored)
+        evidence_ids = [e.get("id", f"doc_{e.get('year', 'unknown')}_{i:02d}")
+                        for i, e in enumerate(unique_events[:5])]
+
     return {
         "query": q_display,
         "intent": intent,
         "answer": answer,
         "events": unique_events,  # Return deduplicated, enriched events
-        "no_data": no_data
+        "no_data": no_data,
+        "confidence": round(best_confidence, 4),
+        "evidence_ids": evidence_ids,
     }
 
 

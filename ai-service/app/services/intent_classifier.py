@@ -27,6 +27,8 @@ class QueryAnalysis:
     question_type: str = "what"          # "when" | "what" | "who" | "list" | "scope"
     confidence: float = 0.0
     explanation: str = ""
+    # Detail level — controls answer verbosity
+    detail_level: str = "standard"       # "brief" | "standard" | "detailed"
     # Fact-check fields — user claims a fact and asks for confirmation
     is_fact_check: bool = False          # True if "phải không?", "đúng không?"
     fact_check_year: Optional[int] = None  # Year claimed by user (may be wrong)
@@ -229,6 +231,52 @@ def detect_question_type(query: str) -> str:
 
 
 # ===================================================================
+# 2b. DETAIL LEVEL DETECTION  (Adaptive Verbosity)
+# ===================================================================
+
+_BRIEF_PATTERNS = [
+    re.compile(r"\bnăm\s+(?:bao\s+nhiêu|nào)\b", re.I),
+    re.compile(r"\bkhi\s+nào\b", re.I),
+    re.compile(r"\btóm\s+tắt\b", re.I),
+    re.compile(r"\bngắn\s+gọn\b", re.I),
+]
+
+_DETAILED_PATTERNS = [
+    re.compile(r"\btrình\s+bày\b", re.I),
+    re.compile(r"\bmô\s+tả\s+chi\s+tiết\b", re.I),
+    re.compile(r"\bkể\s+(?:về|cho|lại)\b", re.I),
+    re.compile(r"\bgiải\s+thích\b", re.I),
+    re.compile(r"\bphân\s+tích\b", re.I),
+    re.compile(r"\bchi\s+tiết\b", re.I),
+    re.compile(r"\bdiễn\s+biến\b", re.I),
+]
+
+
+def detect_detail_level(query: str) -> str:
+    """
+    Detect desired detail level from query phrasing.
+
+    Returns: "brief" | "standard" | "detailed"
+
+    Examples:
+        "Bác Hồ ra đi năm nào?" → "brief"
+        "Trình bày chi tiết sự kiện Bác Hồ ra đi" → "detailed"
+        "Sự kiện Bạch Đằng" → "standard"
+    """
+    q = query.strip()
+
+    for p in _BRIEF_PATTERNS:
+        if p.search(q):
+            return "brief"
+
+    for p in _DETAILED_PATTERNS:
+        if p.search(q):
+            return "detailed"
+
+    return "standard"
+
+
+# ===================================================================
 # 3. DATA SCOPE DETECTION  (Principle 5)
 # ===================================================================
 
@@ -312,6 +360,7 @@ def classify_intent(
     # --- Guard layers ---
     duration = detect_duration_guard(query)
     qtype = detect_question_type(query)
+    dlevel = detect_detail_level(query)
 
     # --- Fact-check detection (before standard classification) ---
     # Check both rewritten and original query — rewrite may strip
@@ -326,6 +375,7 @@ def classify_intent(
         entities=resolved,
         duration_guard=duration,
         question_type=qtype,
+        detail_level=dlevel,
         year=year if not duration else None,       # Guard: don't use year if duration
         year_range=year_range,
         is_fact_check=is_fc,
