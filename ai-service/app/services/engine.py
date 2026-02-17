@@ -6,6 +6,8 @@ from app.services.search_service import (
     scan_territorial_conflicts, scan_civil_wars, scan_broad_history,
     DYNASTY_ORDER,
 )
+from app.services.event_aggregator import aggregate_events, normalize_for_dedup
+from app.services.answer_postprocessor import deduplicate_answer, canonicalize_year_format
 from app.services.query_understanding import (
     rewrite_query, extract_question_intent,
     generate_search_variations,
@@ -383,15 +385,28 @@ def compute_text_similarity(text1: str, text2: str) -> float:
 def _is_similar_event(text1_lower: str, text2_lower: str, kw1: set | None = None, kw2: set | None = None) -> bool:
     """
     Check if two cleaned event texts are similar enough to be considered duplicates.
-    Uses multiple strategies: containment, SequenceMatcher, and keyword overlap.
+    Uses multiple strategies: containment, SequenceMatcher, keyword overlap,
+    and normalized-text comparison (strips year prefixes/bullets).
     """
-    # Strategy 1: Direct containment
+    # Strategy 0: Normalized comparison (catches year-prefix-only differences)
+    norm1 = normalize_for_dedup(text1_lower)
+    norm2 = normalize_for_dedup(text2_lower)
+    if norm1 and norm2:
+        if norm1 == norm2:
+            return True
+        if norm1 in norm2 or norm2 in norm1:
+            return True
+
+    # Strategy 1: Direct containment (on raw text)
     if text1_lower in text2_lower or text2_lower in text1_lower:
         return True
     
     # Strategy 2: SequenceMatcher similarity
-    sim = compute_text_similarity(text1_lower, text2_lower)
-    if sim > 0.6:
+    # Use normalized text for more accurate comparison
+    sim = compute_text_similarity(norm1 or text1_lower, norm2 or text2_lower)
+    # Lower threshold for short texts (< 80 chars) to catch compact reformulations
+    threshold = 0.55 if len(text1_lower) < 80 or len(text2_lower) < 80 else 0.6
+    if sim > threshold:
         return True
     
     # Strategy 3: Keyword-based Jaccard overlap (catches reformulated sentences)
@@ -575,8 +590,8 @@ def _format_event_text(e: dict, year=None, seen_texts: set = None) -> str | None
     if not clean_story.endswith(('.', '!', '?')):
         clean_story += "."
 
-    dedup_key = re.sub(r'[^\w\s]', '', clean_story.lower()).strip()
-    dedup_key = re.sub(r'\s+', ' ', dedup_key)
+    # Use normalize_for_dedup for year-prefix-agnostic dedup
+    dedup_key = normalize_for_dedup(clean_story)
 
     if seen_texts is not None:
         if dedup_key in seen_texts:
@@ -1485,7 +1500,11 @@ def engine_answer(query: str):
     else:
         max_events = MAX_TOTAL_EVENTS
 
-    # Deduplicate and enrich events
+    # --- AGGREGATION LAYER: docs → unique events (prevents source-level duplication) ---
+    if not no_data and raw_events:
+        raw_events = aggregate_events(raw_events)
+
+    # Deduplicate and enrich events (cross-year fuzzy dedup)
     unique_events = deduplicate_and_enrich(raw_events, max_events) if not no_data else []
 
     # --- STEP 7: CONFIDENCE SCORING (Phase 1 / Giai đoạn 11) ---
@@ -1606,6 +1625,11 @@ def engine_answer(query: str):
         validation = validate_answer_relevance(answer, query)
         if not validation["is_relevant"]:
             pass  # Logged but not acted upon (NLI handles filtering)
+
+    # --- ANSWER-LEVEL DEDUP: final sentence dedup safety net ---
+    if answer and not no_data:
+        answer = canonicalize_year_format(answer)
+        answer = deduplicate_answer(answer)
 
     return {
         "query": q_display,
