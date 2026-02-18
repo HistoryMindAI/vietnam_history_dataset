@@ -69,13 +69,38 @@ def build_faiss_index():
     index.add(embeddings.astype(np.float32))
     
     # Save index and metadata
-    faiss.write_index(index, str(INDEX_DIR / "history.index"))
+    index_path = str(INDEX_DIR / "history.index")
+    index_bin_path = str(INDEX_DIR / "index.bin")
+    faiss.write_index(index, index_path)
+
+    # Also save as index.bin (used by tests and runtime)
+    import shutil
+    shutil.copy2(index_path, index_bin_path)
+
+    # Compute SHA256 checksum of index
+    import hashlib
+    sha256 = hashlib.sha256()
+    with open(index_path, "rb") as bf:
+        for chunk in iter(lambda: bf.read(8192), b""):
+            sha256.update(chunk)
+    checksum = sha256.hexdigest()
+
+    meta = {
+        "model": "paraphrase-multilingual-MiniLM-L12-v2",
+        "dimension": int(dimension),
+        "count": len(documents),
+        "index_version": "v3",
+        "index_checksum_sha256": checksum,
+        "documents": documents,
+    }
     with open(INDEX_DIR / "meta.json", "w", encoding="utf-8") as f:
-        json.dump(documents, f, ensure_ascii=False, indent=2)
+        json.dump(meta, f, ensure_ascii=False, indent=2)
     
     print(f"✅ FAISS index saved to: {INDEX_DIR}")
     print(f"   - history.index: {index.ntotal} vectors")
+    print(f"   - index.bin: {index.ntotal} vectors (copy)")
     print(f"   - meta.json: {len(documents)} documents")
+    print(f"   - checksum: {checksum}")
 
 
 if __name__ == "__main__":
