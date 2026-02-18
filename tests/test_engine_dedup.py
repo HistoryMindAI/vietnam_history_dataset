@@ -16,7 +16,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'ai-service'))
 
 from app.services.event_aggregator import normalize_for_dedup, aggregate_events
-from app.services.answer_postprocessor import deduplicate_answer, canonicalize_year_format
+from app.services.answer_postprocessor import deduplicate_answer, canonicalize_year_format, _dedup_intra_line, _is_fuzzy_dup
 from app.services.engine import _is_similar_event, compute_text_similarity
 
 
@@ -228,7 +228,7 @@ class TestDeduplicateAnswer:
 # 4b. INTRA-LINE DEDUP TESTS
 # ======================================================================
 
-from app.services.answer_postprocessor import _dedup_intra_line
+# _dedup_intra_line already imported at top of file
 
 class TestIntraLineDedup:
     """Test within-line clause deduplication."""
@@ -332,3 +332,67 @@ class TestIntegration:
         final = deduplicate_answer(answer)
         assert final.count("Thăng Long") == 1 or final.count("Đại lễ") == 1
         assert "Bạch Đằng" in final
+
+
+# ======================================================================
+# 7. RAPIDFUZZ _is_fuzzy_dup TESTS
+# ======================================================================
+
+class TestIsFuzzyDup:
+    """Test the _is_fuzzy_dup helper using token_set_ratio."""
+
+    def test_exact_match(self):
+        assert _is_fuzzy_dup("trận bạch đằng", "trận bạch đằng") is True
+
+    def test_containment(self):
+        assert _is_fuzzy_dup("trận bạch đằng", "trận bạch đằng năm 938") is True
+
+    def test_token_reorder(self):
+        """Order-agnostic: 'Trận X năm 938' ≈ 'Năm 938 trận X'."""
+        a = normalize_for_dedup("Trận Bạch Đằng năm 938")
+        b = normalize_for_dedup("Năm 938 trận Bạch Đằng")
+        assert _is_fuzzy_dup(a, b) is True
+
+    def test_distinct_events(self):
+        a = normalize_for_dedup("Trận Bạch Đằng đánh bại quân Nam Hán")
+        b = normalize_for_dedup("Chiến dịch Điện Biên Phủ năm 1954")
+        assert _is_fuzzy_dup(a, b) is False
+
+    def test_empty_inputs(self):
+        assert _is_fuzzy_dup("", "anything") is False
+        assert _is_fuzzy_dup("anything", "") is False
+
+    def test_near_duplicate_with_minor_difference(self):
+        """Same event with minor wording change."""
+        a = normalize_for_dedup("Ngô Quyền đánh bại quân Nam Hán tại Bạch Đằng")
+        b = normalize_for_dedup("Ngô Quyền đánh tan quân Nam Hán ở Bạch Đằng")
+        assert _is_fuzzy_dup(a, b) is True
+
+
+# ======================================================================
+# 8. TOKEN-REORDER DEDUP IN deduplicate_answer
+# ======================================================================
+
+class TestTokenReorderDedup:
+    """Test that deduplicate_answer catches token-reordered duplicates."""
+
+    def test_reordered_lines_deduplicated(self):
+        """Two lines with same tokens in different order → keep only first."""
+        text = (
+            "**Năm 938:** Trận Bạch Đằng đánh bại quân Nam Hán.\n\n"
+            "**Năm 938:** Đánh bại quân Nam Hán trận Bạch Đằng."
+        )
+        result = deduplicate_answer(text)
+        # Should have only one line about Bạch Đằng
+        lines = [l for l in result.split('\n') if l.strip()]
+        assert len(lines) == 1, f"Expected 1 line, got {len(lines)}: {lines}"
+
+    def test_distinct_events_preserved(self):
+        """Distinct events should not be removed."""
+        text = (
+            "**Năm 938:** Trận Bạch Đằng đánh bại quân Nam Hán.\n\n"
+            "**Năm 1954:** Chiến dịch Điện Biên Phủ kết thúc chiến tranh Đông Dương."
+        )
+        result = deduplicate_answer(text)
+        assert "Bạch Đằng" in result
+        assert "Điện Biên Phủ" in result

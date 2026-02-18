@@ -6,27 +6,47 @@ Final cleanup layer that removes duplicate sentences from formatted answer text.
 Architecture:
     Formatted Answer Text
         ↓
-    Split by newlines
+    Phase 1: Intra-line dedup (within each line)
         ↓
-    Normalize each line (strip bullets, year prefixes, punctuation)
+    Phase 2: Inter-line dedup (across lines)
         ↓
-    SequenceMatcher fuzzy check (threshold 0.75)
-        ↓
-    Keep first occurrence of each unique sentence
-        ↓
-    Rejoin → Clean Answer
+    Clean Answer
+
+Uses rapidfuzz.fuzz.token_set_ratio for order-agnostic, subset-aware fuzzy matching.
+This is 10x faster than difflib.SequenceMatcher and handles token reordering.
 
 This runs AFTER all formatting is done, as a safety net.
 """
 
 import re
-from difflib import SequenceMatcher
 from typing import List
+
+from rapidfuzz import fuzz
 
 from app.services.event_aggregator import normalize_for_dedup
 
 
-def _dedup_intra_line(line: str, threshold: float = 0.75) -> str:
+# ── Threshold (rapidfuzz uses 0–100 scale) ──────────────────────
+DEDUP_THRESHOLD = 80.0  # ~equivalent to SequenceMatcher 0.75
+
+
+def _is_fuzzy_dup(text_a: str, text_b: str, threshold: float = DEDUP_THRESHOLD) -> bool:
+    """
+    Check if two normalized texts are near-duplicates using token_set_ratio.
+
+    token_set_ratio is order-agnostic and subset-aware:
+      - "Trận Bạch Đằng năm 938" vs "Năm 938 trận Bạch Đằng" → 100.0
+      - "A B C" vs "A B C D E" → 100.0 (subset detection)
+    """
+    if not text_a or not text_b:
+        return False
+    # Exact match or containment
+    if text_a == text_b or text_a in text_b or text_b in text_a:
+        return True
+    return fuzz.token_set_ratio(text_a, text_b) >= threshold
+
+
+def _dedup_intra_line(line: str, threshold: float = DEDUP_THRESHOLD) -> str:
     """
     Remove duplicate clauses WITHIN a single line.
 
@@ -55,24 +75,19 @@ def _dedup_intra_line(line: str, threshold: float = 0.75) -> str:
         before = normalize_for_dedup(year_split[0])
         after = normalize_for_dedup(year_split[-1])
         if before and after and len(before) > 10 and len(after) > 10:
-            sim = SequenceMatcher(None, before, after).ratio()
-            if sim >= threshold:
+            if _is_fuzzy_dup(before, after, threshold):
                 # Keep the part with the year marker (reconstruct)
-                # Find the year marker itself
                 year_match = re.search(
                     r'(\(năm\s+\d{1,4}\)|Năm\s+\**\d{1,4}\**)[,:;]?\s*',
                     line,
                     flags=re.IGNORECASE
                 )
                 if year_match:
-                    # Keep from year marker onward
                     from_year = line[year_match.start():]
-                    # Clean up leading punctuation
                     from_year = re.sub(r'^[.;,]\s*', '', from_year)
                     return from_year
 
     # --- Strategy 2: Sentence-level dedup within line ---
-    # Split on "." followed by space (but not inside abbreviations)
     sentences = re.split(r'(?<=[.!?])\s+(?=[A-ZĐÀ-Ỹ\*])', line)
     if len(sentences) >= 2:
         kept: List[str] = []
@@ -82,14 +97,7 @@ def _dedup_intra_line(line: str, threshold: float = 0.75) -> str:
             if len(snorm) < 5:
                 kept.append(sent)
                 continue
-            is_dup = False
-            for prev in kept_norm:
-                if snorm == prev or snorm in prev or prev in snorm:
-                    is_dup = True
-                    break
-                if SequenceMatcher(None, snorm, prev).ratio() >= threshold:
-                    is_dup = True
-                    break
+            is_dup = any(_is_fuzzy_dup(snorm, prev, threshold) for prev in kept_norm)
             if not is_dup:
                 kept.append(sent)
                 kept_norm.append(snorm)
@@ -100,7 +108,7 @@ def _dedup_intra_line(line: str, threshold: float = 0.75) -> str:
     return line
 
 
-def deduplicate_answer(text: str, threshold: float = 0.75) -> str:
+def deduplicate_answer(text: str, threshold: float = DEDUP_THRESHOLD) -> str:
     """
     Remove duplicate or near-duplicate content from formatted answer text.
 
@@ -110,7 +118,7 @@ def deduplicate_answer(text: str, threshold: float = 0.75) -> str:
 
     Args:
         text: Formatted answer text with newlines.
-        threshold: SequenceMatcher similarity threshold.
+        threshold: rapidfuzz token_set_ratio threshold (0-100 scale).
                    Lines above this threshold are considered duplicates.
 
     Returns:
@@ -147,24 +155,11 @@ def deduplicate_answer(text: str, threshold: float = 0.75) -> str:
             kept_lines.append(line)
             continue
 
-        # Check against all previously kept lines
-        is_duplicate = False
-        for prev_norm in kept_normalized:
-            # Exact match
-            if normalized == prev_norm:
-                is_duplicate = True
-                break
-
-            # Containment check
-            if normalized in prev_norm or prev_norm in normalized:
-                is_duplicate = True
-                break
-
-            # Fuzzy similarity
-            sim = SequenceMatcher(None, normalized, prev_norm).ratio()
-            if sim >= threshold:
-                is_duplicate = True
-                break
+        # Check against all previously kept lines using token_set_ratio
+        is_duplicate = any(
+            _is_fuzzy_dup(normalized, prev_norm, threshold)
+            for prev_norm in kept_normalized
+        )
 
         if not is_duplicate:
             kept_lines.append(line)

@@ -35,18 +35,11 @@ tests/test_entity_normalizer.py::TestCheckTruncatedNames::test_detect_ho_c PASSE
 tests/test_entity_normalizer.py::TestCheckTruncatedNames::test_detect_nguyen_t PASSED [ 77%]
 tests/test_entity_normalizer.py::TestCheckTruncatedNames::test_no_false_positive PASSED [ 80%]
 tests/test_entity_normalizer.py::TestCheckTruncatedNames::test_clean_text_passes PASSED [ 82%]
-tests/test_entity_normalizer.py::TestCheckTemporalMixing::test_detect_ungrounded_year FAILED [ 85%]
+tests/test_entity_normalizer.py::TestCheckTemporalMixing::test_detect_ungrounded_year PASSED [ 85%]
 tests/test_entity_normalizer.py::TestCheckTemporalMixing::test_grounded_years_pass PASSED [ 88%]
 tests/test_entity_normalizer.py::TestCheckTemporalMixing::test_no_event_years_passes PASSED [ 91%]
 tests/test_entity_normalizer.py::TestCheckTemporalMixing::test_approximate_year_tolerance PASSED [ 94%]
 tests/test_entity_normalizer.py::TestVerifierIntegration::test_verify_includes_truncated_names PASSED [ 97%]
 tests/test_entity_normalizer.py::TestVerifierIntegration::test_verify_includes_temporal_mixing PASSED [100%]
 
-================================== FAILURES ===================================
-_____________ TestCheckTemporalMixing.test_detect_ungrounded_year _____________
-tests\test_entity_normalizer.py:308: in test_detect_ungrounded_year
-    assert 1945 in result.message or "1945" in result.message
-E   TypeError: 'in <string>' requires string as left operand, not int
-=========================== short test summary info ===========================
-FAILED tests/test_entity_normalizer.py::TestCheckTemporalMixing::test_detect_ungrounded_year
-======================== 1 failed, 34 passed in 0.12s =========================
+============================= 35 passed in 0.07s ==============================

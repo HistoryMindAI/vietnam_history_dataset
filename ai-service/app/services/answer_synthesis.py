@@ -12,6 +12,7 @@ Principles:
 - Scope-question → dynamic min/max from data
 """
 import app.core.startup as startup
+from rapidfuzz import fuzz
 from app.services.intent_classifier import QueryAnalysis
 from app.services.event_aggregator import normalize_for_dedup
 from app.core.utils.date_utils import safe_year
@@ -159,11 +160,20 @@ def _build_who_answer(events: list, analysis: QueryAnalysis) -> str | None:
     target_persons = [p.lower() for p in analysis.entities.get("persons", [])]
 
     parts = []
-    seen_texts = set()
+    seen_norm: list[str] = []  # Fuzzy dedup via normalize_for_dedup
 
     for e in events[:5]:  # Limit to 5 most relevant
         story = (e.get("story") or "").strip()
-        if not story or story.lower() in seen_texts:
+        if not story:
+            continue
+
+        # Fuzzy dedup check (replaces exact story.lower() match)
+        normalized = normalize_for_dedup(story)
+        if any(
+            normalized == prev or normalized in prev or prev in normalized
+            or fuzz.token_set_ratio(normalized, prev) >= 80.0
+            for prev in seen_norm
+        ):
             continue
 
         # GROUNDING CHECK: Skip events that don't mention target person
@@ -180,7 +190,7 @@ def _build_who_answer(events: list, analysis: QueryAnalysis) -> str | None:
             if not mentions_target:
                 continue  # Skip unrelated events
 
-        seen_texts.add(story.lower())
+        seen_norm.append(normalized)
 
         year = e.get("year")
         if year:
@@ -217,7 +227,8 @@ def _build_list_answer(events: list, analysis: QueryAnalysis) -> str | None:
 
 
 def _build_period_grouped_list(events: list) -> str:
-    """Group events by historical period (Principle 4)."""
+    """Group events by historical period (Principle 4).
+    Uses GLOBAL cross-period dedup to catch same event across periods."""
     grouped: dict[str, list] = {}
     for e in events:
         year = e.get("year", 0)
@@ -228,26 +239,33 @@ def _build_period_grouped_list(events: list) -> str:
         grouped.setdefault(period, []).append(e)
 
     parts = []
+    # GLOBAL seen set across ALL periods (Gap #2 fix)
+    global_seen: list[str] = []
     for period_name, start, end in HISTORICAL_PERIODS:
         if period_name in grouped:
             items = grouped[period_name]
             items.sort(key=lambda x: safe_year(x.get("year"), default=0))
             part_lines = [f"### {period_name} ({start}–{end})"]
-            seen = set()
             for e in items:
                 year = e.get("year", 0)
                 story = (e.get("story") or e.get("event") or "").strip()
                 if not story:
                     continue
                 normalized = normalize_for_dedup(story)
-                if normalized in seen:
+                # Cross-period fuzzy dedup
+                if any(
+                    normalized == prev or normalized in prev or prev in normalized
+                    or fuzz.token_set_ratio(normalized, prev) >= 80.0
+                    for prev in global_seen
+                ):
                     continue
-                seen.add(normalized)
+                global_seen.append(normalized)
                 if year:
                     part_lines.append(f"- **Năm {year}:** {story}")
                 else:
                     part_lines.append(f"- {story}")
-            parts.append("\n".join(part_lines))
+            if len(part_lines) > 1:  # Only add period if it has events
+                parts.append("\n".join(part_lines))
 
     # Add "Khác" if any
     if "Khác" in grouped:
@@ -255,8 +273,16 @@ def _build_period_grouped_list(events: list) -> str:
         for e in grouped["Khác"]:
             story = (e.get("story") or e.get("event") or "").strip()
             if story:
-                other_lines.append(f"- {story}")
-        parts.append("\n".join(other_lines))
+                normalized = normalize_for_dedup(story)
+                if not any(
+                    normalized == prev or normalized in prev or prev in normalized
+                    or fuzz.token_set_ratio(normalized, prev) >= 80.0
+                    for prev in global_seen
+                ):
+                    global_seen.append(normalized)
+                    other_lines.append(f"- {story}")
+        if len(other_lines) > 1:
+            parts.append("\n".join(other_lines))
 
     return "\n\n".join(parts) if parts else None
 

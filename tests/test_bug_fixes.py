@@ -40,13 +40,13 @@ class TestBug1EmptyStringCapitalization:
     def test_format_event_with_empty_story(self):
         """Should handle event with empty story gracefully"""
         event = {"story": "", "event": "", "year": 1945}
-        result = _format_event_text(event, year=1945, seen_texts=set())
+        result = _format_event_text(event, year=1945, seen_texts=[])
         assert result is None  # Should return None, not crash
 
     def test_format_event_with_whitespace_only_story(self):
         """Should handle event with whitespace-only story"""
         event = {"story": "   ", "event": "\n\t", "year": 1945}
-        result = _format_event_text(event, year=1945, seen_texts=set())
+        result = _format_event_text(event, year=1945, seen_texts=[])
         assert result is None
 
     def test_format_event_with_only_metadata(self):
@@ -57,7 +57,7 @@ class TestBug1EmptyStringCapitalization:
             "event": "",
             "year": 1945
         }
-        result = _format_event_text(event, year=1945, seen_texts=set())
+        result = _format_event_text(event, year=1945, seen_texts=[])
         # Should either return None or handle gracefully without crash
         assert result is None or isinstance(result, str)
 
@@ -127,13 +127,13 @@ class TestBug4NullUndefinedInFormatEvent:
     def test_format_event_with_null_story_and_event(self):
         """Should handle event with null story and event fields"""
         event = {"story": None, "event": None, "year": 1945}
-        result = _format_event_text(event, year=1945, seen_texts=set())
+        result = _format_event_text(event, year=1945, seen_texts=[])
         assert result is None  # Should return None gracefully
 
     def test_format_event_with_missing_fields(self):
         """Should handle event with missing story/event fields"""
         event = {"year": 1945}  # No story or event field
-        result = _format_event_text(event, year=1945, seen_texts=set())
+        result = _format_event_text(event, year=1945, seen_texts=[])
         assert result is None
 
     def test_format_event_with_null_title(self):
@@ -144,7 +144,7 @@ class TestBug4NullUndefinedInFormatEvent:
             "title": None,
             "year": 1945
         }
-        result = _format_event_text(event, year=1945, seen_texts=set())
+        result = _format_event_text(event, year=1945, seen_texts=[])
         assert isinstance(result, str)
         assert "valid story" in result.lower()
 
