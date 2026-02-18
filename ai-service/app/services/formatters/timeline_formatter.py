@@ -11,6 +11,7 @@ Functions:
     extract_year     — Extract year from event dict or fallback from story text
     format_timeline_entry — Apply canonical format: "Năm {year}, {content}"
     enforce_timeline_format — Per-line enforcement on final answer text
+    strip_bold       — Remove all ** bold markers from text
 """
 
 import re
@@ -19,7 +20,7 @@ from typing import Optional
 
 # ── Year extraction regex ────────────────────────────────────────
 _YEAR_IN_TEXT_RE = re.compile(
-    r'\b(?:[Nn]ăm\s+)?(\d{3,4})\b'
+    r'\b(?:[Nn]ăm\s+)?\*{0,2}(\d{3,4})\*{0,2}\b'
 )
 
 # ── Cleanup patterns — strip existing year prefixes ──────────────
@@ -30,14 +31,20 @@ _STANDALONE_YEAR_RE = re.compile(
     r'^\*{0,2}\d{3,4}\*{0,2}\s*$'
 )
 _BULLET_PREFIX_RE = re.compile(
-    r'^[-•*]\s*'
+    r'^[-•]\s*'
 )
 
 # Lines to skip during enforcement (headers, intros, short lines)
 _SKIP_PATTERNS = (
     'đây là', 'trong lịch sử', 'lịch sử việt nam',
     'tóm lại', 'như vậy', 'kết luận',
+    '✅', '❌',
 )
+
+
+def strip_bold(text: str) -> str:
+    """Remove all ** bold markers from text."""
+    return text.replace('**', '') if text else text
 
 
 def extract_year(event: dict, story: str = "") -> Optional[int]:
@@ -79,6 +86,7 @@ def format_timeline_entry(year: Optional[int], story: str) -> str:
     This is the SINGLE SOURCE OF TRUTH for year prefix formatting.
 
     Steps:
+    0. Strip all ** bold markers
     1. Strip any existing year prefix from story (bold, plain, standalone)
     2. Strip duplicate "Năm XXXX" inside story text
     3. Apply canonical format
@@ -93,7 +101,8 @@ def format_timeline_entry(year: Optional[int], story: str) -> str:
     if not story:
         return story or ""
 
-    story = story.strip()
+    # Step 0: Strip all bold markers FIRST
+    story = strip_bold(story).strip()
 
     if not year:
         return story
@@ -108,9 +117,9 @@ def format_timeline_entry(year: Optional[int], story: str) -> str:
         story
     ).strip()
 
-    # Step 3: Remove standalone bold year
+    # Step 3: Remove standalone year number at start
     story = re.sub(
-        rf'^\*{{1,2}}{year}\*{{1,2}}[,:;]?\s*',
+        rf'^{year}[,:;]?\s*',
         '',
         story
     ).strip()
@@ -133,16 +142,18 @@ def format_timeline_entry(year: Optional[int], story: str) -> str:
 
 def enforce_timeline_format(answer_text: str) -> str:
     """
-    Final enforcement pass: ensure every content line has year prefix.
+    Final enforcement pass: strip ** bold markers and ensure
+    every content line has year prefix.
 
-    Scans the full answer text line-by-line and applies format_timeline_entry
-    to any content line that is missing a year prefix.
+    Scans the full answer text line-by-line:
+    1. Strips ** bold markers from every line
+    2. Applies format_timeline_entry to lines missing a year prefix
 
-    Skips:
+    Skips year enforcement for:
     - Empty lines
-    - Headers (###, ##, #, **Heading:**)
+    - Headers (###, ##, #)
     - Short lines (< 30 chars — likely formatting)
-    - Intro/context lines ("Đây là", "Trong lịch sử")
+    - Intro/context lines ("Đây là", "✅", "❌")
 
     This runs AFTER all formatting and dedup, as the absolute last step.
     """
@@ -155,25 +166,33 @@ def enforce_timeline_format(answer_text: str) -> str:
     for line in lines:
         stripped = line.strip()
 
-        # Keep empty lines, headers, and short lines as-is
-        if not stripped or stripped.startswith('#') or len(stripped) < 30:
+        # Keep empty lines as-is
+        if not stripped:
             result.append(line)
             continue
 
-        # Skip intro/context patterns
+        # Strip bold markers from ALL lines
+        stripped = strip_bold(stripped)
+
+        # Keep headers (# / ## / ###) as-is (already bold-stripped)
+        if stripped.startswith('#'):
+            result.append(stripped)
+            continue
+
+        # Keep short lines as-is (already bold-stripped)
+        if len(stripped) < 30:
+            result.append(stripped)
+            continue
+
+        # Skip intro/context patterns (already bold-stripped)
         lower = stripped.lower()
         if any(lower.startswith(p) for p in _SKIP_PATTERNS):
-            result.append(line)
+            result.append(stripped)
             continue
 
-        # Skip dynasty headers (e.g. "**Nhà Trần (1225–1400):**")
-        if re.match(r'^\*\*[A-ZĐÀ-Ỹ].*\(\d{3,4}.*\):\*\*', stripped):
-            result.append(line)
-            continue
-
-        # Already has year marker at START → keep
-        if re.match(r'(?:[-•*]\s*)?[Nn]ăm\s+\d{3,4}[,.]', stripped):
-            result.append(line)
+        # Already has year marker at START → keep (already bold-stripped)
+        if re.match(r'(?:[-•]\s*)?[Nn]ăm\s+\d{3,4}[,.]', stripped):
+            result.append(stripped)
             continue
 
         # Try to extract year from the line and apply format
@@ -195,7 +214,7 @@ def enforce_timeline_format(answer_text: str) -> str:
             formatted = format_timeline_entry(year, content)
             result.append(f"{bullet}{formatted}")
         else:
-            # No year found — keep original line
-            result.append(line)
+            # No year found — keep bold-stripped line
+            result.append(stripped)
 
     return '\n'.join(result)
