@@ -15,7 +15,7 @@ import app.core.startup as startup
 from rapidfuzz import fuzz
 from app.services.intent_classifier import QueryAnalysis
 from app.services.event_aggregator import normalize_for_dedup
-from app.services.answer_postprocessor import _extract_year_from_text
+from app.services.formatters.timeline_formatter import extract_year, format_timeline_entry
 from app.core.utils.date_utils import safe_year
 
 
@@ -120,10 +120,13 @@ def _build_when_answer(events: list, analysis: QueryAnalysis) -> str | None:
     places = best.get("places", [])
     persons = best.get("persons", [])
 
+    if not year:
+        year = extract_year({}, story)
+
     if detail == "brief":
         # Minimal: just the year
         if year:
-            return f"Năm **{year}**."
+            return f"Năm {year}."
         elif story:
             return story
         return None
@@ -131,18 +134,18 @@ def _build_when_answer(events: list, analysis: QueryAnalysis) -> str | None:
     if detail == "detailed" and year and story:
         # Rich: include location and persons metadata if available
         text = story if len(story) > len(title) else title + ": " + story
-        parts = [f"Năm **{year}**"]
+        parts = [f"Năm {year}"]
         if places:
             parts.append(f" (tại {', '.join(places[:2])})")
         parts.append(f", {text}")
         return "".join(parts)
 
-    # Standard: year + brief context
+    # Standard: use centralized formatter
     if year and story:
         text = story if len(story) > len(title) else title + ": " + story
-        return f"Năm **{year}**, {text}"
+        return format_timeline_entry(year, text)
     elif year:
-        return f"Năm **{year}**."
+        return f"Năm {year}."
     elif story:
         return story
     return None
@@ -193,13 +196,8 @@ def _build_who_answer(events: list, analysis: QueryAnalysis) -> str | None:
 
         seen_norm.append(normalized)
 
-        year = e.get("year")
-        if not year:
-            year = _extract_year_from_text(story)
-        if year:
-            parts.append(f"**Năm {year}:** {story}")
-        else:
-            parts.append(story)
+        year = extract_year(e, story)
+        parts.append(format_timeline_entry(year, story))
 
     return "\n\n".join(parts) if parts else None
 
@@ -263,12 +261,8 @@ def _build_period_grouped_list(events: list) -> str:
                 ):
                     continue
                 global_seen.append(normalized)
-                if not year:
-                    year = _extract_year_from_text(story)
-                if year:
-                    part_lines.append(f"- **Năm {year}:** {story}")
-                else:
-                    part_lines.append(f"- {story}")
+                year = extract_year(e, story)
+                part_lines.append(f"- {format_timeline_entry(year, story)}")
             if len(part_lines) > 1:  # Only add period if it has events
                 parts.append("\n".join(part_lines))
 
@@ -285,7 +279,8 @@ def _build_period_grouped_list(events: list) -> str:
                     for prev in global_seen
                 ):
                     global_seen.append(normalized)
-                    other_lines.append(f"- {story}")
+                    year = extract_year(e, story)
+                    other_lines.append(f"- {format_timeline_entry(year, story)}")
         if len(other_lines) > 1:
             parts.append("\n".join(other_lines))
 
@@ -304,13 +299,8 @@ def _build_simple_list(events: list) -> str:
         if normalized in seen:
             continue
         seen.add(normalized)
-        year = e.get("year", 0)
-        if not year:
-            year = _extract_year_from_text(story)
-        if year:
-            parts.append(f"**Năm {year}:** {story}")
-        else:
-            parts.append(story)
+        year = extract_year(e, story)
+        parts.append(format_timeline_entry(year, story))
 
     return "\n\n".join(parts) if parts else None
 
@@ -335,13 +325,11 @@ def _build_what_answer(events: list, analysis: QueryAnalysis) -> str | None:
             continue
         seen.add(normalized)
 
-        year = e.get("year", 0)
-        if not year:
-            year = _extract_year_from_text(story)
+        year = extract_year(e, story)
         if year:
-            parts.append(f"**Năm {year}:** {story}")
+            parts.append(format_timeline_entry(year, story))
         elif title:
-            parts.append(f"**{title}:** {story}")
+            parts.append(f"{title}: {story}")
         else:
             parts.append(story)
 
