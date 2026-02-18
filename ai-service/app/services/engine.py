@@ -7,7 +7,7 @@ from app.services.search_service import (
     DYNASTY_ORDER,
 )
 from app.services.event_aggregator import aggregate_events, normalize_for_dedup
-from app.services.answer_postprocessor import deduplicate_answer, canonicalize_year_format
+from app.services.answer_postprocessor import deduplicate_answer, canonicalize_year_format, _dedup_intra_line, _is_fuzzy_dup
 from app.services.query_understanding import (
     rewrite_query, extract_question_intent,
     generate_search_variations,
@@ -561,7 +561,7 @@ def format_complete_answer(events: list, group_by: str = "year") -> str:
     return _format_by_year(events)
 
 
-def _format_event_text(e: dict, year=None, seen_texts: set = None) -> str | None:
+def _format_event_text(e: dict, year=None, seen_texts: list = None) -> str | None:
     """Format a single event into clean text. Returns None if duplicate."""
     story = e.get("story", "") or e.get("event", "") or ""
     # Coerce non-string types to string
@@ -582,14 +582,10 @@ def _format_event_text(e: dict, year=None, seen_texts: set = None) -> str | None
             if not _is_question_title(clean_title):
                 # Check both exact containment AND fuzzy similarity
                 title_in_story = clean_title.lower() in clean_story.lower()
-                # Fuzzy guard: if title ≈ story (>70% similar), skip concat
-                from difflib import SequenceMatcher
+                # Fuzzy guard via token_set_ratio (order-agnostic)
                 title_norm = normalize_for_dedup(clean_title)
                 story_norm = normalize_for_dedup(clean_story)
-                fuzzy_dup = (
-                    SequenceMatcher(None, title_norm, story_norm).ratio() >= 0.7
-                    if title_norm and story_norm else False
-                )
+                fuzzy_dup = _is_fuzzy_dup(title_norm, story_norm)
                 if not title_in_story and not fuzzy_dup:
                     clean_story = f"{clean_title}: {clean_story}"
 
@@ -605,9 +601,10 @@ def _format_event_text(e: dict, year=None, seen_texts: set = None) -> str | None
     dedup_key = normalize_for_dedup(clean_story)
 
     if seen_texts is not None:
-        if dedup_key in seen_texts:
+        # Gap #3 fix: fuzzy containment check instead of exact set membership
+        if any(_is_fuzzy_dup(dedup_key, prev) for prev in seen_texts):
             return None
-        seen_texts.add(dedup_key)
+        seen_texts.append(dedup_key)
 
     return clean_story
 
@@ -633,7 +630,7 @@ def _format_by_year(events: list) -> str | None:
 
     paragraphs = []
     sorted_years = sorted(by_year.keys()) if all(isinstance(y, int) for y in by_year.keys() if y) else by_year.keys()
-    seen_texts = set()
+    seen_texts = []  # Changed from set to list for fuzzy matching
 
     for year in sorted_years:
         event_texts = []
@@ -643,6 +640,8 @@ def _format_by_year(events: list) -> str | None:
                 event_texts.append(text)
         if event_texts:
             joined = " ".join(event_texts)
+            # Gap #5 fix: dedup within joined paragraph
+            joined = _dedup_intra_line(joined)
             if year:
                 paragraphs.append(f"**Năm {year}:** {joined}")
             else:
@@ -668,7 +667,7 @@ def _format_by_dynasty(events: list) -> str | None:
         by_dynasty[dynasty].append(e)
 
     paragraphs = []
-    seen_texts = set()
+    seen_texts = []  # list for fuzzy matching
 
     for dynasty in DYNASTY_ORDER:
         dynasty_events = by_dynasty.get(dynasty, [])
