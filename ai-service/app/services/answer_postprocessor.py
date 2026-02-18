@@ -133,7 +133,9 @@ def deduplicate_answer(text: str, threshold: float = DEDUP_THRESHOLD) -> str:
     lines = [_dedup_intra_line(line, threshold) for line in lines]
 
     if len(lines) <= 1:
-        return '\n'.join(lines)
+        result = '\n'.join(lines)
+        from app.services.formatters.timeline_formatter import enforce_timeline_format
+        return enforce_timeline_format(result)
 
     # Phase 2: Inter-line dedup
     kept_lines: List[str] = []
