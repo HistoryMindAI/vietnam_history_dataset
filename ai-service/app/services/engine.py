@@ -7,7 +7,8 @@ from app.services.search_service import (
     DYNASTY_ORDER,
 )
 from app.services.event_aggregator import aggregate_events, normalize_for_dedup
-from app.services.answer_postprocessor import deduplicate_answer, canonicalize_year_format, _dedup_intra_line, _is_fuzzy_dup, _extract_year_from_text
+from app.services.answer_postprocessor import deduplicate_answer, canonicalize_year_format, _dedup_intra_line, _is_fuzzy_dup
+from app.services.formatters.timeline_formatter import extract_year, format_timeline_entry, enforce_timeline_format
 from app.services.query_understanding import (
     rewrite_query, extract_question_intent,
     generate_search_variations,
@@ -643,12 +644,12 @@ def _format_by_year(events: list) -> str | None:
             # Gap #5 fix: dedup within joined paragraph
             joined = _dedup_intra_line(joined)
             if year:
-                paragraphs.append(f"**Năm {year}:** {joined}")
+                paragraphs.append(format_timeline_entry(year, joined))
             else:
                 # Fallback: extract year from joined event text
-                fallback_year = _extract_year_from_text(joined)
+                fallback_year = extract_year({}, joined)
                 if fallback_year:
-                    paragraphs.append(f"**Năm {fallback_year}:** {joined}")
+                    paragraphs.append(format_timeline_entry(fallback_year, joined))
                 else:
                     paragraphs.append(joined)
 
