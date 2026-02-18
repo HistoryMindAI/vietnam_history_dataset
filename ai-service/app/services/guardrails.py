@@ -151,6 +151,10 @@ class OutputVerifier:
             temp_check = self._check_temporal_mixing(corrected, query_info)
             result.checks.append(temp_check)
 
+        # 7. Missing year prefix check
+        year_prefix_check = self._check_missing_year_prefix(corrected)
+        result.checks.append(year_prefix_check)
+
         # Aggregate severity — worst check wins
         worst = Severity.PASS
         for check in result.checks:
@@ -341,3 +345,53 @@ class OutputVerifier:
             )
 
         return CheckResult(name="temporal_mixing", severity=Severity.PASS)
+
+    def _check_missing_year_prefix(self, answer: str) -> CheckResult:
+        """
+        Check if timeline entries are missing the "Năm XXXX:" year prefix.
+
+        Scans non-header, non-trivial lines for the expected year marker pattern.
+        Lines that look like standalone event descriptions without a year get flagged.
+
+        Skips:
+        - Headers (### / ## / # / **Heading:**)
+        - Short lines (< 30 chars — likely formatting)
+        - Intro/context lines ("Đây là", "Trong lịch sử")
+        - Lines that already have year markers ("Năm XXXX" or "**Năm XXXX:**")
+        """
+        if not answer:
+            return CheckResult(name="missing_year_prefix", severity=Severity.PASS)
+
+        missing_lines = []
+        for i, line in enumerate(answer.split('\n'), 1):
+            stripped = line.strip()
+            if not stripped:
+                continue
+            # Skip headers and short lines
+            if stripped.startswith('#') or len(stripped) < 30:
+                continue
+            # Skip intro/context patterns
+            lower = stripped.lower()
+            if any(lower.startswith(p) for p in (
+                'đây là', 'trong lịch sử', 'lịch sử việt nam',
+                'tóm lại', 'như vậy', 'kết luận',
+            )):
+                continue
+            # Check for year marker presence
+            has_year = bool(re.search(
+                r'(?:\*\*)?[Nn]ăm\s+\*?\*?\d{3,4}\*?\*?[,:.]?\*?\*?',
+                stripped
+            ))
+            if not has_year:
+                missing_lines.append(i)
+
+        if missing_lines:
+            lines_str = ', '.join(str(l) for l in missing_lines[:5])
+            total = len(missing_lines)
+            return CheckResult(
+                name="missing_year_prefix",
+                severity=Severity.SOFT_FAIL,
+                message=f"{total} line(s) missing year prefix (lines: {lines_str})",
+            )
+
+        return CheckResult(name="missing_year_prefix", severity=Severity.PASS)
