@@ -14,3 +14,6 @@ httpx>=0.27.0,<0.28.0
 
 # ===== Minimal deps =====
 numpy<2.0.0
+
+# ===== Fuzzy String Matching (deduplication) =====
+rapidfuzz>=3.0.0
