@@ -7,7 +7,7 @@ from app.services.search_service import (
     DYNASTY_ORDER,
 )
 from app.services.event_aggregator import aggregate_events, normalize_for_dedup
-from app.services.answer_postprocessor import deduplicate_answer, canonicalize_year_format, _dedup_intra_line, _is_fuzzy_dup
+from app.services.answer_postprocessor import deduplicate_answer, canonicalize_year_format, _dedup_intra_line, _is_fuzzy_dup, _extract_year_from_text
 from app.services.query_understanding import (
     rewrite_query, extract_question_intent,
     generate_search_variations,
@@ -645,7 +645,12 @@ def _format_by_year(events: list) -> str | None:
             if year:
                 paragraphs.append(f"**Năm {year}:** {joined}")
             else:
-                paragraphs.append(joined)
+                # Fallback: extract year from joined event text
+                fallback_year = _extract_year_from_text(joined)
+                if fallback_year:
+                    paragraphs.append(f"**Năm {fallback_year}:** {joined}")
+                else:
+                    paragraphs.append(joined)
 
     return "\n\n".join(paragraphs) if paragraphs else None
 
