@@ -30,6 +30,29 @@ from app.services.event_aggregator import normalize_for_dedup
 DEDUP_THRESHOLD = 80.0  # ~equivalent to SequenceMatcher 0.75
 
 
+# ── Year extraction from story text (fallback) ──────────────────
+_YEAR_IN_TEXT_RE = re.compile(
+    r'\b(?:[Nn]ăm\s+)?(\d{3,4})\b'
+)
+
+
+def _extract_year_from_text(text: str) -> int | None:
+    """
+    Extract a plausible historical year (40–2025) from story text.
+
+    Used as fallback when event["year"] is missing or 0.
+    Scans the text for patterns like "năm 938", "1954", etc.
+
+    Returns the first valid year found, or None.
+    """
+    if not text:
+        return None
+    for m in _YEAR_IN_TEXT_RE.finditer(text):
+        y = int(m.group(1))
+        if 40 <= y <= 2025:
+            return y
+    return None
+
 def _is_fuzzy_dup(text_a: str, text_b: str, threshold: float = DEDUP_THRESHOLD) -> bool:
     """
     Check if two normalized texts are near-duplicates using token_set_ratio.

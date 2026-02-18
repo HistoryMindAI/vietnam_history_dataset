@@ -15,6 +15,7 @@ import app.core.startup as startup
 from rapidfuzz import fuzz
 from app.services.intent_classifier import QueryAnalysis
 from app.services.event_aggregator import normalize_for_dedup
+from app.services.answer_postprocessor import _extract_year_from_text
 from app.core.utils.date_utils import safe_year
 
 
@@ -193,6 +194,8 @@ def _build_who_answer(events: list, analysis: QueryAnalysis) -> str | None:
         seen_norm.append(normalized)
 
         year = e.get("year")
+        if not year:
+            year = _extract_year_from_text(story)
         if year:
             parts.append(f"**Năm {year}:** {story}")
         else:
@@ -260,6 +263,8 @@ def _build_period_grouped_list(events: list) -> str:
                 ):
                     continue
                 global_seen.append(normalized)
+                if not year:
+                    year = _extract_year_from_text(story)
                 if year:
                     part_lines.append(f"- **Năm {year}:** {story}")
                 else:
@@ -300,6 +305,8 @@ def _build_simple_list(events: list) -> str:
             continue
         seen.add(normalized)
         year = e.get("year", 0)
+        if not year:
+            year = _extract_year_from_text(story)
         if year:
             parts.append(f"**Năm {year}:** {story}")
         else:
@@ -329,6 +336,8 @@ def _build_what_answer(events: list, analysis: QueryAnalysis) -> str | None:
         seen.add(normalized)
 
         year = e.get("year", 0)
+        if not year:
+            year = _extract_year_from_text(story)
         if year:
             parts.append(f"**Năm {year}:** {story}")
         elif title:
