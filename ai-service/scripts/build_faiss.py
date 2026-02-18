@@ -95,12 +95,16 @@ def build_faiss_index():
     }
     with open(INDEX_DIR / "meta.json", "w", encoding="utf-8") as f:
         json.dump(meta, f, ensure_ascii=False, indent=2)
+
+    # Write checksum.sha256 for Dockerfile verification
+    with open(INDEX_DIR / "checksum.sha256", "w", encoding="utf-8") as f:
+        f.write(f"{checksum}  index.bin\n")
     
     print(f"✅ FAISS index saved to: {INDEX_DIR}")
     print(f"   - history.index: {index.ntotal} vectors")
     print(f"   - index.bin: {index.ntotal} vectors (copy)")
     print(f"   - meta.json: {len(documents)} documents")
-    print(f"   - checksum: {checksum}")
+    print(f"   - checksum.sha256: {checksum}")
 
 
 if __name__ == "__main__":
