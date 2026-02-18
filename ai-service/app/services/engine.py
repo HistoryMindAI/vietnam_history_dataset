@@ -305,6 +305,42 @@ def clean_story_text(text: str, year: int | None = None) -> str:
     
     result = text.strip()
     
+    # Phase 0: Strip builder scaffolding (B1./B2./B3. patterns)
+    # Data contains "B1. gắn mốc XXXX với Event. B2. nêu ... – "content". B3. kết luận – ..."
+    # Extract content from between markers and reconstruct natural sentence
+    if re.match(r'^B1\.?\s', result, re.IGNORECASE):
+        # Extract content pieces from B1/B2/B3
+        parts = []
+        # B2 content: the quoted description after B2 pattern
+        b2_match = re.search(r'B2\.\s*nêu\s+diễn biến\s+trọng tâm\s*[–—-]\s*["\"]?(.+?)["\"]?\.\s*(?:B3|$)', result, re.IGNORECASE)
+        if b2_match:
+            parts.append(b2_match.group(1).strip().rstrip('.'))
+        # B3 content: conclusion after B3 pattern
+        b3_match = re.search(r'B3\.\s*kết luận\s*[–—-]\s*(.+?)$', result, re.IGNORECASE)
+        if b3_match:
+            conclusion = b3_match.group(1).strip().rstrip('.')
+            if conclusion:
+                parts.append(conclusion)
+        if parts:
+            result = '. '.join(parts) + '.'
+        else:
+            # Fallback: just strip B1/B2/B3 prefixes
+            result = re.sub(r'B[123]\.\s*(?:gắn mốc \d+ với|nêu diễn biến trọng tâm\s*[–—-]|kết luận\s*[–—-])\s*', '', result, flags=re.IGNORECASE)
+    
+    # Phase 0b: Strip "Câu hỏi nhắm tới sự kiện ... Cốt lõi." meta-prompt prefix
+    result = re.sub(
+        r'^Câu hỏi nhắm tới sự kiện\s+.+?\.\s*Cốt lõi\.\s*',
+        '', result, flags=re.IGNORECASE
+    )
+    
+    # Phase 0c: Strip "Sự kiện này có là" pattern
+    result = re.sub(r'\.\s*Sự kiện này có là\s+', '. ', result, flags=re.IGNORECASE)
+    
+    # Phase 0d: Strip "Trả lời sẽ nêu rõ mốc, diễn biến chính và" trailing
+    result = re.sub(r'\.\s*Trả lời sẽ nêu rõ.+$', '.', result, flags=re.IGNORECASE)
+    
+    result = result.strip()
+    
     # Phase 1: Remove structural/query-style prefixes (these are data artifacts, not content)
     structural_patterns = [
         r'^Câu hỏi nhắm tới sự kiện\s*',
@@ -353,7 +389,193 @@ def clean_story_text(text: str, year: int | None = None) -> str:
     result = re.sub(r',\s*địa điểm\s+.+$', '', result)   # trailing ", địa điểm Hà Nội"
     result = re.sub(r'\s+thuộc\s+.+\d{4}[.,]?\s*$', '', result)  # trailing "thuộc X 1945."
     
+    # Phase 5: Normalize punctuation artifacts (double dots, orphan periods)
+    result = re.sub(r'\.\s*\.\s*\.', '.', result)   # ".. ." → "."
+    result = re.sub(r'\.{2,}', '.', result)          # ".." → "."
+    result = re.sub(r'\.\s+\.', '.', result)         # ". ." → "."
+    result = result.strip().rstrip('.')  # Remove trailing dot (will be re-added by formatter)
+    if result and not result.endswith(('.', '!', '?')):
+        result += '.'
+    
     return result.strip()
+
+
+# ── Pronoun replacement for repeated person names ──────────────────
+# Special pronoun for HCM (only exception)
+_HCM_CANONICAL = "hồ chí minh"
+# Female canonical names → pronoun "bà"
+_FEMALE_CANONICALS = frozenset({
+    "hai bà trưng", "trưng trắc", "trưng nhị",
+    "bà triệu", "triệu thị trinh",
+    "âu cơ",
+})
+# Compound nouns that contain a person name but must NOT be touched
+_PROTECTED_COMPOUNDS = [
+    "chiến dịch hồ chí minh",
+    "thành phố hồ chí minh",
+    "tp hồ chí minh",
+    "tp. hồ chí minh",
+    "lăng chủ tịch hồ chí minh",
+    "lăng bác",
+    "đường hồ chí minh",
+    "tư tưởng hồ chí minh",
+    "bảo tàng hồ chí minh",
+]
+
+
+def _build_canonical_name_groups() -> dict:
+    """
+    Build canonical → [all name forms] mapping from PERSON_ALIASES.
+    Returns dict: canonical_lower → list of name forms (longest first).
+    """
+    groups: dict = {}
+    for alias, canonical in startup.PERSON_ALIASES.items():
+        if canonical not in groups:
+            groups[canonical] = set()
+        groups[canonical].add(canonical)
+        groups[canonical].add(alias)
+    # Convert to sorted lists (longest first, so we match longer names before shorter)
+    return {c: sorted(names, key=len, reverse=True) for c, names in groups.items()}
+
+
+def _get_pronoun(canonical: str) -> str:
+    """Return the correct pronoun for a canonical person name."""
+    if canonical == _HCM_CANONICAL:
+        return "Bác"
+    # Check if canonical or any of its aliases is a known female
+    canonical_lower = canonical.lower()
+    if canonical_lower in _FEMALE_CANONICALS:
+        return "bà"
+    # Also check if any alias maps to a female canonical
+    for female in _FEMALE_CANONICALS:
+        if female == canonical_lower:
+            return "bà"
+        # Check reverse: the canonical itself may be an alias of a female canonical
+        mapped = startup.PERSON_ALIASES.get(canonical_lower, "")
+        if mapped in _FEMALE_CANONICALS:
+            return "bà"
+    return "ông"
+
+
+def _is_protected_position(text_lower: str, start: int, end: int) -> bool:
+    """Check if the name at [start:end] is part of a protected compound noun."""
+    for compound in _PROTECTED_COMPOUNDS:
+        # Find the compound in the text near our match position
+        cpos = text_lower.find(compound)
+        while cpos != -1:
+            cend = cpos + len(compound)
+            # Our name match overlaps with this compound → protected
+            if start >= cpos and end <= cend:
+                return True
+            cpos = text_lower.find(compound, cpos + 1)
+    return False
+
+
+def replace_repeated_names(text: str) -> str:
+    """
+    Replace 2nd+ occurrences of the same person name (including aliases)
+    with the appropriate Vietnamese pronoun.
+
+    Rules:
+    - Hồ Chí Minh (+ aliases) → "Bác"
+    - Female figures → "bà"
+    - All other persons → "ông"
+    - Protected compound nouns (e.g. "Chiến dịch Hồ Chí Minh") are skipped
+
+    Only replaces when the same canonical person appears 2+ times.
+    Keeps the FIRST occurrence and replaces subsequent ones.
+    """
+    if not text or not isinstance(text, str) or len(text) < 10:
+        return text
+
+    # Build name groups from startup aliases
+    if not hasattr(startup, 'PERSON_ALIASES') or not startup.PERSON_ALIASES:
+        return text
+
+    groups = _build_canonical_name_groups()
+    if not groups:
+        return text
+
+    text_lower = text.lower()
+
+    # Step 1: Find ALL name occurrences across all canonical groups
+    # Each occurrence: (start, end, canonical, matched_name)
+    all_matches = []
+    for canonical, name_forms in groups.items():
+        for name in name_forms:
+            if len(name) < 2:  # Skip very short names to avoid false positives
+                continue
+            search_start = 0
+            name_lower = name.lower()
+            while True:
+                pos = text_lower.find(name_lower, search_start)
+                if pos == -1:
+                    break
+                end_pos = pos + len(name)
+
+                # Word boundary check: ensure we're not matching inside another word
+                # Check character before match
+                if pos > 0 and text_lower[pos - 1].isalpha():
+                    search_start = pos + 1
+                    continue
+                # Check character after match
+                if end_pos < len(text_lower) and text_lower[end_pos].isalpha():
+                    search_start = pos + 1
+                    continue
+
+                all_matches.append((pos, end_pos, canonical, name))
+                search_start = end_pos
+
+    if not all_matches:
+        return text
+
+    # Step 2: Remove overlapping matches (keep longest match at each position)
+    all_matches.sort(key=lambda m: (m[0], -(m[1] - m[0])))
+    filtered = []
+    last_end = -1
+    for match in all_matches:
+        if match[0] >= last_end:
+            filtered.append(match)
+            last_end = match[1]
+
+    # Step 3: Group by canonical, keeping order of appearance
+    from collections import OrderedDict
+    canonical_occurrences: dict = OrderedDict()
+    for match in filtered:
+        canonical = match[2]
+        if canonical not in canonical_occurrences:
+            canonical_occurrences[canonical] = []
+        canonical_occurrences[canonical].append(match)
+
+    # Step 4: Identify which matches to replace (2nd+ occurrence per canonical)
+    replacements = {}  # (start, end) → pronoun
+    for canonical, matches in canonical_occurrences.items():
+        if len(matches) < 2:
+            continue  # Only 1 mention — no replacement needed
+        pronoun = _get_pronoun(canonical)
+        for i, match in enumerate(matches):
+            if i == 0:
+                continue  # Keep the first occurrence
+            start, end = match[0], match[1]
+            # Skip if this is part of a protected compound noun
+            if _is_protected_position(text_lower, start, end):
+                continue
+            replacements[(start, end)] = pronoun
+
+    if not replacements:
+        return text
+
+    # Step 5: Apply replacements from end to start (to preserve positions)
+    result = list(text)
+    for (start, end), pronoun in sorted(replacements.items(), reverse=True):
+        # Capitalize pronoun if it starts a sentence (after '. ' or start of text)
+        cap_pronoun = pronoun
+        if start == 0 or (start >= 2 and text[start - 2:start] == '. '):
+            cap_pronoun = pronoun[0].upper() + pronoun[1:] if len(pronoun) > 1 else pronoun.upper()
+
+        result[start:end] = list(cap_pronoun)
+
+    return ''.join(result)
 
 
 def extract_core_keywords(text: str) -> set:
@@ -1523,6 +1745,36 @@ def engine_answer(query: str):
     # Deduplicate and enrich events (cross-year fuzzy dedup)
     unique_events = deduplicate_and_enrich(raw_events, max_events) if not no_data else []
 
+    # --- CLEAN EVENT TEXT ---
+    # Strip builder scaffolding (B1/B2/B3), meta-prompts, and data artifacts
+    # from all event text fields BEFORE answer synthesis.
+    # This ensures both structured and legacy pipelines get clean data.
+    for evt in unique_events:
+        year_val = evt.get("year")
+        for field in ("event", "story"):
+            raw_text = evt.get(field)
+            if raw_text and isinstance(raw_text, str) and raw_text.strip():
+                cleaned = clean_story_text(raw_text, year_val)
+                # Apply year prefix so all pipelines get "Năm XXXX, content"
+                if cleaned and year_val:
+                    try:
+                        yr = int(year_val)
+                        if 40 <= yr <= 2025:
+                            cleaned = format_timeline_entry(yr, cleaned)
+                    except (ValueError, TypeError):
+                        pass
+                evt[field] = cleaned
+
+    # --- PRONOUN REPLACEMENT ---
+    # Replace 2nd+ occurrences of the same person name with ông/bà/Bác
+    for evt in unique_events:
+        for field in ("event", "story"):
+            text = evt.get(field)
+            if text and isinstance(text, str) and len(text) >= 10:
+                evt[field] = replace_repeated_names(text)
+
+
+
     # --- STEP 7: CONFIDENCE SCORING (Phase 1 / Giai đoạn 11) ---
     # Score events and check if confidence is high enough to answer
     if unique_events:
@@ -1650,6 +1902,11 @@ def engine_answer(query: str):
     # --- ENTITY NORMALIZATION: alias consistency + truncation fix ---
     if answer and not no_data:
         answer = normalize_entity_names(answer)
+
+    # --- PRONOUN REPLACEMENT on final answer ---
+    # Ensures the answer text (from answer synthesis) also uses pronouns
+    if answer and not no_data and len(answer) >= 10:
+        answer = replace_repeated_names(answer)
 
     # --- CONFIDENCE & EVIDENCE ATTRIBUTION ---
     best_confidence = 0.0
