@@ -24,39 +24,41 @@ DYNASTY_INDEX: 16
 ============================================================
 QUERY: năm 1911 Bác Hồ ra đi tìm đường cứu nước đúng không
 ============================================================
-  intent:  event_query
+  intent:  fact_check
   no_data: False
-  events:  2
-  answer:  **Nguyễn Tất Thành ra đi tìm đường cứu nước. Bác rời bến Nhà Rồng, bắt đầu hành trình qua nhiều châu lục, đặt nền móng cho con đường cách mạng sau này của Hồ C.** (năm 1911):
-Nguyễn Tất Thành ra đi tìm đường cứu nước. Bác rời bến Nhà Rồng, bắt đầu hành trình qua nhiều châu lục, đặt nền móng cho con đường cách mạng sau này của Bác.
+  events:  3
+  answer:  ✅ **Đúng rồi!** Sự kiện này diễn ra vào năm **1911**.
 
-- **Năm 1975**: Chiến dịch Hồ Chí Minh – Giải phóng miền Nam được coi là cột mốc quan trọng.
+Nguyễn Tất Thành ra đi tìm đường cứu nước. Bác rời bến Nhà Rồng, bắt đầu hành trình qua nhiều châu lục, đặt nền móng cho con đường cách mạng sau này của Bác.
   event[0]: year=1911, Nguyễn Tất Thành ra đi tìm đường cứu nước. Bác rời bến Nhà Rồng, bắt đầu hành trình qua nhiều châu l
-  event[1]: year=1975, Chiến dịch Hồ Chí Minh – Giải phóng miền Nam được coi là cột mốc quan trọng.
+  event[1]: year=1941, Việt Minh ra đời. Mặt trận Việt Nam Độc lập Đồng minh được thành lập, đoàn kết lực lượng cứu quốc, v
+  event[2]: year=938, Trận Bạch Đằng (Ngô Quyền). Ông dùng cọc gỗ đặt ngầm trên sông Bạch Đằng, đánh bại thủy quân Nam Hán
 
 ============================================================
 QUERY: Hãy kể cho tôi về triều đại nhà Trần và những chiến công chống quân Nguyên Mông
 ============================================================
+[GUARDRAIL] truncation: Truncated output detected and auto-fixed
+[GUARDRAIL] missing_year_prefix: 3 line(s) missing year prefix (lines: 1, 5, 9)
   intent:  event_query
   no_data: False
   events:  7
-  answer:  **Nguyên Mông** và **Quân Nguyên** là **cùng một chủ đề / sự kiện**.
+  answer:  Nguyên Mông và Quân Nguyên là cùng một chủ đề / sự kiện.
 
-Tên chính: **Nguyên Mông**
-
-Các tên gọi khác: Mông Cổ, Mông Nguyên, Quân Nguyên, Quân Mông, Đế Quốc Mông Cổ
+Tên chính: Nguyên Mông
 
 ---
 
 Dưới đây là các sự kiện liên quan:
 
-**Nhà Trần thành lập. Lý Chiêu Hoàng nhường ngôi cho Trần Cảnh, mở đầu triều Trần, về lâu dài mở ra thời kỳ hưng thịnh, nổi bật với ba lần kháng Mông-Nguyên.** (năm 1225):
-Nhà Trần thành lập. Lý Chiêu Hoàng nhường ngôi cho Trần Cảnh, mở đầu triều Trần, về lâu dài mở ra thời kỳ hư
-  event[0]: year=1225, Nhà Trần thành lập. Lý Chiêu Hoàng nhường ngôi cho Trần Cảnh, mở đầu triều Trần, về lâu dài mở ra th
-  event[1]: year=1258, Kháng chiến lần 1 chống Mông Cổ. Đại Việt đánh bại cuộc xâm lược đầu tiên của quân Mông Cổ, qua đó b
-  event[2]: year=1284, Hịch tướng sĩ. Trần Hưng Đạo soạn Hịch tướng sĩ khích lệ quân dân trước kháng chiến lần 2, về lâu dà
-  event[3]: year=1285, Kháng chiến lần 2 chống Nguyên. Quân dân Đại Việt giành thắng lợi lớn trước quân Nguyên, qua đó củng
-  event[4]: year=1288, Trận Bạch Đằng (Trần Hưng Đạo). Ông nhử địch vào bãi cọc ngầm trên sông Bạch Đằng, tiêu diệt thủy qu
+Năm 1225, Nhà Trần thành lập. Lý Chiêu Hoàng nhường ngôi cho Trần Cảnh (Trần Thái Tông), mở đầu triều Trần, về lâu dài mở ra thời kỳ hưng thịnh, nổi bật với ba lần kháng Mông-Nguyên.
+
+- Năm 1258, Kháng chiến lần 1 chống Mông Cổ. Đại Việt đánh bại cuộc xâm lược đầu tiên của quân Mông Cổ, qua đó bảo vệ độc lập, mở ra chuỗi thắng lợi chống xâm lăng phương Bắc.
+- Năm 1284, Hịch 
+  event[0]: year=1225, Năm 1225, Nhà Trần thành lập. Lý Chiêu Hoàng nhường ngôi cho Trần Cảnh, mở đầu triều Trần, về lâu dà
+  event[1]: year=1258, Năm 1258, Kháng chiến lần 1 chống Mông Cổ. Đại Việt đánh bại cuộc xâm lược đầu tiên của quân Mông Cổ
+  event[2]: year=1284, Năm 1284, Hịch tướng sĩ. Trần Hưng Đạo soạn Hịch tướng sĩ khích lệ quân dân trước kháng chiến lần 2,
+  event[3]: year=1285, Năm 1285, Kháng chiến lần 2 chống Nguyên. Quân dân Đại Việt giành thắng lợi lớn trước quân Nguyên, q
+  event[4]: year=1288, Năm 1288, Trận Bạch Đằng (Trần Hưng Đạo). Ông nhử địch vào bãi cọc ngầm trên sông Bạch Đằng, tiêu di
 
 ============================================================
 QUERY: Nguyen Hyue
@@ -64,11 +66,11 @@ QUERY: Nguyen Hyue
   intent:  person_query
   no_data: False
   events:  2
-  answer:  **Nam Bộ** — năm **1785**:
+  answer:  Xoài Mút — năm 1785:
 
-Rạch Gầm – Xoài Mút. Nguyễn Huệ đánh bại quân Xiêm trên sông Tiền. Ngăn chặn can thiệp ngoại bang, củng cố Tây Sơn ở Nam Bộ.
-  event[0]: year=1785, Rạch Gầm – Xoài Mút. Nguyễn Huệ đánh bại quân Xiêm trên sông Tiền. Ngăn chặn can thiệp ngoại bang, c
-  event[1]: year=1789, Ngọc Hồi – Đống Đa (Quang Trung). Ông thần tốc tiến ra Bắc, đánh bại quân Thanh. Bảo vệ độc lập, khẳ
+Năm 1785, Rạch Gầm – Xoài Mút. Nguyễn Huệ đánh bại quân Xiêm trên sông Tiền. Ngăn chặn can thiệp ngoại bang, củng cố Tây Sơn ở Nam Bộ.
+  event[0]: year=1785, Năm 1785, Rạch Gầm – Xoài Mút. Nguyễn Huệ đánh bại quân Xiêm trên sông Tiền. Ngăn chặn can thiệp ngo
+  event[1]: year=1789, Năm 1789, Ngọc Hồi – Đống Đa (Quang Trung). Ông thần tốc tiến ra Bắc, đánh bại quân Thanh. Bảo vệ độ
 
 ============================================================
 QUERY: tran bach dan
@@ -76,14 +78,14 @@ QUERY: tran bach dan
   intent:  event_query
   no_data: False
   events:  4
-  answer:  **Trận Bạch Đằng (Ngô Quyền). Ông dùng cọc gỗ đặt ngầm trên sông Bạch Đằng, đánh bại thủy quân Nam Hán, chấm dứt hơn một thiên niên kỷ Bắc thuộc, mở ra kỷ nguyên độc.** (năm 938):
-Trận Bạch Đằng (Ngô Quyền). Ông dùng cọc gỗ đặt ngầm trên sông Bạch Đằng, đánh bại thủy quân Nam Hán, chấm dứt hơn một thiên niên kỷ Bắc thuộc, mở ra kỷ nguyên độc lập của người Việt.
+  answer:  Năm 938, Trận Bạch Đằng (Ngô Quyền). Ông dùng cọc gỗ đặt ngầm trên sông Bạch Đằng, đánh bại thủy quân Nam Hán, chấm dứt hơn một thiên niên kỷ Bắc thuộc, mở ra kỷ nguyên độc lập của người Việt.
 
-- **Năm 939**: Ngô Quyền xưng vương, đóng đô Cổ Loa. Sau chiến thắng Bạch Đằng, Ngô Quyền lên ngôi, chọn Cổ Loa làm kinh đô, qua đó xác
-  event[0]: year=938, Trận Bạch Đằng (Ngô Quyền). Ông dùng cọc gỗ đặt ngầm trên sông Bạch Đằng, đánh bại thủy quân Nam Hán
-  event[1]: year=939, Ngô Quyền xưng vương, đóng đô Cổ Loa. Sau chiến thắng Bạch Đằng, Ngô Quyền lên ngôi, chọn Cổ Loa làm
-  event[2]: year=1225, Nhà Trần thành lập. Lý Chiêu Hoàng nhường ngôi cho Trần Cảnh, mở đầu triều Trần, về lâu dài mở ra th
-  event[3]: year=1288, Trận Bạch Đằng (Trần Hưng Đạo). Ông nhử địch vào bãi cọc ngầm trên sông Bạch Đằng, tiêu diệt thủy qu
+- Năm 939, Ngô Quyền xưng vương, đóng đô Cổ Loa. Sau chiến thắng Bạch Đằng, Ngô Quyền lên ngôi, chọn Cổ Loa làm kinh đô, qua đó xác lập quốc gia độc lập, khởi đầu nhà Ngô.
+- Năm 1225, Nhà Trần thành lập. Lý Chiêu Hoàng nhường ngôi cho Trần Cảnh (Trần Thái Tông), mở đầu triều Trần, về lâu dài mở ra thời kỳ
+  event[0]: year=938, Năm 938, Trận Bạch Đằng (Ngô Quyền). Ông dùng cọc gỗ đặt ngầm trên sông Bạch Đằng, đánh bại thủy quâ
+  event[1]: year=939, Năm 939, Ngô Quyền xưng vương, đóng đô Cổ Loa. Sau chiến thắng Bạch Đằng, Ngô Quyền lên ngôi, chọn C
+  event[2]: year=1225, Năm 1225, Nhà Trần thành lập. Lý Chiêu Hoàng nhường ngôi cho Trần Cảnh, mở đầu triều Trần, về lâu dà
+  event[3]: year=1288, Năm 1288, Trận Bạch Đằng (Trần Hưng Đạo). Ông nhử địch vào bãi cọc ngầm trên sông Bạch Đằng, tiêu di
 
 ============================================================
 QUERY: Bác Hồ và Trần Hưng Đạo có chung giai đoạn không
@@ -107,14 +109,14 @@ QUERY: Trận bạch den
   intent:  event_query
   no_data: False
   events:  4
-  answer:  **Trận Bạch Đằng (Ngô Quyền). Ông dùng cọc gỗ đặt ngầm trên sông Bạch Đằng, đánh bại thủy quân Nam Hán, chấm dứt hơn một thiên niên kỷ Bắc thuộc, mở ra kỷ nguyên độc.** (năm 938):
-Trận Bạch Đằng (Ngô Quyền). Ông dùng cọc gỗ đặt ngầm trên sông Bạch Đằng, đánh bại thủy quân Nam Hán, chấm dứt hơn một thiên niên kỷ Bắc thuộc, mở ra kỷ nguyên độc lập của người Việt.
+  answer:  Năm 938, Trận Bạch Đằng (Ngô Quyền). Ông dùng cọc gỗ đặt ngầm trên sông Bạch Đằng, đánh bại thủy quân Nam Hán, chấm dứt hơn một thiên niên kỷ Bắc thuộc, mở ra kỷ nguyên độc lập của người Việt.
 
-- **Năm 939**: Ngô Quyền xưng vương, đóng đô Cổ Loa. Sau chiến thắng Bạch Đằng, Ngô Quyền lên ngôi, chọn Cổ Loa làm kinh đô, qua đó xác
-  event[0]: year=938, Trận Bạch Đằng (Ngô Quyền). Ông dùng cọc gỗ đặt ngầm trên sông Bạch Đằng, đánh bại thủy quân Nam Hán
-  event[1]: year=939, Ngô Quyền xưng vương, đóng đô Cổ Loa. Sau chiến thắng Bạch Đằng, Ngô Quyền lên ngôi, chọn Cổ Loa làm
-  event[2]: year=1225, Nhà Trần thành lập. Lý Chiêu Hoàng nhường ngôi cho Trần Cảnh, mở đầu triều Trần, về lâu dài mở ra th
-  event[3]: year=1288, Trận Bạch Đằng (Trần Hưng Đạo). Ông nhử địch vào bãi cọc ngầm trên sông Bạch Đằng, tiêu diệt thủy qu
+- Năm 939, Ngô Quyền xưng vương, đóng đô Cổ Loa. Sau chiến thắng Bạch Đằng, Ngô Quyền lên ngôi, chọn Cổ Loa làm kinh đô, qua đó xác lập quốc gia độc lập, khởi đầu nhà Ngô.
+- Năm 1225, Nhà Trần thành lập. Lý Chiêu Hoàng nhường ngôi cho Trần Cảnh (Trần Thái Tông), mở đầu triều Trần, về lâu dài mở ra thời kỳ
+  event[0]: year=938, Năm 938, Trận Bạch Đằng (Ngô Quyền). Ông dùng cọc gỗ đặt ngầm trên sông Bạch Đằng, đánh bại thủy quâ
+  event[1]: year=939, Năm 939, Ngô Quyền xưng vương, đóng đô Cổ Loa. Sau chiến thắng Bạch Đằng, Ngô Quyền lên ngôi, chọn C
+  event[2]: year=1225, Năm 1225, Nhà Trần thành lập. Lý Chiêu Hoàng nhường ngôi cho Trần Cảnh, mở đầu triều Trần, về lâu dà
+  event[3]: year=1288, Năm 1288, Trận Bạch Đằng (Trần Hưng Đạo). Ông nhử địch vào bãi cọc ngầm trên sông Bạch Đằng, tiêu di
 
 ============================================================
 QUERY: Trận Bạch Đằng
@@ -122,14 +124,14 @@ QUERY: Trận Bạch Đằng
   intent:  event_query
   no_data: False
   events:  4
-  answer:  **Trận Bạch Đằng (Ngô Quyền). Ông dùng cọc gỗ đặt ngầm trên sông Bạch Đằng, đánh bại thủy quân Nam Hán, chấm dứt hơn một thiên niên kỷ Bắc thuộc, mở ra kỷ nguyên độc.** (năm 938):
-Trận Bạch Đằng (Ngô Quyền). Ông dùng cọc gỗ đặt ngầm trên sông Bạch Đằng, đánh bại thủy quân Nam Hán, chấm dứt hơn một thiên niên kỷ Bắc thuộc, mở ra kỷ nguyên độc lập của người Việt.
+  answer:  Năm 938, Trận Bạch Đằng (Ngô Quyền). Ông dùng cọc gỗ đặt ngầm trên sông Bạch Đằng, đánh bại thủy quân Nam Hán, chấm dứt hơn một thiên niên kỷ Bắc thuộc, mở ra kỷ nguyên độc lập của người Việt.
 
-- **Năm 939**: Ngô Quyền xưng vương, đóng đô Cổ Loa. Sau chiến thắng Bạch Đằng, Ngô Quyền lên ngôi, chọn Cổ Loa làm kinh đô, qua đó xác
-  event[0]: year=938, Trận Bạch Đằng (Ngô Quyền). Ông dùng cọc gỗ đặt ngầm trên sông Bạch Đằng, đánh bại thủy quân Nam Hán
-  event[1]: year=939, Ngô Quyền xưng vương, đóng đô Cổ Loa. Sau chiến thắng Bạch Đằng, Ngô Quyền lên ngôi, chọn Cổ Loa làm
-  event[2]: year=1225, Nhà Trần thành lập. Lý Chiêu Hoàng nhường ngôi cho Trần Cảnh, mở đầu triều Trần, về lâu dài mở ra th
-  event[3]: year=1288, Trận Bạch Đằng (Trần Hưng Đạo). Ông nhử địch vào bãi cọc ngầm trên sông Bạch Đằng, tiêu diệt thủy qu
+- Năm 939, Ngô Quyền xưng vương, đóng đô Cổ Loa. Sau chiến thắng Bạch Đằng, Ngô Quyền lên ngôi, chọn Cổ Loa làm kinh đô, qua đó xác lập quốc gia độc lập, khởi đầu nhà Ngô.
+- Năm 1225, Nhà Trần thành lập. Lý Chiêu Hoàng nhường ngôi cho Trần Cảnh (Trần Thái Tông), mở đầu triều Trần, về lâu dài mở ra thời kỳ
+  event[0]: year=938, Năm 938, Trận Bạch Đằng (Ngô Quyền). Ông dùng cọc gỗ đặt ngầm trên sông Bạch Đằng, đánh bại thủy quâ
+  event[1]: year=939, Năm 939, Ngô Quyền xưng vương, đóng đô Cổ Loa. Sau chiến thắng Bạch Đằng, Ngô Quyền lên ngôi, chọn C
+  event[2]: year=1225, Năm 1225, Nhà Trần thành lập. Lý Chiêu Hoàng nhường ngôi cho Trần Cảnh, mở đầu triều Trần, về lâu dà
+  event[3]: year=1288, Năm 1288, Trận Bạch Đằng (Trần Hưng Đạo). Ông nhử địch vào bãi cọc ngầm trên sông Bạch Đằng, tiêu di
 
 ============================================================
 QUERY: nhà Trần
@@ -137,15 +139,15 @@ QUERY: nhà Trần
   intent:  dynasty_query
   no_data: False
   events:  5
-  answer:  **Nhà Trần thành lập. Lý Chiêu Hoàng nhường ngôi cho Trần Cảnh, mở đầu triều Trần, về lâu dài mở ra thời kỳ hưng thịnh, nổi bật với ba lần kháng Mông-Nguyên.** (năm 1225):
-Nhà Trần thành lập. Lý Chiêu Hoàng nhường ngôi cho Trần Cảnh, mở đầu triều Trần, về lâu dài mở ra thời kỳ hưng thịnh, nổi bật với ba lần kháng Mông-Nguyên.
+  answer:  Năm 1225, Nhà Trần thành lập. Lý Chiêu Hoàng nhường ngôi cho Trần Cảnh (Trần Thái Tông), mở đầu triều Trần, về lâu dài mở ra thời kỳ hưng thịnh, nổi bật với ba lần kháng Mông-Nguyên.
 
-- **Năm 1258**: Kháng chiến lần 1 chống Mông Cổ. Đại Việt đánh bại cuộc xâm lược đầu tiên của quân Mông Cổ, qua đó bảo vệ độc lập, mở ra chuỗi thắng lợi chống xâm lăng phư
-  event[0]: year=1225, Nhà Trần thành lập. Lý Chiêu Hoàng nhường ngôi cho Trần Cảnh, mở đầu triều Trần, về lâu dài mở ra th
-  event[1]: year=1258, Kháng chiến lần 1 chống Mông Cổ. Đại Việt đánh bại cuộc xâm lược đầu tiên của quân Mông Cổ, qua đó b
-  event[2]: year=1284, Hịch tướng sĩ. Trần Hưng Đạo soạn Hịch tướng sĩ khích lệ quân dân trước kháng chiến lần 2, về lâu dà
-  event[3]: year=1285, Kháng chiến lần 2 chống Nguyên. Quân dân Đại Việt giành thắng lợi lớn trước quân Nguyên, qua đó củng
-  event[4]: year=1288, Trận Bạch Đằng (Trần Hưng Đạo). Ông nhử địch vào bãi cọc ngầm trên sông Bạch Đằng, tiêu diệt thủy qu
+- Năm 1258, Kháng chiến lần 1 chống Mông Cổ. Đại Việt đánh bại cuộc xâm lược đầu tiên của quân Mông Cổ, qua đó bảo vệ độc lập, mở ra chuỗi thắng lợi chống xâm lăng phương Bắc.
+- Năm 1284, Hịch tướng sĩ. Trần Hưng Đạo soạn Hịch tướng sĩ khích lệ quân dân trước kháng chiến lần 2, về lâu dài tác phẩm quân sự – chính t
+  event[0]: year=1225, Năm 1225, Nhà Trần thành lập. Lý Chiêu Hoàng nhường ngôi cho Trần Cảnh, mở đầu triều Trần, về lâu dà
+  event[1]: year=1258, Năm 1258, Kháng chiến lần 1 chống Mông Cổ. Đại Việt đánh bại cuộc xâm lược đầu tiên của quân Mông Cổ
+  event[2]: year=1284, Năm 1284, Hịch tướng sĩ. Trần Hưng Đạo soạn Hịch tướng sĩ khích lệ quân dân trước kháng chiến lần 2,
+  event[3]: year=1285, Năm 1285, Kháng chiến lần 2 chống Nguyên. Quân dân Đại Việt giành thắng lợi lớn trước quân Nguyên, q
+  event[4]: year=1288, Năm 1288, Trận Bạch Đằng (Trần Hưng Đạo). Ông nhử địch vào bãi cọc ngầm trên sông Bạch Đằng, tiêu di
 
 ============================================================
 QUERY: Nguyễn Huệ
@@ -153,8 +155,8 @@ QUERY: Nguyễn Huệ
   intent:  person_query
   no_data: False
   events:  2
-  answer:  **Nam Bộ** — năm **1785**:
+  answer:  Xoài Mút — năm 1785:
 
-Rạch Gầm – Xoài Mút. Nguyễn Huệ đánh bại quân Xiêm trên sông Tiền. Ngăn chặn can thiệp ngoại bang, củng cố Tây Sơn ở Nam Bộ.
-  event[0]: year=1785, Rạch Gầm – Xoài Mút. Nguyễn Huệ đánh bại quân Xiêm trên sông Tiền. Ngăn chặn can thiệp ngoại bang, c
-  event[1]: year=1789, Ngọc Hồi – Đống Đa (Quang Trung). Ông thần tốc tiến ra Bắc, đánh bại quân Thanh. Bảo vệ độc lập, khẳ
+Năm 1785, Rạch Gầm – Xoài Mút. Nguyễn Huệ đánh bại quân Xiêm trên sông Tiền. Ngăn chặn can thiệp ngoại bang, củng cố Tây Sơn ở Nam Bộ.
+  event[0]: year=1785, Năm 1785, Rạch Gầm – Xoài Mút. Nguyễn Huệ đánh bại quân Xiêm trên sông Tiền. Ngăn chặn can thiệp ngo
+  event[1]: year=1789, Năm 1789, Ngọc Hồi – Đống Đa (Quang Trung). Ông thần tốc tiến ra Bắc, đánh bại quân Thanh. Bảo vệ độ

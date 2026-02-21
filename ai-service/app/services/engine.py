@@ -1423,6 +1423,9 @@ def engine_answer(query: str):
 
     # Detect if query is IMPLICITLY asking about entity relationship
     # "X và Y" / "X với Y" / "X hay Y" without further context → likely comparing/relating
+    # GUARD: Only trigger when connector is BETWEEN the two alias names AND query is
+    # short (primarily about identity). Long descriptive queries like
+    # "nhà Trần và chiến công chống quân Nguyên Mông" should NOT trigger.
     _CONNECTOR_PATTERNS = [
         re.compile(r'\bvà\b', re.I),
         re.compile(r'\bvới\b', re.I),
@@ -1430,10 +1433,43 @@ def engine_answer(query: str):
         re.compile(r'\bvs\.?\b', re.I),
         re.compile(r'\bvoi\b', re.I),    # unaccented "với"
     ]
-    is_implicit_relationship = (
-        same_person_info is not None
-        and any(p.search(q_rewritten) or p.search(q) for p in _CONNECTOR_PATTERNS)
-    )
+    is_implicit_relationship = False
+    if same_person_info is not None:
+        alias_names = same_person_info["names_mentioned"]
+        if len(alias_names) >= 2:
+            name_a, name_b = alias_names[0], alias_names[1]
+            # Find positions in the rewritten (accented) query first, fallback to original
+            _check_q = q_rewritten
+            pos_a = _check_q.find(name_a)
+            pos_b = _check_q.find(name_b)
+            if pos_a < 0 or pos_b < 0:
+                _check_q = q
+                pos_a = _check_q.find(name_a)
+                pos_b = _check_q.find(name_b)
+            if pos_a >= 0 and pos_b >= 0:
+                # Extract text between the two alias names
+                if pos_a < pos_b:
+                    between_start = pos_a + len(name_a)
+                    between_end = pos_b
+                else:
+                    between_start = pos_b + len(name_b)
+                    between_end = pos_a
+                between = _check_q[between_start:between_end].strip() if between_start < between_end else ""
+                # Connector must sit between the two alias names
+                has_connector_between = bool(between) and any(
+                    p.search(between) for p in _CONNECTOR_PATTERNS
+                )
+                # Query must be SHORT — primarily the two names + connector
+                # Remove alias names from query and count remaining meaningful words
+                q_remaining = _check_q
+                for name in alias_names:
+                    q_remaining = q_remaining.replace(name, "")
+                _FILLER_WORDS = {"và", "với", "hay", "vs", "là", "có", "phải", "không",
+                                 "có phải", "gì", "nhau", "một", "cùng"}
+                remaining_words = [w for w in q_remaining.split()
+                                   if len(w) >= 2 and w.lower() not in _FILLER_WORDS]
+                is_short_identity_query = len(remaining_words) <= 3
+                is_implicit_relationship = has_connector_between and is_short_identity_query
 
     if not raw_events:
 
