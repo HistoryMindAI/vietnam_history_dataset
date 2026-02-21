@@ -1,0 +1,8 @@
+unique_events count: 1
+PERSON_ALIASES count: 114
+HCM-related keys: ['hồ chí minh']
+groups count: 34
+HCM group: ['nguyễn sinh cung', 'nguyễn tất thành', 'nguyễn ái quốc', 'hồ chí minh', 'bác hồ', 'anh ba']
+field=event changed=True
+  BEFORE: Năm 1911, Nguyễn Tất Thành rời bến Nhà Rồng, bắt đầu hành trình qua nhiều châu lục. Đặt nền móng cho con đường cách mạng sau này của Hồ Chí Minh.
+  AFTER:  Năm 1911, Nguyễn Tất Thành rời bến Nhà Rồng, bắt đầu hành trình qua nhiều châu lục. Đặt nền móng cho con đường cách mạng sau này của Bác.

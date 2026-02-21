@@ -1,0 +1,8 @@
+=== FINAL ANSWER ===
+Năm 1911, Nguyễn Tất Thành rời bến Nhà Rồng, bắt đầu hành trình qua nhiều châu lục. Đặt nền móng cho con đường cách mạng sau này của Hồ Chí Minh.
+
+=== FINAL EVENTS ===
+[0] year=1911
+  event: Năm 1911, Nguyễn Tất Thành rời bến Nhà Rồng, bắt đầu hành trình qua nhiều châu lục. Đặt nền móng cho con đường cách mạng sau này của Hồ Chí Minh.
+  story: 
+
