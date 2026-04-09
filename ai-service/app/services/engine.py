@@ -1931,9 +1931,12 @@ def engine_answer(query: str):
             pass  # Logged but not acted upon (NLI handles filtering)
 
     # --- ANSWER-LEVEL DEDUP: final sentence dedup safety net ---
+    # Keep strict location answers as-authored; timeline enforcement rewrites
+    # "ở đâu" answers into event-style prose and makes them drift again.
     if answer and not no_data:
-        answer = canonicalize_year_format(answer)
-        answer = deduplicate_answer(answer)
+        if query_info.answer_type_required != "location":
+            answer = canonicalize_year_format(answer)
+            answer = deduplicate_answer(answer)
 
     # --- ENTITY NORMALIZATION: alias consistency + truncation fix ---
     if answer and not no_data:
