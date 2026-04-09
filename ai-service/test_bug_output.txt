@@ -1,4 +1,0 @@
-  File "<string>", line 13
-    print(f'  intent:  {r[\
-          ^
-SyntaxError: unterminated string literal (detected at line 13)
