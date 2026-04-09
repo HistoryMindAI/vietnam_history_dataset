@@ -47,6 +47,7 @@ def format_answer(
         fact_check → format_fact_check()
         person → format_person()
         year → format_year()
+        location → format_location()
         event → format_event()
         list → format_list()
         dynasty → format_dynasty()
@@ -63,6 +64,8 @@ def format_answer(
         return _format_person(structured)
     elif structured.answer_type == "year":
         return _format_year(structured)
+    elif structured.answer_type == "location":
+        return _format_location(structured)
     elif structured.answer_type == "list":
         return _format_list(structured)
     elif structured.answer_type == "dynasty":
@@ -139,6 +142,29 @@ def _format_year(s: StructuredAnswer) -> Optional[str]:
         f"Năm **{s.year}**{period_note}, "
         f"{s.description}"
     )
+
+
+def _format_location(s: StructuredAnswer) -> Optional[str]:
+    """Format location-focused answer (where question) — concise and grounded."""
+    if not s.location:
+        return None
+
+    lead = []
+    if s.title:
+        lead.append(f"**{s.title}**")
+    if s.year:
+        lead.append(f"(năm {s.year})")
+
+    subject = " ".join(lead).strip()
+    if subject:
+        first_line = f"{subject} diễn ra tại **{s.location}**."
+    else:
+        first_line = f"Sự kiện này diễn ra tại **{s.location}**."
+
+    if s.description:
+        return f"{first_line}\n\n{s.description}"
+
+    return first_line
 
 
 def _format_event(s: StructuredAnswer) -> Optional[str]:
