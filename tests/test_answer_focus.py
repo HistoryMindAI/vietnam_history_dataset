@@ -68,6 +68,23 @@ def test_format_location_answer_is_concise_and_grounded():
     assert "đánh tan quân Nguyên Mông" not in answer
 
 
+def test_format_location_answer_extracts_clean_title_from_raw_event_sentence():
+    query_info = _make_query_info("location")
+    events = [{
+        "year": 938,
+        "event": "Năm 938, Trận Bạch Đằng (Ngô Quyền). Ông dùng cọc gỗ đặt ngầm trên sông Bạch Đằng, đánh bại thủy quân Nam Hán.",
+        "story": "Năm 938, Trận Bạch Đằng (Ngô Quyền). Ông dùng cọc gỗ đặt ngầm trên sông Bạch Đằng, đánh bại thủy quân Nam Hán.",
+        "places": ["Bạch Đằng"],
+        "persons": ["Ngô Quyền"],
+        "_final_confidence": 0.93,
+    }]
+
+    structured = build_answer(query_info, events)
+    answer = format_answer(structured, query_info)
+
+    assert answer == "**Trận Bạch Đằng (Ngô Quyền)** (năm 938) diễn ra tại **Bạch Đằng**."
+
+
 def test_location_answer_without_place_returns_none():
     query_info = _make_query_info("location")
     structured = build_answer(query_info, [{
@@ -98,6 +115,29 @@ def test_engine_where_answer_stays_location_focused(mock_scan, mock_search):
     assert "diễn ra tại" in result["answer"]
     assert "Ngô Quyền dùng cọc gỗ" not in result["answer"]
     assert "đánh tan quân Nguyên Mông" not in result["answer"]
+
+
+@patch("app.services.engine.semantic_search")
+@patch("app.services.engine.scan_by_entities")
+def test_engine_where_answer_handles_live_like_event_payload(mock_scan, mock_search):
+    _setup_full_mocks()
+    mock_scan.return_value = [{
+        "id": "hf_000281",
+        "year": 938,
+        "event": "Năm 938, Trận Bạch Đằng (Ngô Quyền). Ông dùng cọc gỗ đặt ngầm trên sông Bạch Đằng, đánh bại thủy quân Nam Hán.",
+        "story": "Năm 938, Trận Bạch Đằng (Ngô Quyền). Ông dùng cọc gỗ đặt ngầm trên sông Bạch Đằng, đánh bại thủy quân Nam Hán, chấm dứt hơn một thiên niên kỷ Bắc thuộc.",
+        "persons": ["Ngô Quyền"],
+        "places": ["Bạch Đằng"],
+        "keywords": ["bạch_đằng", "ngô_quyền"],
+    }]
+    mock_search.return_value = []
+
+    from app.services.engine import engine_answer
+
+    result = engine_answer("Trận Bạch Đằng ở đâu?")
+
+    assert not result["no_data"]
+    assert result["answer"] == "**Trận Bạch Đằng (Ngô Quyền)** (năm 938) diễn ra tại **Bạch Đằng**."
 
 
 @patch("app.services.engine.semantic_search")

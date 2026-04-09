@@ -305,6 +305,7 @@ def _clean_display_title(value: Any, year: Any = None) -> Optional[str]:
         return None
 
     text = re.sub(r"^\s*Năm\s+\d{3,4}[,:]?\s*", "", text, flags=re.IGNORECASE)
+    text = re.split(r"[.!?;]", text, maxsplit=1)[0]
     text = re.sub(r"\s+", " ", text).strip(" .,;:-")
 
     if year is not None:
