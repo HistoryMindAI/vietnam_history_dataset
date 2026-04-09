@@ -72,3 +72,9 @@ ENTAILMENT_WEIGHT = float(os.getenv("ENTAILMENT_WEIGHT", 0.4))
 # ===============================
 USE_LLM_REWRITE = os.getenv("USE_LLM_REWRITE", "false").lower() == "true"
 
+# ===============================
+# RUNTIME CONCURRENCY CONFIG
+# ===============================
+CHAT_MAX_CONCURRENT_REQUESTS = int(os.getenv("CHAT_MAX_CONCURRENT_REQUESTS", 8))
+CHAT_ACQUIRE_TIMEOUT_SECONDS = float(os.getenv("CHAT_ACQUIRE_TIMEOUT_SECONDS", 0.5))
+UVICORN_WORKERS = int(os.getenv("UVICORN_WORKERS", 1))

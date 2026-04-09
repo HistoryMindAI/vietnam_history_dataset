@@ -79,6 +79,20 @@ docker run -d -p 8000:8000 --name ai-service-container vietnam-history-ai
 *   `--name ai-service-container`: Đặt tên dễ nhớ cho container là `ai-service-container`.
 *   `vietnam-history-ai`: Tên của image cần chạy (đã đặt ở bước build).
 
+### Cấu hình chịu tải
+
+Bạn có thể tinh chỉnh runtime bằng env:
+
+```bash
+CHAT_MAX_CONCURRENT_REQUESTS=8
+CHAT_ACQUIRE_TIMEOUT_SECONDS=0.5
+UVICORN_WORKERS=1
+```
+
+- `CHAT_MAX_CONCURRENT_REQUESTS`: giới hạn số request nặng xử lý đồng thời trên mỗi worker.
+- `CHAT_ACQUIRE_TIMEOUT_SECONDS`: nếu quá tải, service trả `503` sớm thay vì nghẽn dây chuyền.
+- `UVICORN_WORKERS`: chỉ nên tăng khi máy deploy có đủ CPU và RAM, vì mỗi worker sẽ nạp model/index riêng.
+
 ---
 
 ### 4. Kiểm tra hoạt động

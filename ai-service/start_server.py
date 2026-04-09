@@ -37,7 +37,15 @@ def start():
                 port = 8000
                 
         host = "0.0.0.0"
+        workers_env = os.environ.get("UVICORN_WORKERS", "1")
+        try:
+            workers = max(1, int(workers_env))
+        except ValueError:
+            print(f"⚠️ [STARTUP] UVICORN_WORKERS is invalid: '{workers_env}'. Defaulting to 1.", flush=True)
+            workers = 1
+
         print(f"🚀 [STARTUP] Configured listener: {host}:{port}", flush=True)
+        print(f"🚀 [STARTUP] Configured workers: {workers}", flush=True)
 
         # 3. Check if we can bind to this port (Diagnostic)
         try:
@@ -96,15 +104,18 @@ def start():
         print(f"🚀 [STARTUP] Launching Uvicorn on {host}:{port}...", flush=True)
         # Using string import to allow uvicorn to handle the import chain better if needed
         # but here we already have the app object.
+        app_target = "app.main:app" if workers > 1 else app
+
         uvicorn.run(
-            app,
+            app_target,
             host=host,
             port=port,
             log_level="info",
             proxy_headers=True,
             forwarded_allow_ips="*",
             timeout_keep_alive=30,
-            access_log=True # Ensure access logs are ON
+            access_log=True, # Ensure access logs are ON
+            workers=workers
         )
         
     except BaseException as e:
