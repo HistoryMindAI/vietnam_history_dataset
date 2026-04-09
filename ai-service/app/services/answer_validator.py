@@ -176,14 +176,15 @@ class AnswerValidator:
         if not events:
             return events
 
-        # Skip filtering entirely for broad intents that don't need constraints
-        # NOTE: Entity-scan intents are NOT skipped here anymore!
-        # They still go through validate_candidate() for temporal checks.
-        # Entity text-matching is skipped inside validate_candidate() via
-        # _should_skip_entity_check().
-        if query_info.intent in (
-            "data_scope", "broad_history", "dynasty_timeline",
-            "resistance_national", "semantic",
+        # Skip filtering only for truly broad intents WITHOUT explicit constraints.
+        # This keeps broad narrative queries flexible, while still enforcing
+        # who/when/where gates for semantic fallbacks.
+        if (
+            query_info.intent in (
+                "data_scope", "broad_history", "dynasty_timeline",
+                "resistance_national", "semantic",
+            )
+            and not self._has_explicit_constraints(query_info)
         ):
             return events
 
@@ -222,12 +223,26 @@ class AnswerValidator:
             event.get("story", "") or "",
             event.get("event", "") or "",
             event.get("title", "") or "",
+            event.get("location", "") or "",
+            " ".join(event.get("places", []) or []),
             " ".join(event.get("persons", []) or []),
             " ".join(event.get("persons_all", []) or []),
             " ".join(event.get("keywords", []) or []),
             event.get("dynasty", "") or "",
         ]
         return " ".join(parts).lower()
+
+    def _has_explicit_constraints(self, query_info: QueryInfo) -> bool:
+        """
+        Return True when the query carries constraints that should still be
+        enforced even if the classifier fell back to a broad/semantic intent.
+        """
+        return any((
+            query_info.required_year is not None,
+            query_info.required_year_range is not None,
+            bool(query_info.required_persons),
+            query_info.answer_type_required in {"person", "year", "location", "dynasty"},
+        ))
 
     def _entity_present(
         self, entity: str, event_text: str, event: Dict[str, Any]
@@ -283,8 +298,12 @@ class AnswerValidator:
             return event.get("year") is not None
 
         elif required_type == "location":
-            # Relaxed — hard to validate location, just pass
-            return True
+            places = event.get("places", []) or []
+            if places:
+                return True
+            if event.get("location"):
+                return True
+            return False
 
         elif required_type == "event":
             # Must have story or event text

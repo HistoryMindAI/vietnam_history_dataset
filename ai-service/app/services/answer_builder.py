@@ -38,6 +38,7 @@ def build_answer(
         fact_check → _build_fact_check()
         who        → _build_person_answer()
         when       → _build_year_answer()
+        where      → _build_location_answer()
         list       → _build_list()
         what/event → _build_event_answer()
 
@@ -61,6 +62,9 @@ def build_answer(
 
     elif answer_type == "year":
         return _build_year_answer(query_info, best, events)
+
+    elif answer_type == "location":
+        return _build_location_answer(query_info, best, events)
 
     elif answer_type == "list":
         return _build_list(query_info, events)
@@ -157,6 +161,27 @@ def _build_year_answer(
         title=best.get("event") or best.get("title"),
         year=best.get("year"),
         people=best.get("persons", []) or [],
+        location=_pick_primary_location(best),
+        dynasty=best.get("dynasty"),
+        description=story,
+        confidence=best.get("_final_confidence", 0.0),
+    )
+
+
+def _build_location_answer(
+    query_info: QueryInfo,
+    best: Dict[str, Any],
+    events: List[Dict[str, Any]],
+) -> StructuredAnswer:
+    """Build answer focused on where an event happened."""
+    story = (best.get("story") or best.get("event") or "").strip()
+
+    return StructuredAnswer(
+        answer_type="location",
+        title=best.get("event") or best.get("title"),
+        year=best.get("year"),
+        people=best.get("persons", []) or [],
+        location=_pick_primary_location(best),
         dynasty=best.get("dynasty"),
         description=story,
         confidence=best.get("_final_confidence", 0.0),
@@ -187,7 +212,7 @@ def _build_event_answer(
         title=best.get("event") or best.get("title"),
         year=best.get("year"),
         people=best.get("persons", []) or [],
-        location=best.get("location"),
+        location=_pick_primary_location(best),
         dynasty=best.get("dynasty"),
         description=story,
         items=items,
@@ -243,3 +268,15 @@ def _build_dynasty_answer(
         items=items,
         confidence=best.get("_final_confidence", 0.0),
     )
+
+
+def _pick_primary_location(event: Dict[str, Any]) -> Optional[str]:
+    """Pick the best location field available from an event payload."""
+    if event.get("location"):
+        return event["location"]
+
+    places = event.get("places", []) or []
+    if places:
+        return places[0]
+
+    return None
