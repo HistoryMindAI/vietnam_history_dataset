@@ -1,5 +1,0 @@
-None
-None
-None
-None
-(1000, 1500)
