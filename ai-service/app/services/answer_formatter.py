@@ -161,9 +161,6 @@ def _format_location(s: StructuredAnswer) -> Optional[str]:
     else:
         first_line = f"Sự kiện này diễn ra tại **{s.location}**."
 
-    if s.description:
-        return f"{first_line}\n\n{s.description}"
-
     return first_line
 
 

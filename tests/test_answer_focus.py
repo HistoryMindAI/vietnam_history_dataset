@@ -6,9 +6,17 @@ Focus:
 - location answers should stay concise and grounded
 """
 
+from unittest.mock import patch
+
 from app.core.query_schema import QueryInfo
 from app.services.answer_builder import build_answer
 from app.services.answer_formatter import format_answer
+from tests.test_engine import (
+    MOCK_HICH_TUONG_SI,
+    MOCK_NGO_QUYEN,
+    MOCK_TRAN_HUNG_DAO,
+    _setup_full_mocks,
+)
 
 
 def _make_query_info(answer_type_required: str) -> QueryInfo:
@@ -57,6 +65,7 @@ def test_format_location_answer_is_concise_and_grounded():
     assert "diễn ra tại" in answer
     assert "Bạch Đằng" in answer
     assert "1288" in answer
+    assert "đánh tan quân Nguyên Mông" not in answer
 
 
 def test_location_answer_without_place_returns_none():
@@ -71,3 +80,38 @@ def test_location_answer_without_place_returns_none():
 
     answer = format_answer(structured, query_info)
     assert answer is None
+
+
+@patch("app.services.engine.semantic_search")
+@patch("app.services.engine.scan_by_entities")
+def test_engine_where_answer_stays_location_focused(mock_scan, mock_search):
+    _setup_full_mocks()
+    mock_scan.return_value = [MOCK_NGO_QUYEN, MOCK_TRAN_HUNG_DAO]
+    mock_search.return_value = []
+
+    from app.services.engine import engine_answer
+
+    result = engine_answer("Trận Bạch Đằng ở đâu?")
+
+    assert not result["no_data"]
+    assert "Bạch Đằng" in result["answer"]
+    assert "diễn ra tại" in result["answer"]
+    assert "Ngô Quyền dùng cọc gỗ" not in result["answer"]
+    assert "đánh tan quân Nguyên Mông" not in result["answer"]
+
+
+@patch("app.services.engine.semantic_search")
+@patch("app.services.engine.scan_by_entities")
+def test_engine_who_answer_filters_unrelated_candidates(mock_scan, mock_search):
+    _setup_full_mocks()
+    mock_scan.return_value = [MOCK_TRAN_HUNG_DAO, MOCK_HICH_TUONG_SI]
+    mock_search.return_value = []
+
+    from app.services.engine import engine_answer
+
+    result = engine_answer("Trần Hưng Đạo là ai?")
+
+    assert not result["no_data"]
+    assert "Trần Hưng Đạo" in result["answer"]
+    assert "Hịch tướng sĩ" in result["answer"]
+    assert "Ngô Quyền" not in result["answer"]

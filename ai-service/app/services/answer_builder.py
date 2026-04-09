@@ -22,6 +22,7 @@ USAGE:
     text = answer_formatter.format_answer(structured, query_info)
 """
 
+import re
 from typing import List, Dict, Any, Optional
 
 from app.core.query_schema import QueryInfo, StructuredAnswer
@@ -111,7 +112,7 @@ def _build_fact_check(
 
     return StructuredAnswer(
         answer_type="fact_check",
-        title=best.get("event") or best.get("title"),
+        title=_pick_display_title(best),
         year=actual_year,
         people=best.get("persons", []) or [],
         dynasty=best.get("dynasty"),
@@ -139,7 +140,7 @@ def _build_person_answer(
 
     return StructuredAnswer(
         answer_type="person",
-        title=best.get("event") or best.get("title"),
+        title=_pick_display_title(best),
         year=best.get("year"),
         people=all_people[:5],
         dynasty=best.get("dynasty"),
@@ -158,7 +159,7 @@ def _build_year_answer(
 
     return StructuredAnswer(
         answer_type="year",
-        title=best.get("event") or best.get("title"),
+        title=_pick_display_title(best),
         year=best.get("year"),
         people=best.get("persons", []) or [],
         location=_pick_primary_location(best),
@@ -178,7 +179,7 @@ def _build_location_answer(
 
     return StructuredAnswer(
         answer_type="location",
-        title=best.get("event") or best.get("title"),
+        title=_pick_display_title(best),
         year=best.get("year"),
         people=best.get("persons", []) or [],
         location=_pick_primary_location(best),
@@ -201,7 +202,7 @@ def _build_event_answer(
     if len(events) > 1:
         for e in events[:8]:
             items.append({
-                "title": e.get("event") or e.get("title", ""),
+                "title": _pick_display_title(e) or "",
                 "year": e.get("year"),
                 "story": (e.get("story") or "").strip()[:200],
                 "persons": e.get("persons", []) or [],
@@ -209,7 +210,7 @@ def _build_event_answer(
 
     return StructuredAnswer(
         answer_type="event",
-        title=best.get("event") or best.get("title"),
+        title=_pick_display_title(best),
         year=best.get("year"),
         people=best.get("persons", []) or [],
         location=_pick_primary_location(best),
@@ -228,7 +229,7 @@ def _build_list(
     items = []
     for e in events[:15]:
         items.append({
-            "title": e.get("event") or e.get("title", ""),
+            "title": _pick_display_title(e) or "",
             "year": e.get("year"),
             "story": (e.get("story") or "").strip()[:200],
             "persons": e.get("persons", []) or [],
@@ -253,7 +254,7 @@ def _build_dynasty_answer(
     items = []
     for e in events[:10]:
         items.append({
-            "title": e.get("event") or e.get("title", ""),
+            "title": _pick_display_title(e) or "",
             "year": e.get("year"),
             "story": (e.get("story") or "").strip()[:200],
             "persons": e.get("persons", []) or [],
@@ -261,7 +262,7 @@ def _build_dynasty_answer(
 
     return StructuredAnswer(
         answer_type="dynasty",
-        title=best.get("event") or best.get("title"),
+        title=_pick_display_title(best),
         year=best.get("year"),
         dynasty=best.get("dynasty"),
         description=(best.get("story") or "").strip(),
@@ -280,3 +281,38 @@ def _pick_primary_location(event: Dict[str, Any]) -> Optional[str]:
         return places[0]
 
     return None
+
+
+def _pick_display_title(event: Dict[str, Any]) -> Optional[str]:
+    """Prefer stable title metadata over cleaned event text for concise answers."""
+    year = event.get("year")
+
+    for candidate in (event.get("title"), event.get("event")):
+        cleaned = _clean_display_title(candidate, year=year)
+        if cleaned:
+            return cleaned
+
+    return None
+
+
+def _clean_display_title(value: Any, year: Any = None) -> Optional[str]:
+    """Remove timeline scaffolding so titles do not repeat the year."""
+    if value is None:
+        return None
+
+    text = str(value).strip()
+    if not text:
+        return None
+
+    text = re.sub(r"^\s*Năm\s+\d{3,4}[,:]?\s*", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"\s+", " ", text).strip(" .,;:-")
+
+    if year is not None:
+        try:
+            year_int = int(year)
+        except (TypeError, ValueError):
+            year_int = None
+        if year_int is not None:
+            text = re.sub(rf"\b{year_int}\b$", "", text).strip(" .,;:-")
+
+    return text or None
