@@ -29,6 +29,7 @@ def _make_query_info(
     required_persons: list | None = None,
     required_topics: list | None = None,
     relation_type: str | None = None,
+    answer_type_required: str | None = None,
 ) -> QueryInfo:
     """Helper to create a QueryInfo with specified constraints."""
     return QueryInfo(
@@ -40,6 +41,7 @@ def _make_query_info(
         required_persons=required_persons or [],
         required_topics=required_topics or [],
         relation_type=relation_type,
+        answer_type_required=answer_type_required,
     )
 
 
@@ -397,6 +399,59 @@ class TestAnswerValidatorTemporal:
         # Event doesn't mention THĐ but matches year — should PASS because entity skipped
         event = {"event": "Trận Bạch Đằng lần 3", "year": 1288}
         assert validator.validate_candidate(qi, event) is True
+
+
+class TestAnswerValidatorFocusGuards:
+    """Regression tests for answer-focus drift on semantic fallback paths."""
+
+    @pytest.fixture
+    def validator(self):
+        from app.services.answer_validator import AnswerValidator
+        return AnswerValidator()
+
+    def test_semantic_who_query_still_filters_non_person_events(self, validator):
+        """Semantic fallback must still respect who-question answer type."""
+        qi = _make_query_info(
+            query="Ai chỉ huy trận này?",
+            intent="semantic",
+            answer_type_required="person",
+        )
+        events = [
+            {"event": "Một biến cố chung", "year": 1288, "story": "Sự kiện lớn diễn ra."},
+            {"event": "Chiến thắng Bạch Đằng", "year": 1288, "persons": ["Trần Hưng Đạo"]},
+        ]
+
+        filtered = validator.filter_events(qi, events)
+        assert filtered == [events[1]]
+
+    def test_semantic_where_query_requires_location_metadata(self, validator):
+        """Where-questions should reject events with no grounded location."""
+        qi = _make_query_info(
+            query="Trận này diễn ra ở đâu?",
+            intent="semantic",
+            answer_type_required="location",
+        )
+        events = [
+            {"event": "Hịch tướng sĩ", "year": 1284, "story": "Trần Hưng Đạo soạn bài hịch."},
+            {"event": "Trận Bạch Đằng", "year": 1288, "places": ["Bạch Đằng"]},
+        ]
+
+        filtered = validator.filter_events(qi, events)
+        assert filtered == [events[1]]
+
+    def test_where_query_with_no_location_returns_empty(self, validator):
+        """If no candidate has a location, hard filter should return empty."""
+        qi = _make_query_info(
+            query="Sự kiện này ở đâu?",
+            intent="semantic",
+            answer_type_required="location",
+        )
+        events = [
+            {"event": "Biến cố A", "year": 1000},
+            {"event": "Biến cố B", "year": 1100, "story": "Một sự kiện chung."},
+        ]
+
+        assert validator.filter_events(qi, events) == []
 
 
 class TestTopicSeparation:
