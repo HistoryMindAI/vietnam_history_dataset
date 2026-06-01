@@ -13,7 +13,6 @@ import re
 from unicodedata import normalize as unicode_normalize
 from difflib import SequenceMatcher
 import logging
-import app.core.startup as startup
 
 logger = logging.getLogger(__name__)
 
@@ -278,6 +277,7 @@ def _normalize_text(text: str) -> str:
 # ===================================================================
 
 def rewrite_query(query: str) -> str:
+    import app.core.startup as startup
     """
     Rewrite query for better understanding:
     1. Normalize unicode
@@ -441,6 +441,7 @@ def _fuzzy_restore_accents(text: str) -> str:
 
 
 def fuzzy_match_entity(query: str, entity_dict: dict, threshold: float = 0.75) -> list:
+    import app.core.startup as startup
     """
     Find entities that fuzzy-match the query when exact match fails.
     
@@ -574,6 +575,7 @@ def generate_search_variations(query: str, resolved_entities: dict) -> list:
 
 
 def extract_question_intent(query: str) -> str | None:
+    import app.core.startup as startup
     """
     Detect high-level question patterns for better intent routing.
     Returns intent hint or None if no pattern matched.

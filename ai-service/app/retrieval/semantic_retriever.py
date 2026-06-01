@@ -37,31 +37,35 @@ class SemanticRetriever(BaseRetriever):
             This class provides an alternative interface for hybrid fusion.
             To integrate, replace direct FAISS calls with this retriever.
         """
-        # TODO: integrate with existing FAISS search infrastructure
-        # Pseudocode:
-        #
-        # if self.encoder:
-        #     query_vec = self.encoder.encode([query])
-        # distances, indices = self.vector_index.search(query_vec, top_k)
-        #
-        # results = []
-        # for rank, (dist, idx) in enumerate(zip(distances[0], indices[0])):
-        #     if idx == -1:
-        #         continue
-        #     doc = DOCUMENTS[idx]
-        #     results.append({
-        #         "id": str(idx),
-        #         "score": float(dist),
-        #         "metadata": {
-        #             "year": doc.get("year"),
-        #             "event": doc.get("event"),
-        #             "persons": doc.get("persons", []),
-        #             "dynasty": doc.get("dynasty"),
-        #         }
-        #     })
-        # return results
+        import app.core.startup as startup
+        import numpy as np
 
-        raise NotImplementedError(
-            "SemanticRetriever.search() is a skeleton — "
-            "integrate with existing FAISS infrastructure to activate."
-        )
+        if self.encoder:
+            query_vec = self.encoder.encode([query])
+            emb_2d = np.expand_dims(query_vec[0], axis=0).astype("float32")
+        else:
+            # Assuming caller provided string, but wait, if no encoder, we can't embed.
+            # So encoder is required.
+            if not isinstance(query, str):
+                emb_2d = np.expand_dims(query, axis=0).astype("float32")
+            else:
+                raise ValueError("Encoder is required to embed string query")
+
+        distances, indices = self.vector_index.search(emb_2d, top_k)
+
+        results = []
+        for rank, (dist, idx) in enumerate(zip(distances[0], indices[0])):
+            if idx == -1:
+                continue
+            doc = startup.DOCUMENTS[idx]
+            results.append({
+                "id": str(idx),
+                "score": float(dist),
+                "metadata": {
+                    "year": doc.get("year"),
+                    "event": doc.get("event"),
+                    "persons": doc.get("persons", []),
+                    "dynasty": doc.get("dynasty"),
+                }
+            })
+        return results
