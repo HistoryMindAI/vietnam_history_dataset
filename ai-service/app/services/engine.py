@@ -1517,6 +1517,7 @@ def engine_answer(query: str):
         re.compile(r'\bvới\b', re.I),
         re.compile(r'\bhay\b', re.I),
         re.compile(r'\bvs\.?\b', re.I),
+        re.compile(r'\bva\b', re.I),     # unaccented "và"
         re.compile(r'\bvoi\b', re.I),    # unaccented "với"
     ]
     is_implicit_relationship = False
@@ -1551,7 +1552,7 @@ def engine_answer(query: str):
                 for name in alias_names:
                     q_remaining = q_remaining.replace(name, "")
                 _FILLER_WORDS = {"và", "với", "hay", "vs", "là", "có", "phải", "không",
-                                 "có phải", "gì", "nhau", "một", "cùng"}
+                                 "có phải", "gì", "nhau", "một", "cùng", "va", "voi"}
                 remaining_words = [w for w in q_remaining.split()
                                    if len(w) >= 2 and w.lower() not in _FILLER_WORDS]
                 is_short_identity_query = len(remaining_words) <= 3
