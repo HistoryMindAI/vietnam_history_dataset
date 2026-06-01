@@ -71,7 +71,7 @@ def format_answer(
     elif structured.answer_type == "dynasty":
         return _format_dynasty(structured)
     else:
-        return _format_event(structured)
+        return _format_event(structured, query_info)
 
 
 # ===================================================================
@@ -164,7 +164,7 @@ def _format_location(s: StructuredAnswer) -> Optional[str]:
     return first_line
 
 
-def _format_event(s: StructuredAnswer) -> Optional[str]:
+def _format_event(s: StructuredAnswer, query_info: QueryInfo = None) -> Optional[str]:
     """Format generic event answer."""
     if not s.description:
         return None
@@ -182,7 +182,12 @@ def _format_event(s: StructuredAnswer) -> Optional[str]:
     parts.append(s.description)
 
     # Additional items (if multiple events)
-    if s.items and len(s.items) > 1:
+    # ONLY show additional items if question_type is 'list' or unknown (general query), NOT for specific what/why/how/who/when/where questions
+    show_additional = True
+    if query_info is not None and query_info.question_type in ("what", "why", "how", "who", "when", "where"):
+        show_additional = False
+
+    if show_additional and s.items and len(s.items) > 1:
         parts.append("")
         for item in s.items[1:5]:  # Skip first (already shown in main description)
             item_year = item.get("year", "")
