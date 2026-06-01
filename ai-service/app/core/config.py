@@ -41,7 +41,7 @@ SIM_THRESHOLD = float(os.getenv("SIM_THRESHOLD", 0.35))
 # NLU CONFIG (Natural Language Understanding)
 # ===============================
 SIM_THRESHOLD_LOW = float(os.getenv("SIM_THRESHOLD_LOW", 0.25))  # Fallback search
-FUZZY_MATCH_THRESHOLD = float(os.getenv("FUZZY_MATCH_THRESHOLD", 0.75))  # Entity fuzzy match
+FUZZY_MATCH_THRESHOLD = float(os.getenv("FUZZY_MATCH_THRESHOLD", 0.80))  # Entity fuzzy match
 HIGH_CONFIDENCE_SCORE = float(os.getenv("HIGH_CONFIDENCE_SCORE", 0.55))  # Bypass keyword check
 
 # ===============================
