@@ -262,6 +262,13 @@ class TestDurationGuardIntegration:
         assert r.year is None
         assert r.intent != "year_specific"
 
+    def test_1000_nam_thang_long_unaccented_no_year(self):
+        """'ky niem 1000 nam Thang Long' (unaccented duration) should NOT trigger year_specific intent."""
+        r = classify_intent("ky niem 1000 nam Thăng Long", year=1000)
+        assert r.duration_guard is True
+        assert r.year is None
+        assert r.intent != "year_specific"
+
     def test_hon_150_nam_no_year(self):
         r = classify_intent("hơn 150 năm chia cắt", year=150)
         assert r.duration_guard is True
