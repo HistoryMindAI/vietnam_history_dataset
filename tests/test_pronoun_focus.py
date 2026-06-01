@@ -30,6 +30,11 @@ class TestPronounReplacement:
             "trưng trắc": "hai bà trưng",
             "trưng nhị": "hai bà trưng",
             "hai bà trưng": "hai bà trưng",
+            "các vua hùng": "hùng vương",
+            "hùng vương": "hùng vương",
+            "vua hùng": "hùng vương",
+            "bà triệu": "bà triệu",
+            "triệu thị trinh": "bà triệu",
         }
         with patch("app.core.startup.PERSON_ALIASES", mock_aliases):
             yield
@@ -96,3 +101,46 @@ class TestPronounReplacement:
         result = replace_repeated_names(text)
         # Second occurrence start of sentence -> replaced by capitalized "Ông"
         assert "Ông chỉ huy trận Bạch Đằng." in result
+
+    def test_dynamic_female_prefix_detection(self):
+        from app.services.engine import replace_repeated_names
+        # Test that any name containing 'bà' is dynamically treated as female
+        text = "Bà Triệu phất cờ khởi nghĩa năm 248. Bà Triệu chống lại quân Đông Ngô."
+        result = replace_repeated_names(text)
+        assert "Bà Triệu phất cờ" in result
+        assert "Bà chống lại quân" in result
+
+    def test_dynamic_collective_plural_vua_hung(self):
+        from app.services.engine import replace_repeated_names
+        text = "Các vua Hùng dựng nước Văn Lang. Các vua Hùng truyền được 18 đời."
+        result = replace_repeated_names(text)
+        assert "Các vua Hùng dựng nước" in result
+        assert "Các vua truyền được" in result
+
+    def test_capitalization_after_question_and_exclamation(self):
+        from app.services.engine import replace_repeated_names
+        text = "Hồ Chí Minh đọc tuyên ngôn! Hồ Chí Minh lúc đó vô cùng xúc động."
+        result = replace_repeated_names(text)
+        assert "Bác lúc đó vô" in result  # Starts sentence after '! ' -> capitalized to 'Bác'
+
+    def test_protected_compound_nouns(self):
+        from app.services.engine import replace_repeated_names
+        # 'Chiến dịch Hồ Chí Minh' and 'Thành phố Hồ Chí Minh' are protected and should not be touched
+        text = "Hồ Chí Minh là lãnh tụ vĩ đại. Chiến dịch Hồ Chí Minh mang tên Người."
+        result = replace_repeated_names(text)
+        assert "Hồ Chí Minh là lãnh tụ" in result
+        assert "Chiến dịch Hồ Chí Minh" in result  # Unmodified!
+
+    def test_overlapping_aliases_resolution(self):
+        from app.services.engine import replace_repeated_names
+        # Trần Hưng Đạo and Trần Quốc Tuấn are the same canonical entity -> second is replaced
+        text = "Trần Quốc Tuấn soạn Hịch tướng sĩ. Trần Hưng Đạo chỉ huy quân đội đánh Nguyên Mông."
+        result = replace_repeated_names(text)
+        assert "Trần Quốc Tuấn soạn" in result
+        assert "Ông chỉ huy quân đội" in result
+
+    def test_empty_and_short_inputs(self):
+        from app.services.engine import replace_repeated_names
+        assert replace_repeated_names("") == ""
+        assert replace_repeated_names(None) is None
+        assert replace_repeated_names("short") == "short"
