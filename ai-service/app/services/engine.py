@@ -1180,14 +1180,17 @@ def _generate_same_entity_response(info: dict) -> str:
         entity_type, ("cùng một thực thể", "Tên chính", "Các tên gọi khác")
     )
 
+    # Capitalize the names properly
+    capitalized_canonical = " ".join([word.capitalize() for word in canonical.split()])
+
     response = f"{names_str} là **{same_label}**.\n\n"
-    response += f"{main_label}: **{canonical.title()}**\n\n"
+    response += f"{main_label}: **{capitalized_canonical}**\n\n"
 
     if all_aliases:
-        alias_str = ", ".join(a.title() for a in all_aliases)
-        response += f"{alias_label}: {alias_str}\n\n"
+        capitalized_aliases = [ " ".join([word.capitalize() for word in a.split()]) for a in all_aliases]
+        alias_str = ", ".join(capitalized_aliases)
+        response += f"{alias_label}: {alias_str}"
 
-    response += "---\n\nDưới đây là các sự kiện liên quan:"
     return response
 
 
@@ -1984,9 +1987,18 @@ def engine_answer(query: str):
         else:
             answer = same_entity_response
 
+    # Remove dangling events label if we don't have any events, but do have same entity response
+    if same_person_info and (is_relationship or is_definition or is_implicit_relationship):
+        if not unique_events:
+            answer = same_entity_response
+
     # Smart no_data response — suggest alternative phrasing
     if no_data:
-        answer = _generate_no_data_suggestion(q_display, rewritten, resolved, question_intent)
+        # If we already have a same-entity explanation, don't overwrite it with a generic "no data" message
+        if same_person_info and (is_relationship or is_definition or is_implicit_relationship):
+            no_data = False
+        else:
+            answer = _generate_no_data_suggestion(q_display, rewritten, resolved, question_intent)
     
     # --- PHASE 5: OUTPUT VERIFICATION PASS (Guardrails) ---
     # Final quality checks before returning to user.
@@ -2027,8 +2039,10 @@ def engine_answer(query: str):
 
     # --- PRONOUN REPLACEMENT on final answer ---
     # Ensures the answer text (from answer synthesis) also uses pronouns
+    # But ONLY if it's not a definition/relationship query, to preserve names
     if answer and not no_data and len(answer) >= 10:
-        answer = replace_repeated_names(answer)
+        if not (same_person_info and (is_relationship or is_definition or is_implicit_relationship)):
+            answer = replace_repeated_names(answer)
 
     # --- CONFIDENCE & EVIDENCE ATTRIBUTION ---
     best_confidence = 0.0

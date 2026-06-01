@@ -113,3 +113,16 @@ class TestAPIEdgeCases:
         response = client.post("/api/chat", json={"query": "năm 1945!@#$%"})
         # Should not crash
         assert response.status_code == 200
+
+    def test_relationship_query(self):
+        """Query with relationship between alias and canonical should not override same-entity explanation with no_data"""
+        import app.core.startup as startup
+        startup._load_knowledge_base()
+        startup._build_historical_phrases()
+        response = client.post("/api/chat", json={"query": "Quang Trung và Nguyễn Huệ là gì của nhau"})
+        assert response.status_code == 200
+        data = response.json()
+        assert "cùng một người" in data["answer"].lower()
+        assert "tên chính: nguyễn huệ" in data["answer"].lower()
+        assert "ông" not in data["answer"].lower()
+        assert data["no_data"] == False
