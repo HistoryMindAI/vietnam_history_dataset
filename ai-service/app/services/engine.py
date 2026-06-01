@@ -1687,7 +1687,7 @@ def engine_answer(query: str):
             entity_scan_count = len(raw_events)
             if 0 < entity_scan_count < 3:
                 raw_events.extend(semantic_search(rewritten))
-        elif is_definition:
+        elif is_definition and not query_analysis.year:
             # GROUNDING CHECK: If definition query looks like asking about specific entity
             # but entity resolution found NOTHING, this is likely a DATA GAP (missing person in database).
             # Don't fallback to semantic search → force "no data" to prevent hallucination
