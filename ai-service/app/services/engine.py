@@ -438,12 +438,27 @@ def _build_canonical_name_groups() -> dict:
     return {c: sorted(names, key=len, reverse=True) for c, names in groups.items()}
 
 
-def _get_pronoun(canonical: str) -> str:
+def _get_pronoun(canonical: str, matched_name: str = "") -> str:
     """Return the correct pronoun for a canonical person name."""
-    if canonical == _HCM_CANONICAL:
-        return "Bác"
-    # Check if canonical or any of its aliases is a known female
     canonical_lower = canonical.lower()
+    matched_lower = matched_name.lower() if matched_name else ""
+
+    if canonical_lower == _HCM_CANONICAL:
+        return "Bác"
+
+    # Plural check for "Hai Bà Trưng" / "các vua hùng"
+    if matched_lower:
+        if "hai bà" in matched_lower:
+            return "hai bà"
+        if "các vua hùng" in matched_lower or "các vua" in matched_lower or "18 đời" in matched_lower:
+            return "các vua"
+    else:
+        if "hai bà" in canonical_lower:
+            return "hai bà"
+        if "các vua hùng" in canonical_lower or "các vua" in canonical_lower or "18 đời" in canonical_lower:
+            return "các vua"
+
+    # Check if canonical or any of its aliases is a known female
     if canonical_lower in _FEMALE_CANONICALS:
         return "bà"
     # Also check if any alias maps to a female canonical
@@ -468,6 +483,20 @@ def _is_protected_position(text_lower: str, start: int, end: int) -> bool:
             if start >= cpos and end <= cend:
                 return True
             cpos = text_lower.find(compound, cpos + 1)
+    return False
+
+
+def _is_inside_parentheses(text: str, start: int, end: int) -> bool:
+    """Check if the text at [start:end] is enclosed within parentheses."""
+    left_paren = text.rfind('(', max(0, start - 50), start)
+    if left_paren != -1:
+        right_paren = text.find(')', end, min(len(text), end + 50))
+        if right_paren != -1:
+            # Check if there is no other '(' or ')' between them that would mismatch
+            between_left = text.find('(', left_paren + 1, start)
+            between_right = text.rfind(')', end, right_paren)
+            if between_left == -1 and between_right == -1:
+                return True
     return False
 
 
@@ -538,28 +567,44 @@ def replace_repeated_names(text: str) -> str:
             filtered.append(match)
             last_end = match[1]
 
-    # Step 3: Group by canonical, keeping order of appearance
+    # Step 3: Group by canonical (or sub-key for collective groups), keeping order of appearance
     from collections import OrderedDict
     canonical_occurrences: dict = OrderedDict()
     for match in filtered:
         canonical = match[2]
-        if canonical not in canonical_occurrences:
-            canonical_occurrences[canonical] = []
-        canonical_occurrences[canonical].append(match)
+        name = match[3]
 
-    # Step 4: Identify which matches to replace (2nd+ occurrence per canonical)
+        # For collective groups, treat distinct names as separate entities
+        if canonical in {"hai bà trưng", "hùng vương"}:
+            group_key = f"{canonical}:{name.lower()}"
+        else:
+            group_key = canonical
+
+        if group_key not in canonical_occurrences:
+            canonical_occurrences[group_key] = []
+        canonical_occurrences[group_key].append(match)
+
+    # Step 4: Identify which matches to replace (2nd+ occurrence per group_key)
     replacements = {}  # (start, end) → pronoun
-    for canonical, matches in canonical_occurrences.items():
+    for group_key, matches in canonical_occurrences.items():
         if len(matches) < 2:
             continue  # Only 1 mention — no replacement needed
-        pronoun = _get_pronoun(canonical)
+
         for i, match in enumerate(matches):
             if i == 0:
                 continue  # Keep the first occurrence
             start, end = match[0], match[1]
+            canonical = match[2]
+            name = match[3]
+
             # Skip if this is part of a protected compound noun
             if _is_protected_position(text_lower, start, end):
                 continue
+            # Skip if match is inside parentheses
+            if _is_inside_parentheses(text, start, end):
+                continue
+
+            pronoun = _get_pronoun(canonical, name)
             replacements[(start, end)] = pronoun
 
     if not replacements:
