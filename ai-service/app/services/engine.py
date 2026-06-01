@@ -446,17 +446,37 @@ def _get_pronoun(canonical: str, matched_name: str = "") -> str:
     if canonical_lower == _HCM_CANONICAL:
         return "Bác"
 
-    # Plural check for "Hai Bà Trưng" / "các vua hùng"
+    # Plural/singular checks for collective groups
+    if canonical_lower == "hai bà trưng":
+        if matched_lower:
+            if "hai bà" in matched_lower or matched_lower == "hai bà trưng":
+                return "hai bà"
+            else:
+                return "bà"
+        else:
+            return "hai bà"
+
+    if canonical_lower == "hùng vương":
+        if matched_lower:
+            if "các vua" in matched_lower or "18 đời" in matched_lower:
+                return "các vua"
+            else:
+                return "ông"
+        else:
+            return "các vua"
+
+    # Plural check for any other matches that have matched_lower
     if matched_lower:
         if "hai bà" in matched_lower:
             return "hai bà"
         if "các vua hùng" in matched_lower or "các vua" in matched_lower or "18 đời" in matched_lower:
             return "các vua"
-    else:
-        if "hai bà" in canonical_lower:
-            return "hai bà"
-        if "các vua hùng" in canonical_lower or "các vua" in canonical_lower or "18 đời" in canonical_lower:
-            return "các vua"
+
+    # Fallback/canonical checks
+    if "hai bà" in canonical_lower:
+        return "hai bà"
+    if "các vua hùng" in canonical_lower or "các vua" in canonical_lower or "18 đời" in canonical_lower:
+        return "các vua"
 
     # Check if canonical or any of its aliases is a known female
     if canonical_lower in _FEMALE_CANONICALS:
@@ -488,16 +508,34 @@ def _is_protected_position(text_lower: str, start: int, end: int) -> bool:
 
 def _is_inside_parentheses(text: str, start: int, end: int) -> bool:
     """Check if the text at [start:end] is enclosed within parentheses."""
-    left_paren = text.rfind('(', max(0, start - 50), start)
-    if left_paren != -1:
-        right_paren = text.find(')', end, min(len(text), end + 50))
-        if right_paren != -1:
-            # Check if there is no other '(' or ')' between them that would mismatch
-            between_left = text.find('(', left_paren + 1, start)
-            between_right = text.rfind(')', end, right_paren)
-            if between_left == -1 and between_right == -1:
-                return True
-    return False
+    # Find if there is an unclosed '(' to the left of start
+    depth = 0
+    has_unclosed_open = False
+    for i in range(start - 1, -1, -1):
+        if text[i] == ')':
+            depth += 1
+        elif text[i] == '(':
+            if depth > 0:
+                depth -= 1
+            else:
+                has_unclosed_open = True
+                break
+    if not has_unclosed_open:
+        return False
+
+    # Now verify that there is a matching ')' to the right of end
+    depth = 0
+    has_unclosed_close = False
+    for i in range(end, len(text)):
+        if text[i] == '(':
+            depth += 1
+        elif text[i] == ')':
+            if depth > 0:
+                depth -= 1
+            else:
+                has_unclosed_close = True
+                break
+    return has_unclosed_close
 
 
 def replace_repeated_names(text: str) -> str:
