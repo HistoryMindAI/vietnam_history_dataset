@@ -41,16 +41,17 @@ class QueryAnalysis:
 
 _DURATION_PATTERNS = [
     # "hơn 150 năm", "gần 100 năm", "khoảng 200 năm"
-    re.compile(r"\b(?:hơn|gần|khoảng|suốt|trải qua|qua)\s+(\d+)\s*năm\b", re.I),
+    re.compile(r"\b(?:hơn|gần|khoảng|suốt|trải qua|qua|hon|gan|khoang|suot|trai qua)\s+(\d+)\s*n[ăa]m\b", re.I),
     # "kỷ niệm 1000 năm", "kỉ niệm 1000 năm"
-    re.compile(r"\bk[ỷỉ]\s*ni[ệe]m\s+(\d+)\s*năm\b", re.I),
+    re.compile(r"\bk[ỷỉy]\s*ni[ệe]m\s+(\d+)\s*n[ăa]m\b", re.I),
     # "tròn 100 năm"
-    re.compile(r"\btròn\s+(\d+)\s*năm\b", re.I),
+    re.compile(r"\b(?:tròn|tron)\s+(\d+)\s*n[ăa]m\b", re.I),
     # "150 năm chia cắt", "1000 năm Thăng Long"
-    re.compile(r"\b(\d+)\s*năm\s+(?:chia\s*cắt|tồn\s*tại|thống\s*trị|đô\s*hộ|"
-               r"thăng\s*long|lịch\s*sử|xây\s*dựng|phát\s*triển|đấu\s*tranh)", re.I),
+    re.compile(r"\b(\d+)\s*n[ăa]m\s+(?:chia\s*cắt|tồn\s*tại|thống\s*trị|đô\s*hộ|"
+               r"thăng\s*long|lịch\s*sử|xây\s*dựng|phát\s*triển|đấu\s*tranh"
+               r"|chia\s*cat|ton\s*tai|thong\s*tri|do\s*ho|thang\s*long|lich\s*su|xay\s*dung|phat\s*trien|dau\s*tranh)", re.I),
     # "X năm kể từ", "X năm sau"
-    re.compile(r"\b(\d+)\s*năm\s+(?:kể\s*từ|sau|trước)\b", re.I),
+    re.compile(r"\b(\d+)\s*n[ăa]m\s+(?:kể\s*từ|sau|trước|ke\s*tu|sau|truoc)\b", re.I),
 ]
 
 
