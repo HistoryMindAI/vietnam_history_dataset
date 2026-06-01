@@ -155,3 +155,68 @@ def test_engine_who_answer_filters_unrelated_candidates(mock_scan, mock_search):
     assert "Trần Hưng Đạo" in result["answer"]
     assert "Hịch tướng sĩ" in result["answer"]
     assert "Ngô Quyền" not in result["answer"]
+
+
+def test_format_event_excludes_additional_items_for_specific_questions():
+    from app.core.query_schema import QueryInfo, StructuredAnswer
+    from app.services.answer_formatter import format_answer
+
+    # 1. Setup a specific "what" question
+    query_info = QueryInfo(
+        original_query="Chiến dịch Điện Biên Phủ diễn ra thế nào?",
+        normalized_query="chiến dịch điện biên phủ diễn ra thế nào",
+        intent="event_query",
+        question_type="what",
+        answer_type_required="event",
+    )
+
+    structured = StructuredAnswer(
+        answer_type="event",
+        title="Chiến dịch Điện Biên Phủ",
+        year=1954,
+        description="Chiến dịch kết thúc bằng thắng lợi hoàn toàn của quân dân Việt Nam.",
+        items=[
+            {"title": "Chiến dịch Điện Biên Phủ", "year": 1954, "story": "Chiến dịch Điện Biên Phủ kết thúc thắng lợi."},
+            {"title": "Ký Hiệp định Genève", "year": 1954, "story": "Ký kết Hiệp định Genève chấm dứt chiến tranh."},
+        ]
+    )
+
+    answer = format_answer(structured, query_info)
+    assert answer is not None
+    # Description should be present
+    assert "Chiến dịch kết thúc" in answer
+    # Additional items (Hiệp định Genève) should be OMITTED
+    assert "Hiệp định Genève" not in answer
+
+
+def test_format_event_includes_additional_items_for_general_queries():
+    from app.core.query_schema import QueryInfo, StructuredAnswer
+    from app.services.answer_formatter import format_answer
+
+    # 2. Setup a general/empty question type query
+    query_info = QueryInfo(
+        original_query="Điện Biên Phủ",
+        normalized_query="điện biên phủ",
+        intent="event_query",
+        question_type=None,
+        answer_type_required="event",
+    )
+
+    structured = StructuredAnswer(
+        answer_type="event",
+        title="Chiến dịch Điện Biên Phủ",
+        year=1954,
+        description="Chiến dịch kết thúc bằng thắng lợi hoàn toàn của quân dân Việt Nam.",
+        items=[
+            {"title": "Chiến dịch Điện Biên Phủ", "year": 1954, "story": "Chiến dịch Điện Biên Phủ kết thúc thắng lợi."},
+            {"title": "Ký Hiệp định Genève", "year": 1954, "story": "Ký kết Hiệp định Genève chấm dứt chiến tranh."},
+        ]
+    )
+
+    answer = format_answer(structured, query_info)
+    assert answer is not None
+    # Description should be present
+    assert "Chiến dịch kết thúc" in answer
+    # Additional items (Hiệp định Genève) should be INCLUDED
+    assert "Hiệp định Genève" in answer
+
