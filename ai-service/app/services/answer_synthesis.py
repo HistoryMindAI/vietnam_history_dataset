@@ -227,7 +227,7 @@ def _build_list_answer(events: list, analysis: QueryAnalysis) -> str | None:
         return _build_simple_list(events)
 
 
-def _build_period_grouped_list(events: list) -> str:
+def _build_period_grouped_list(events: list) -> str | None:
     """Group events by historical period (Principle 4).
     Uses GLOBAL cross-period dedup to catch same event across periods."""
     grouped: dict[str, list] = {}
@@ -287,7 +287,7 @@ def _build_period_grouped_list(events: list) -> str:
     return "\n\n".join(parts) if parts else None
 
 
-def _build_simple_list(events: list) -> str:
+def _build_simple_list(events: list) -> str | None:
     """Simple chronological list without period grouping."""
     parts = []
     seen = set()
