@@ -22,7 +22,7 @@ All downstream components (synthesis, formatting) receive already-unique events.
 
 import re
 from typing import Any, Dict, List, Optional
-
+from rapidfuzz import fuzz
 
 # ======================================================================
 # TEXT NORMALIZATION FOR DEDUP
@@ -137,15 +137,13 @@ def aggregate_events(
 
     Args:
         docs: Raw document list (may contain duplicates).
-        similarity_threshold: SequenceMatcher threshold for fuzzy matching.
+        similarity_threshold: threshold for fuzzy matching (0.0 to 1.0).
 
     Returns:
         List of unique events with merged metadata.
     """
     if not docs:
         return []
-
-    from difflib import SequenceMatcher
 
     # Each cluster: {"doc": best_doc, "key": normalized, "year": int,
     #                "persons": set, "places": set, "story_len": int}
@@ -184,8 +182,9 @@ def aggregate_events(
                 # Containment
                 matched = True
             else:
-                # Fuzzy match
-                sim = SequenceMatcher(None, event_key, cluster["key"]).ratio()
+                # Fuzzy match using token_set_ratio (order-agnostic, subset-aware)
+                # Rapidfuzz returns 0-100, so we convert it to 0.0-1.0
+                sim = fuzz.token_set_ratio(event_key, cluster["key"]) / 100.0
                 if sim >= similarity_threshold:
                     matched = True
 
