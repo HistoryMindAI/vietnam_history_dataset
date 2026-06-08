@@ -183,7 +183,6 @@ def resolve_query_entities(query: str) -> dict:
     if not any(result.values()):
         phonetic_variants = generate_phonetic_variants(q_low)
         for variant in phonetic_variants[:3]:  # Limit to avoid over-expansion
-            variant_result = {"persons": [], "dynasties": [], "topics": [], "places": []}
             # Try exact match with phonetic variant
             for alias, canonical in startup.PERSON_ALIASES.items():
                 if alias in variant and canonical not in seen_persons:
