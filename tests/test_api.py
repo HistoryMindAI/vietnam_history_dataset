@@ -22,7 +22,7 @@ def test_client():
                         from fastapi.testclient import TestClient
                         from app.main import app
                         
-                        client = TestClient(app)
+                        client = TestClient(app=app, backend="asyncio")
                         yield client
 
 
@@ -99,3 +99,25 @@ def test_chat_endpoint_empty_query(mock_engine, test_client):
     
     # Should still return 200 with no_data=True
     assert response.status_code == 200
+
+@patch("app.api.chat.chat_slots.acquire", side_effect=TimeoutError("Mocked timeout"))
+def test_chat_concurrency_timeout(mock_acquire, test_client):
+    """Test chat endpoint returns 503 when concurrency limit is reached (timeout)."""
+    payload = {"query": "test query"}
+    response = test_client.post("/api/chat", json=payload)
+
+    assert response.status_code == 503
+    data = response.json()
+    assert "detail" in data
+    assert "AI service is busy" in data["detail"]
+
+@patch("app.api.chat.engine_answer", side_effect=Exception("Mocked engine failure"))
+def test_chat_engine_exception(mock_engine, test_client):
+    """Test chat endpoint returns 503 when engine raises an unexpected exception."""
+    payload = {"query": "test query"}
+    response = test_client.post("/api/chat", json=payload)
+
+    assert response.status_code == 503
+    data = response.json()
+    assert "detail" in data
+    assert "Service unavailable or error while processing the query" in data["detail"]
