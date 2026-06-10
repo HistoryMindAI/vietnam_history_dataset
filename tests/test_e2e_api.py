@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'ai-service'))
 from app.main import app
 
 
-client = TestClient(app)
+client = TestClient(app=app, backend="asyncio")
 
 
 class TestHealthEndpoints:

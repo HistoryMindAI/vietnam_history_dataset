@@ -64,7 +64,7 @@ class TestEndpoints:
     """
     Tests for critical endpoints to ensure they don't crash (500/502).
     """
-    client = TestClient(app)
+    client = TestClient(app=app, backend="asyncio")
 
     def test_root_endpoint(self):
         """
