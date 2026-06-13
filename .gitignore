@@ -100,3 +100,4 @@ docker_build*.txt
 docker_build*.log
 *.doc
 *.docx
+.coverage
