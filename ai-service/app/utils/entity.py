@@ -13,7 +13,7 @@ ENTITY_ALIASES_NORM = {
 def extract_entities(query: str):
     q = normalize(query)
     found = set()
-    for key, aliases in ENTITY_ALIASES.items():
+    for key, aliases in ENTITY_ALIASES_NORM.items():
         for a in aliases:
             if a in q:
                 found.add(key)
