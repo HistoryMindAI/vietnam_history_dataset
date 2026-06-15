@@ -135,3 +135,39 @@ def test_semantic_search_empty_session(clean_startup):
     clean_startup.index = MagicMock()
     clean_startup.session = None
     assert semantic_search("Bạch Đằng") == []
+
+@patch('app.services.search_service.generate_phonetic_variants')
+def test_resolve_query_entities_phonetic_fallback(mock_generate_phonetic_variants):
+    from app.services.search_service import resolve_query_entities
+    import app.core.startup as startup
+
+    # Store original values
+    orig_person_aliases = startup.PERSON_ALIASES.copy()
+    orig_dynasty_aliases = startup.DYNASTY_ALIASES.copy()
+    orig_topic_synonyms = startup.TOPIC_SYNONYMS.copy()
+    orig_places_index = startup.PLACES_INDEX.copy()
+
+    try:
+        # Override to short terms to be matched
+        startup.PERSON_ALIASES = {"zxy": "nguyễn chí thanh"}
+        startup.DYNASTY_ALIASES = {"qwerty": "nhà trần"}
+        startup.TOPIC_SYNONYMS = {"asdf": "chiến dịch"}
+        startup.PLACES_INDEX = {"hjkl": [1]}
+
+        mock_generate_phonetic_variants.return_value = ["zxy qwerty asdf hjkl", "variant2"]
+
+        result = resolve_query_entities("querywithnotmatch")
+
+        assert "nguyễn chí thanh" in result["persons"]
+        assert "nhà trần" in result["dynasties"]
+        assert "chiến dịch" in result["topics"]
+        assert "hjkl" in result["places"]
+
+        # Ensure it breaks after first variant
+        mock_generate_phonetic_variants.assert_called_once()
+
+    finally:
+        startup.PERSON_ALIASES = orig_person_aliases
+        startup.DYNASTY_ALIASES = orig_dynasty_aliases
+        startup.TOPIC_SYNONYMS = orig_topic_synonyms
+        startup.PLACES_INDEX = orig_places_index

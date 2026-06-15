@@ -1,0 +1,65 @@
+with open("tests/test_search_service.py", "r") as f:
+    lines = f.readlines()
+
+new_lines = []
+for i, line in enumerate(lines):
+    if line.startswith("def test_semantic_search_empty_index(clean_startup):"):
+        # Found the corrupted spot, let's inject the correct code instead
+        new_lines.append(line)
+        new_lines.append("    from app.services.search_service import semantic_search\n")
+        new_lines.append("\n")
+        new_lines.append("    # Mock to trigger early return\n")
+        new_lines.append("    clean_startup.index = None\n")
+        new_lines.append("    assert semantic_search(\"Bạch Đằng\") == []\n")
+        new_lines.append("\n")
+        new_lines.append("def test_semantic_search_empty_session(clean_startup):\n")
+        new_lines.append("    from app.services.search_service import semantic_search\n")
+        new_lines.append("\n")
+        new_lines.append("    # Mock to trigger early return\n")
+        new_lines.append("    clean_startup.index = MagicMock()\n")
+        new_lines.append("    clean_startup.session = None\n")
+        new_lines.append("    assert semantic_search(\"Bạch Đằng\") == []\n")
+        new_lines.append("\n")
+
+        # Add the valid new test and break
+        new_lines.append("@patch('app.services.search_service.generate_phonetic_variants')\n")
+        new_lines.append("def test_resolve_query_entities_phonetic_fallback(mock_generate_phonetic_variants):\n")
+        new_lines.append("    from app.services.search_service import resolve_query_entities\n")
+        new_lines.append("    import app.core.startup as startup\n")
+        new_lines.append("    \n")
+        new_lines.append("    # Store original values\n")
+        new_lines.append("    orig_person_aliases = startup.PERSON_ALIASES.copy()\n")
+        new_lines.append("    orig_dynasty_aliases = startup.DYNASTY_ALIASES.copy()\n")
+        new_lines.append("    orig_topic_synonyms = startup.TOPIC_SYNONYMS.copy()\n")
+        new_lines.append("    orig_places_index = startup.PLACES_INDEX.copy()\n")
+        new_lines.append("    \n")
+        new_lines.append("    try:\n")
+        new_lines.append("        # Override to short terms to be matched\n")
+        new_lines.append("        startup.PERSON_ALIASES = {\"zxy\": \"nguyễn chí thanh\"}\n")
+        new_lines.append("        startup.DYNASTY_ALIASES = {\"qwerty\": \"nhà trần\"}\n")
+        new_lines.append("        startup.TOPIC_SYNONYMS = {\"asdf\": \"chiến dịch\"}\n")
+        new_lines.append("        startup.PLACES_INDEX = {\"hjkl\": [1]}\n")
+        new_lines.append("        \n")
+        new_lines.append("        mock_generate_phonetic_variants.return_value = [\"zxy qwerty asdf hjkl\", \"variant2\"]\n")
+        new_lines.append("        \n")
+        new_lines.append("        result = resolve_query_entities(\"querywithnotmatch\")\n")
+        new_lines.append("        \n")
+        new_lines.append("        assert \"nguyễn chí thanh\" in result[\"persons\"]\n")
+        new_lines.append("        assert \"nhà trần\" in result[\"dynasties\"]\n")
+        new_lines.append("        assert \"chiến dịch\" in result[\"topics\"]\n")
+        new_lines.append("        assert \"hjkl\" in result[\"places\"]\n")
+        new_lines.append("        \n")
+        new_lines.append("        # Ensure it breaks after first variant\n")
+        new_lines.append("        mock_generate_phonetic_variants.assert_called_once()\n")
+        new_lines.append("        \n")
+        new_lines.append("    finally:\n")
+        new_lines.append("        startup.PERSON_ALIASES = orig_person_aliases\n")
+        new_lines.append("        startup.DYNASTY_ALIASES = orig_dynasty_aliases\n")
+        new_lines.append("        startup.TOPIC_SYNONYMS = orig_topic_synonyms\n")
+        new_lines.append("        startup.PLACES_INDEX = orig_places_index\n")
+        break
+    else:
+        new_lines.append(line)
+
+with open("tests/test_search_service.py", "w") as f:
+    f.writelines(new_lines)
