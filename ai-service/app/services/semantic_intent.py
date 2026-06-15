@@ -18,7 +18,7 @@ Architecture overview:
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 # ===================================================================
 # SEMANTIC INTENT DATA CLASS
@@ -218,7 +218,6 @@ def classify_semantic_intent(
     structure = detect_structure_request(query)
 
     has_persons = bool(resolved.get("persons"))
-    has_dynasties = bool(resolved.get("dynasties"))
     has_topics = bool(resolved.get("topics"))
     has_specific_entity = has_persons or has_topics
 
