@@ -171,3 +171,69 @@ def test_resolve_query_entities_phonetic_fallback(mock_generate_phonetic_variant
         startup.DYNASTY_ALIASES = orig_dynasty_aliases
         startup.TOPIC_SYNONYMS = orig_topic_synonyms
         startup.PLACES_INDEX = orig_places_index
+
+def test_detect_place_from_query(clean_startup):
+    from app.services.search_service import detect_place_from_query
+
+    clean_startup.PLACES_INDEX = {
+        "hà nội": [1, 2],
+        "hải phòng": [3]
+    }
+
+    assert detect_place_from_query("tôi muốn tìm hà nội") == "hà nội"
+    assert detect_place_from_query("tôi muốn tìm thái bình") is None
+
+def test_extract_important_keywords():
+    from app.services.search_service import extract_important_keywords
+
+    assert "tôi" not in extract_important_keywords("tôi muốn tìm hà nội")
+    assert "nội" in extract_important_keywords("tôi muốn tìm hà nội")
+
+def test_scan_by_year(clean_startup):
+    from app.services.search_service import scan_by_year
+
+    clean_startup.DOCUMENTS_BY_YEAR = {
+        1010: [{"year": 1010, "story": "Dời đô"}],
+        1288: [{"year": 1288, "story": "Bạch Đằng"}]
+    }
+
+    assert len(scan_by_year(1010)) == 1
+    assert scan_by_year(1010)[0]["story"] == "Dời đô"
+    assert len(scan_by_year(9999)) == 0
+
+def test_resolve_query_entities_dynasty_guard(clean_startup):
+    from app.services.search_service import resolve_query_entities
+
+    clean_startup.PERSON_ALIASES = {"nguyễn huệ": "nguyễn huệ"}
+    clean_startup.DYNASTY_ALIASES = {"nhà nguyễn": "nguyễn"}
+    clean_startup.TOPIC_SYNONYMS = {}
+    clean_startup.PLACES_INDEX = {}
+    clean_startup.PERSONS_INDEX = {}
+    clean_startup.DYNASTY_INDEX = {}
+
+    res = resolve_query_entities("vua nguyễn huệ nhà nguyễn")
+    assert "nguyễn huệ" in res["persons"]
+    assert "nguyễn" in res["dynasties"]
+
+    # False match prevention for alias
+    res = resolve_query_entities("vua nguyễn huệ")
+    assert "nguyễn huệ" in res["persons"]
+    assert "nguyễn" not in res["dynasties"]
+
+@patch('app.core.startup.session')
+@patch('app.core.startup.tokenizer')
+def test_get_cached_embedding(mock_tokenizer, mock_session):
+    from app.services.search_service import get_cached_embedding
+
+    import numpy as np
+    from unittest.mock import MagicMock
+
+    mock_tokenizer.return_value = {"input_ids": np.array([[1]]), "attention_mask": np.array([[1]])}
+    mock_session.return_value = MagicMock()
+    mock_session.get_inputs.return_value = []
+    mock_session.run.return_value = [np.array([[[0.1, 0.2]]])]
+
+    emb1 = get_cached_embedding("test query")
+    emb2 = get_cached_embedding("test query")
+
+    assert emb1 is emb2 # Should be cached

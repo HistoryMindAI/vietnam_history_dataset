@@ -1,6 +1,6 @@
 import app.core.startup as startup
 from app.core.utils.date_utils import safe_year
-from app.core.config import TOP_K, SIM_THRESHOLD, SIM_THRESHOLD_LOW, FUZZY_MATCH_THRESHOLD, HIGH_CONFIDENCE_SCORE
+from app.core.config import TOP_K, SIM_THRESHOLD, FUZZY_MATCH_THRESHOLD, HIGH_CONFIDENCE_SCORE
 from functools import lru_cache
 from app.utils.normalize import normalize_query
 from app.services.query_understanding import (
@@ -188,21 +188,28 @@ def resolve_query_entities(query: str) -> dict:
             for alias, canonical in startup.PERSON_ALIASES.items():
                 if alias in variant and canonical not in seen_persons:
                     seen_persons.add(canonical)
-                    result["persons"].append(canonical)
+                    variant_result["persons"].append(canonical)
             for alias, canonical in startup.DYNASTY_ALIASES.items():
                 if alias in variant and canonical not in seen_dynasties:
                     seen_dynasties.add(canonical)
-                    result["dynasties"].append(canonical)
+                    variant_result["dynasties"].append(canonical)
             for synonym, canonical in startup.TOPIC_SYNONYMS.items():
                 if synonym in variant and canonical not in seen_topics:
                     seen_topics.add(canonical)
-                    result["topics"].append(canonical)
+                    variant_result["topics"].append(canonical)
             for place_key in startup.PLACES_INDEX:
                 if place_key in variant and place_key not in seen_places:
                     seen_places.add(place_key)
-                    result["places"].append(place_key)
+                    variant_result["places"].append(place_key)
+
+            # Add to main result
+            result["persons"].extend(variant_result["persons"])
+            result["dynasties"].extend(variant_result["dynasties"])
+            result["topics"].extend(variant_result["topics"])
+            result["places"].extend(variant_result["places"])
+
             # If phonetic variant found something, stop trying more variants
-            if any(result.values()):
+            if any(variant_result.values()):
                 break
 
     return result
